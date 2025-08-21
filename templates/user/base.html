@@ -1,37 +1,35 @@
 {% load static %}
+{% load socialaccount %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bootstrap Navbar & Footer</title>
+  <title>{% block title %}Walkon{% endblock %}</title>
   
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
+
+  <!-- Bootstrap Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css?family=Poppins|Inter&display=swap" rel="stylesheet">
   
   <!-- Custom CSS -->
-    <link rel="stylesheet" href="{% static 'style.css' %}">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <!-- Extra CSS (child templates can add more here) -->
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
-    
-
-
-{% load socialaccount %}
-
+  
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg bg-white shadow-sm" style="padding-top:15px; padding-bottom:15px;">
+<nav class="navbar navbar-expand-lg bg-white shadow-sm py-3">
   <div class="container">
     <!-- Brand -->
-
-<a class="navbar-brand" href="#">
-    <img src="{% static 'images/logo.png' %}" alt="Logo" style="width:150px; height:auto;">
-</a>
-
+    <a class="navbar-brand" href="#">
+      <img src="{% static 'images/logo.png' %}" alt="Logo" style="width:150px; height:auto;">
+    </a>
 
     <!-- Toggle -->
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -47,25 +45,31 @@
 
         <!-- Category Dropdown -->
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="categoryDropdown" role="button" data-bs-toggle="dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="categoryDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             Category
           </a>
-          <ul class="dropdown-menu">
+          <ul class="dropdown-menu" aria-labelledby="categoryDropdown">
             <li><a class="dropdown-item" href="#">Women</a></li>
             <li><a class="dropdown-item" href="#">Men</a></li>
             <li><a class="dropdown-item" href="#">Kids</a></li>
           </ul>
         </li>
 
-        <li class="nav-item"><a class="nav-link" href="#">Shop</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'all_products' %}">Shop</a></li>
         <li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
         <li class="nav-item"><a class="nav-link" href="#">Blog</a></li>
       </ul>
 
-      <!-- Search -->
+      <!-- Search + Signout -->
       <form class="d-flex me-lg-3 mb-3 mb-lg-0">
         <input class="form-control me-2" type="search" placeholder="Search">
       </form>
+      {% if user.is_authenticated %}
+        <a href="{% url 'logout' %}" class="btn btn-dark me-3">Sign out</a>
+      {% endif %}
+      {% if not user.is_authenticated %}
+        <a href="{% url 'login' %}" class="btn btn-dark me-3">Sign in</a>
+      {% endif %}
 
       <!-- Icons -->
       <div class="d-flex align-items-center gap-3">
@@ -74,9 +78,11 @@
           <i class="bi bi-heart"></i>
         </a>
         <!-- Profile -->
+        {% if user.is_authenticated %}
         <a href="#" class="text-dark fs-5 position-relative">
           <i class="bi bi-person-circle"></i>
         </a>
+        {% endif %}
         <!-- Cart with count -->
         <a href="#" class="text-dark fs-5 position-relative">
           <i class="bi bi-cart3"></i>
@@ -87,6 +93,7 @@
   </div>
 </nav>
 
+{% block content %}{% endblock content %}
 
 <!-- Footer -->
 <footer class="bg-white py-5 mt-auto border-top">
@@ -113,7 +120,7 @@
       </div>
 
       <!-- Newsletter Column -->
-      <div class="col-md-6 mb-3">
+      <div class="col-md-4 mb-3">
         <h5 class="fw-bold">Subscribe to Our Newsletter</h5>
         <form class="d-flex">
           <input type="email" class="form-control me-2" placeholder="Email Address">
@@ -123,4 +130,12 @@
     </div>
 
     <div class="text-center mt-4">
-      <p class="mb-1 small">© 2025 | G-ROCK | All Rights R
+      <p class="mb-1 small">© 2025 | WalkOn | All Rights Reserved</p>
+    </div>
+  </div>
+</footer>
+
+<!-- Bootstrap JS (needed for dropdown + toggle) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

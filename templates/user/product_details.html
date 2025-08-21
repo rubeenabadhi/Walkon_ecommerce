@@ -1,0 +1,219 @@
+{% extends 'user/base.html' %}
+{% load static %}
+{% block title %}Product Details - Walkon{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/product.css' %}">
+{% endblock %}
+{% block content %}
+    
+<div class="product-details container">
+  <div class="row">
+
+    <!-- LEFT: Images -->
+    <div class="col-md-6">
+     <!-- Main Image -->
+{% if product.primary_image %}
+  <div class="main-image-container" style="overflow: hidden; max-width: 400px;">
+    <img id="mainImage"
+         src="{{ product.primary_image.url }}" 
+         alt="{{ product.name }}" 
+         class="product-image img-fluid rounded mb-3"
+         style="width: 100%; max-height: 400px; object-fit: contain; cursor: zoom-in; transition: transform 0.2s ease;">
+  </div>
+{% else %}
+  <p>No primary image available.</p>
+{% endif %}
+
+<!-- Variant Images -->
+<div class="product-images d-flex gap-2 flex-nowrap overflow-auto">
+  {% for variant in product.variants.all %}
+    {% for image in variant.images.all|slice:":3" %}
+      <img src="{{ image.url }}" 
+           alt="{{ product.name }} image" 
+           class="img-thumbnail thumb"
+           style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;">
+    {% endfor %}
+  {% empty %}
+    <p class="text-muted">No extra images available</p>
+  {% endfor %}
+</div>
+
+
+      <!-- Colors -->
+<p class="color-info mt-3 fw-semibold">Available Colours:</p>
+<div class="d-flex gap-2 mt-3">
+  {% for color in colors %}
+    <div class="color-circle border rounded-circle shadow-sm"
+         style="width: 28px; height: 28px; background-color: {{ color.hex_code }};"
+         title="{{ color.name }}">
+    </div>
+  {% empty %}
+    <p>No colors available</p>
+  {% endfor %}
+</div>
+
+
+    </div>
+    <!-- RIGHT: Details -->
+    <div class="col-md-6">
+      <h1 class="product-title">{{ product.name }}</h1>
+      <p class="product-category fw-semibold">Category: {{ product.category.name }}</p>
+      <p class="product-gender">{{product.gender}}</p>
+      <p class="product-brand fw-semibold">Brand: {{ product.brand.name }}</p>
+      <p class="product-price text-success fw-bold fs-4">₹{{ product.variants.first.price }}</p>
+      <p class="product-Stock>Stock" >Available Stock : {{ product.variants.first.stock }}</p>
+      <p class="product-discount fw-semibold">Discount: 0 %</p>
+      
+      <div class="ratings">
+  {% for i in "12345" %}
+    {% if forloop.counter <= product.average_rating %}
+      ⭐
+    {% else %}
+      ☆
+    {% endif %}
+  {% endfor %}
+  <span>{{ product.reviews.count }} </span>
+</div>
+
+
+      <p class="size-label" style="font-weight: bold;">Select a size</p>
+      <div class="size-selection mb-3">
+        {% for variant in product.variants.all %}
+          <span class="size-option">{{ variant.size }} </span>
+        {% endfor %}
+      </div>
+
+      <div class="d-flex gap-3 mb-4">
+        
+  {% if product.is_available and product.variants.first.stock > 0 %}
+    <!-- Show Wishlist + Add to Cart buttons -->
+    <button class="btn btn-wishlist">Add to Wishlist</button>
+    <button class="btn btn-cart" data-bs-toggle="modal" data-bs-target="#sizeModal">Add to Cart</button>
+  
+  {% else %}
+    <button class="btn btn-danger" disabled>Out of Stock</button>
+  {% endif %}
+</div>
+
+
+      <!-- Tabs -->
+<ul class="nav nav-tabs">
+  <li class="nav-item">
+    <a class="nav-link active" data-bs-toggle="tab" href="#description">Description</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" data-bs-toggle="tab" href="#review">Review</a>
+  </li>
+</ul>
+
+<div class="tab-content mt-3">
+
+  <!-- Description Tab -->
+  <div class="tab-pane fade show active" id="description">
+    <p>{{ product.description }}</p>
+  </div>
+
+  <!-- Review Tab -->
+  <div class="tab-pane fade" id="review">
+    <div class="reviews mt-4">
+      <h5>Customer Reviews</h5>
+      {% for review in product.reviews.all %}
+        <div class="review border p-2 rounded mb-2">
+          <strong>{{ review.user.username }}</strong> - ⭐ {{ review.rating }}
+          <p>{{ review.comment }}</p>
+          <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
+        </div>
+      {% empty %}
+        <p class="text-muted">No reviews yet. Be the first to review!</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+  <!-- Also Like Section -->
+<h2 class="also-like-title mt-5">You May Also Like</h2>
+<div class="row mt-3">
+  {% for related in products|slice:":3" %}  
+    <div class="col-md-4 also-like-item mb-4">
+      <div class="card h-100 shadow-sm">
+        <img src="{{ related.primary_image.url }}" 
+     alt="{{ related.name }}" 
+     class="card-img-top img-fluid rounded"
+     style="max-height: 250px; object-fit: contain; background-color: #f8f9fa;">
+        <div class="card-body text-center">
+          <p class="item-title fw-semibold mb-1">{{ related.name }}</p>
+          <p class="item-color text-muted small">
+            {{ related.variants.first.color.name|default:"No Color" }}
+          </p>
+          <p class="item-price text-success fw-bold">
+            ₹{{ related.variants.first.price|default:"N/A" }}
+          </p>
+          <a href="{% url 'product_details' related.slug %}" 
+             class="btn btn-outline-primary btn-sm mt-2">
+            View Details
+          </a>
+        </div>
+      </div>
+    </div>
+  {% empty %}
+    <p class="text-muted">No related products available.</p>
+  {% endfor %}
+</div>
+
+<!-- Size Modal -->
+<div class="modal fade" id="sizeModal" tabindex="-1" aria-labelledby="sizeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Select a Size</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body d-flex flex-wrap gap-2">
+        {% for variant in product.variants.all %}
+          <span class="size-option">{{ variant.size }}</span>
+        {% endfor %}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Confirm</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const thumbs = document.querySelectorAll('.thumb');
+    const mainImage = document.getElementById('mainImage');
+
+    if (!mainImage) return; // Safety check
+
+    // Change main image when clicking a thumbnail
+    thumbs.forEach(thumb => {
+      thumb.addEventListener('click', function() {
+        mainImage.src = this.src;
+      });
+    });
+
+    // Zoom effect on hover
+    mainImage.addEventListener('mousemove', function(e) {
+      const { left, top, width, height } = this.getBoundingClientRect();
+      const x = ((e.pageX - left) / width) * 100;
+      const y = ((e.pageY - top) / height) * 100;
+      this.style.transformOrigin = `${x}% ${y}%`;
+      this.style.transform = "scale(2)";
+    });
+
+    mainImage.addEventListener('mouseleave', function() {
+      this.style.transformOrigin = "center";
+      this.style.transform = "scale(1)";
+    });
+  });
+</script>
+{% endblock %}

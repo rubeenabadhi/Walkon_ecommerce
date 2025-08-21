@@ -1,0 +1,110 @@
+
+{% extends 'admin/base.html' %}
+{% load static %}
+{% block title %}Add Category - Walkon Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid add-gender-1">
+    {% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  {% endfor %}
+{% endif %}
+  <h1 class="display-5 fw-normal mb-4">Add Category</h1>
+  <div class="row">
+    <!-- Form Section -->
+    <div class="col-lg-8">
+      <div class="card shadow-sm p-4 mb-4">
+        <form method="POST" action="{% url 'add_category' %}">
+          {% csrf_token %}
+          <div class="mb-3">
+        {{ form.label.label_tag }}
+        {{ form.name }}
+        {% if form.name.errors %}
+            <div class="text-danger">{{ form.name.errors }}</div>
+        {% endif %}
+    </div>
+          <div class="mb-3">
+            <label for="{{ form.slug.id_for_label }}" class="form-label text-muted">Slug</label>
+            {{ form.slug }}
+            {% if form.slug.errors %}
+                <div class="text-danger">{{ form.slug.errors }}</div>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <label for="{{ form.description.id_for_label }}" class="form-label text-muted">{{ form.description.label }}</label>
+            {{ form.description }}
+            {% if form.description.errors %}
+              <div class="invalid-feedback d-block">
+                {{ form.description.errors }}
+              </div>
+            {% endif %}
+          </div>
+          <div class="d-flex gap-3">
+            <button type="button" class="btn btn-outline-dark rounded-3">Cancel</button>
+            <button type="submit" class="btn btn-dark rounded-3 text-white">Save</button>
+          </div>
+        </form>
+      </div>
+      <h3 class="h5 mb-3">Additional Options</h3>
+      <div class="card shadow-sm p-4 mb-3">
+        <div class="d-flex align-items-center">
+          <i class="bi bi-tags me-2" style="font-size: 20px;"></i>
+          <span>Add Category</span>
+        </div>
+      </div>
+    </div>
+    <!-- Sidebar Icons Section -->
+    <div class="col-lg-4">
+    
+      <div class="card shadow-sm p-4 mb-3">
+        <div class="d-flex justify-content-center align-items-center" style="height: 10px;">
+            <a href="{% url 'add_size' %}" class="btn btn-light cell-action-button p-2" title="Add Size">
+          <i class="bi bi-plus-circle" style="font-size: 20px;">Size</i>
+            </a>
+        </div>
+      </div>
+      <div class="card shadow-sm p-4 mb-3">
+        <div class="d-flex justify-content-center align-items-center" style="height: 10px;">
+            <a href="{% url 'add_color' %}" class="btn btn-light cell-action-button p-2" title="Add Color">
+          <i class="bi bi-plus-circle" style="font-size: 20px;">Color</i>
+            </a>
+        </div>
+      </div>
+      <div class="card shadow-sm p-4 mb-3">
+        <div class="d-flex justify-content-center align-items-center" style="height: 10px;">
+            <a href="{% url 'add_category' %}" class="btn btn-light cell-action-button p-2" title="Add Category">
+          <i class="bi bi-plus-circle" style="font-size: 20px;">Category</i>
+            </a>
+        </div>
+      </div>
+
+      <div class="card shadow-sm p-4 mb-3">
+        <div class="d-flex justify-content-center align-items-center" style="height: 10px;">
+            <a href="{% url 'add_gender' %}" class="btn btn-light cell-action-button p-2" title="Add Gender">
+          <i class="bi bi-plus-circle" style="font-size: 20px;">Gender</i>
+            </a>
+        </div>
+      </div>
+        <div class="card shadow-sm p-4 mb-3">
+            <div class="d-flex justify-content-center align-items-center" style="height: 10px;">
+            <a href="{% url 'add_brand' %}" class="btn btn-light cell-action-button p-2" title="Add Brand">
+            <i class="bi bi-plus-circle" style="font-size: 20px;">Brand</i>
+            </a>
+            </div>
+        </div>
+        <div class="card shadow-sm p-4 mb-3">
+        <div class="d-flex justify-content-center align-items-center" style="height: 10px;">
+            <a href="{% url 'add_product' %}" class="btn btn-light cell-action-button p-2" title="Add Product">
+          <i class="bi bi-plus-circle" style="font-size: 20px;">Add Product</i>
+            </a>
+        </div>
+      </div>
+    </div>
+</div>
+  </div>
+</div>
+{% endblock %}

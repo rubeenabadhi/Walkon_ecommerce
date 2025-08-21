@@ -1,19 +1,117 @@
-{% extends "user/base.html" %}
+{% extends 'user/base.html' %}
 {% load static %}
-{% block title %}Signup - WalkOn{% endblock %}
+{% block title %}Home - Walkon{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
 {% block content %}
+  
+
+<!-- Hero Section -->
+<div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
+  <div class="carousel-inner">
+    <div class="carousel-item active">
+      <section class="hero-section" style="background-image: url('{% static "images/shoe.jpg" %}');">
+        <div class="hero-content">
+          <h1>Step Into Style</h1>
+          <p>Explore our vibrant collection of premium shoes</p>
+          <a href="#" class="btn btn-primary">Shop Now</a>
+        </div>
+      </section>
+    </div>
+    <div class="carousel-item">
+      <section class="hero-section" style="background-image: url('{% static "images/hero2.png" %}');">
+        <div class="hero-content">
+          <h1>Walk With Confidence</h1>
+          <p>Trendy, durable and stylish shoes just for you</p>
+          <a href="#" class="btn btn-primary">Shop Now</a>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
 
 
+<!-- Category Section (Men, Women, Kids) -->
+<section class="category-section">
+  <div class="container">
+    <h2 class="text-center mb-5">Shop by Category</h2>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="category-card">
+          <img src="{% static 'images/men_home.jpeg' %}" alt="Men's Shoes">
+          <div class="category-overlay">
+            <h3>Men's Collection</h3>
+            <a href="#" class="btn btn-primary">Explore Now</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="category-card">
+          <img src="{% static 'images/women_home.jpeg' %}" alt="Women's Shoes">
+          <div class="category-overlay">
+            <h3>Women's Collection</h3>
+            <a href="#" class="btn btn-primary">Explore Now</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="category-card">
+          <img src="{% static 'images/kid_home.jpeg' %}" alt="Kids' Shoes">
+          <div class="category-overlay">
+            <h3>Kids' Collection</h3>
+            <a href="#" class="btn btn-primary">Explore Now</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
+<!-- Top Trends Section -->
+<section class="trends-section">
+  <div class="container">
+    <h2>Top Trends</h2>
+    <div class="row g-4">
+      {% for product in top_trends %}
+      <div class="col-md-3 col-sm-6">
+        <div class="product-card">
+          <img src="{{ product.image.url }}" alt="{{ product.name }}">
+          <div class="card-body">
+            <h5 class="card-title">{{ product.name }}</h5>
+            <p class="card-text text-primary fw-bold">${{ product.price }}</p>
+            <a href="{% url 'product_detail' product.id %}" class="btn btn-primary">View Details</a>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <p class="text-center">No trending products available.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
 
-
-
-
-
-
-
-
-
-
+<!-- New Arrivals Section -->
+<section class="arrivals-section">
+  <div class="container">
+    <h2>New Arrivals</h2>
+    <div class="row g-4">
+      {% for product in new_arrivals %}
+      <div class="col-md-3 col-sm-6">
+        <div class="product-card">
+          <img src="{{ product.image.url }}" alt="{{ product.name }}">
+          <div class="card-body">
+            <h5 class="card-title">{{ product.name }}</h5>
+            <p class="card-text text-primary fw-bold">${{ product.price }}</p>
+            <a href="{% url 'product_detail' product.id %}" class="btn btn-primary">View Details</a>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <p class="text-center">No new arrivals available.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
 {% endblock %}

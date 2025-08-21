@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    'django_filters', # Required by django-filter
     'admin_dashboard',
     'cart',
     'checkout',
@@ -61,6 +62,8 @@ INSTALLED_APPS = [
     'offers',
     'address',
     'wallet',
+    'django_bootstrap_breadcrumbs',
+    
 ]
 
 MIDDLEWARE = [
@@ -86,6 +89,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'product.context_processors.user_product_list',
             ],
         },
     },
@@ -188,16 +192,30 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
-# django-allauth settings
 SITE_ID = 2
-LOGIN_REDIRECT_URL = 'home'
-LOGOUT_REDIRECT_URL = 'home'
 
-ACCOUNT_USER_MODEL_USERNAME_FIELD = None  # For custom user models without 'username'
+LOGIN_URL = "/login/"
+LOGOUT_REDIRECT_URL = "/"
+LOGIN_REDIRECT_URL = "/"
 
-# New django-allauth style settings
-ACCOUNT_LOGIN_METHODS = {'email'}
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+
+# Django-allauth account settings 
+
+ACCOUNT_LOGIN_METHODS = {"username", "email"}
+ACCOUNT_SIGNUP_FIELDS = ["username*", "email*", "password1*", "password2*"]
+
+ACCOUNT_UNIQUE_EMAIL = True
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
+SOCIALACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_CONFIRMATION = True
+
+# Let allauth auto-generate a username if Google doesn’t provide one
+ACCOUNT_USERNAME_GENERATOR = "allauth.account.utils.generate_unique_username"
+
+# Match users by email if they already exist
+SOCIALACCOUNT_ADAPTER = "authentication.adapters.MySocialAccountAdapter"
+
 
 # Email settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

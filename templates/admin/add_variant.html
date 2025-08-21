@@ -1,0 +1,39 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4">Add Variant for {{ product.name }} admin {{user.username}}</h2>
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+  
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <h4>Product Variants</h4>
+    {{ variant_formset.management_form }}
+    {% for form in variant_formset %}
+        <div class="card mb-3 p-3">
+            {{ form.as_p }}
+        </div>
+    {% endfor %}
+
+    <h4>Product Images</h4>
+    {{ image_formset.management_form }}
+    {% for form in image_formset %}
+        <div class="card mb-3 p-3">
+            {{ form.as_p }}
+        </div>
+    {% endfor %}
+
+    <button type="submit" class="btn btn-primary">Save</button>
+</form>
+  <a href="#" class="btn btn-secondary">Back to Product</a>
+</div>
+{% endblock %}

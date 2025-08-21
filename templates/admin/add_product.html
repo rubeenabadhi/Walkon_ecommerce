@@ -1,0 +1,87 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+{% block title %}Add Product - Walkon Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <h2 class="mb-4 text-primary">➕ Add New Product</h2>
+
+    <form method="POST" enctype="multipart/form-data" action="{% url 'add_product' %}">
+    {% csrf_token %}
+    
+    <!-- Product Name -->
+    <div class="mb-3">
+      <label class="form-label">Product Name</label>
+      <input type="text" name="name" class="form-control" placeholder="Enter product name" required>
+    </div>
+    
+    <!-- Description -->
+    <div class="mb-3">
+      <label class="form-label">Description</label>
+      <textarea name="description" class="form-control" rows="3"></textarea>
+    </div>
+    
+    <!-- Category -->
+<div class="mb-3">
+  <label class="form-label">Category</label>
+  <select name="category" class="form-select" required>
+    {% for cat in categories %}
+      <option value="{{ cat.id }}">{{ cat.name }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+<!-- Brand -->
+<div class="mb-3">
+  <label class="form-label">Brand</label>
+  <select name="brand" class="form-select" required>
+    {% for brand in brands %}
+      <option value="{{ brand.id }}">{{ brand.name }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+<!-- Gender -->
+<div class="mb-3">
+  <label class="form-label">Gender</label>
+  <select name="gender" class="form-select" required>
+    {% for gender in genders %}
+      <option value="{{ gender.id }}">{{ gender.label }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+
+    <!-- Primary Image -->
+    <div class="mb-3">
+      <label class="form-label">Primary Image</label>
+      <input type="file" name="primary_image" class="form-control" required>
+    </div>
+    
+    <button type="submit" class="btn btn-primary">Save Product</button>
+  </form>
+
+
+
+    <!-- Sidebar Options -->
+    <div class="mt-5">
+        <h3 class="h5 mb-3">Additional Options</h3>
+        <div class="card shadow-sm p-3 mb-3">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-tags me-2" style="font-size: 20px;"></i>
+                <span>Add color</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

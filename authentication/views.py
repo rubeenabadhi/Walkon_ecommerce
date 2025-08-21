@@ -8,9 +8,23 @@ from django.contrib.auth import login
 from django.db.models import Q
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import auth
+from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
+from django.core.paginator import Paginator
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from product.models import Product  # 
+from django.views.decorators.cache import never_cache
+
+
 
 #user-defined views for signup and OTP verification,home view
 def home(request):
+    products = Product.objects.all()  # Assuming you have a Product model
+    context = {
+        'products': products,
+    }
     return render(request, 'user/index.html')
 def signup(request):
     if request.method == 'POST':
@@ -108,19 +122,25 @@ def resend_otp(request):
 
     return redirect('verify_otp')
 def user_login(request):
-    if request.method=='POST':
-        email=request.POST['email']
-        password= request.POST['password']
-        user= auth.authenticate(email=email,password=password,is_active=True,is_staff=False, is_superuser=False)
-        print(user)
-        if user is not None:
-            auth.login(request,user)
-            return redirect('home')
-        else:
-            messages.info(request,'Invalid details')
-            return redirect('user_login')
-    return render(request, 'user/user_login.html')
+    if request.method == 'POST':
+        email = request.POST['email']
+        password = request.POST['password']
 
+        user = auth.authenticate(request, username=email, password=password)
+        # If you use custom user with EMAIL as USERNAME_FIELD, then 'username=email' is correct
+
+        if user is not None:
+            if user.is_active and not user.is_staff and not user.is_superuser:
+                auth.login(request, user)
+                return redirect('home')
+            else:
+                messages.error(request, "Only normal users can log in here.")
+                return redirect('login')
+        else:
+            messages.error(request, "Invalid email or password")
+            return redirect('login')
+
+    return render(request, 'user/user_login.html')
 def forgot_password_request(request):
     if request.method == 'POST':
         email = request.POST.get('email')
@@ -171,7 +191,6 @@ def reset_password(request):
     return render(request, 'user/reset_password.html')
 
 #admin login view
-
 def admin_login(request):
     if request.method == "POST":
         email = request.POST.get("email")
@@ -192,20 +211,57 @@ def admin_login(request):
     return render(request, "admin/admin_login.html")
 
 #logut view
-def logout_view(request):
-    
+@login_required(login_url='admin_login' or 'login')
+@never_cache
+def logout_view(request):  
     # Save whether the current user is staff before logging them out
     was_staff = request.user.is_staff
-
     auth.logout(request)
-
-    if was_staff:
+    if was_staff :
         # Redirect to admin login page
         return redirect('admin_login')
     else:
         # Redirect to home page
         return redirect('home')
 
+# Admin User Management
 
 
-    
+@staff_member_required
+def admin_user_management(request):
+    if not request.user.is_staff:
+        messages.error(request, "You do not have permission to access this page.")
+        return redirect('dashboard')
+
+    # ---- SEARCH ----
+    query = request.GET.get('q')# Get search query from GET request
+    if query:
+        users = CustomUser.objects.filter(
+            Q(username__icontains=query) |
+            Q(email__icontains=query) | 
+            Q(is_active__in=[True if query.lower() == "active" else False if query.lower() == "blocked" else None])
+        , is_staff=False, is_superuser=False).order_by('-date_joined')    
+    else:
+        users = CustomUser.objects.filter(is_staff=False,is_superuser=False).order_by('-date_joined')  # Latest first
+
+    # ---- PAGINATION ----
+    paginator = Paginator(users, 2)  # 2 users per page
+    page_number = request.GET.get('page')
+    users = paginator.get_page(page_number)
+
+    context = {
+        "users": users,
+        "query": query,
+    }
+    return render(request, "admin/user_management.html", context)
+
+# active or inactive user 
+@staff_member_required
+@require_POST
+def toggle_user_status(request, user_id):
+    if request.method == "POST":
+        user = get_object_or_404(CustomUser, id=user_id)
+        user.is_active = not user.is_active
+        user.save()
+        return JsonResponse({"success": True, "is_active": user.is_active})
+    return JsonResponse({"success": False, "error": "Invalid request"})

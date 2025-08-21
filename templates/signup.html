@@ -43,7 +43,7 @@
 
           <div class="mb-3">
             <label for="id_email" class="form-label">Email</label>
-            <input type="email" id="id_email" name="email" class="form-control" required>
+            <input type="email" id="id_email" name="email" class="form-control"  style="text-transform: lowercase;" required>
           </div>
 
           <div class="mb-3">
@@ -70,14 +70,14 @@
         </div>
 
         <!-- Google Login -->
-        <a href="#" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center">
+        <a href="{% provider_login_url 'google' %}" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center">
           <img src="{% static 'icons/google_icon.png' %}" alt="Google" class="me-2" style="width:20px;">
           Sign up with Google
         </a>
 
         <!-- Login link -->
         <p class="mt-4 text-center">
-          Already have an account? <a href="#">Login now</a>
+          Already have an account? <a href="{% url 'login' %}">Login now</a>
         </p>
       </div>
     </div>

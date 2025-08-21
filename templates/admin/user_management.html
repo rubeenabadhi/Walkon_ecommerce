@@ -1,0 +1,138 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+<main class="px-4">   
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2">Customers</h1>
+    <div class="d-flex align-items-center gap-3">
+      <!-- Search -->
+      <form method="get" action="">
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input type="text" name="q" class="form-control" placeholder="Search here" value="{{ request.GET.q }}">
+          {% if request.GET.q %}
+            <a href="{% url 'user_management' %}" class="btn btn-outline-secondary">Clear</a>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Customer Table -->
+  <div class="table-responsive">
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Customer ID</th>
+          <th>Customer Name</th>
+          <th>Email</th>
+          <th>Status</th>
+          <th>Actions</th>
+          
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+          <!-- icon instead of image -->
+          <td class="text-center">
+            <i class="bi bi-person-circle" style="font-size: 1.5rem;"></i>
+          </td>
+            <td>{{ user.id }}</td>
+          <td>{{ user.get_full_name|default:user.username }}</td>
+          <td>{{ user.email }}</td>
+          <td>
+            {% if user.is_active %}
+              <span class="badge bg-success">Active</span>
+            {% else %}
+              <span class="badge bg-danger">Blocked</span>
+            {% endif %}
+          </td>
+          <td>
+            <button class="btn btn-sm {% if user.is_active %}btn-danger{% else %}btn-success{% endif %}"
+                onclick="toggleUser({{ user.id }})"
+                id="btn-{{ user.id }}">
+          {% if user.is_active %} Block {% else %} Unblock {% endif %}
+        </button>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="text-center">No users found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+<div class="d-flex justify-content-center mt-4">
+  {% if users.has_other_pages %}
+    <ul class="pagination">
+      {% if users.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?q={{ request.GET.q }}&page={{ users.previous_page_number }}">&laquo;</a>
+        </li>
+      {% endif %}
+
+      {% for page_num in users.paginator.page_range %}
+        {% if users.number == page_num %}
+          <li class="page-item active">
+            <a class="page-link">{{ page_num }}</a>
+          </li>
+        {% else %}
+          <li class="page-item">
+            <a class="page-link" href="?q={{ request.GET.q }}&page={{ page_num }}">{{ page_num }}</a>
+          </li>
+        {% endif %}
+      {% endfor %}
+
+      {% if users.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?q={{ request.GET.q }}&page={{ users.next_page_number }}">&raquo;</a>
+        </li>
+      {% endif %}
+    </ul>
+  {% endif %}
+</div>
+</div>
+</main>
+<!-- End of main container -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+function toggleUser(userId) {
+    fetch(`/toggle/${userId}/`, {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": getCookie("csrftoken"),
+            "Content-Type": "application/json",
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("User status changed!");
+            location.reload(); // Refresh page to see update
+        } else {
+            alert("Error: " + data.error);
+        }
+    });
+}
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock content %}

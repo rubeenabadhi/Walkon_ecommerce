@@ -1,0 +1,121 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'admin/style.css' %}">
+{% block title %}Products - Walkon Admin{% endblock %}
+{% block content %}
+<div class="container-fluid products-1 py-4">
+    <!-- Header -->
+    <div class="content-67 mb-4">
+      <h1 class="title-68 text-rgb-9-9-9 fw-bold fs-2">Products management</h1>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="row mb-4 align-items-center">
+      <div class="col-md-6">
+        <div class="searchbox-256 input-group">
+          <span class="input-group-text bg-white border-end-0">
+            <i class="bi bi-search"></i>
+          </span>
+          <input type="text" class="form-control border-start-0 text-rgb-170-170-170" placeholder="Search here">
+        </div>
+      </div>
+      <div class="col-md-6 d-flex align-items-center justify-content-md-end gap-3">
+        <span class="text-263 text-rgb-159-155-155">Filters</span>
+        <div class="chip-261 border rounded-pill px-3 py-2">Filter</div>
+        <div class="icgridview-265 d-flex align-items-center gap-2 bg-black text-white rounded px-3 py-2">
+            <a href="{% url 'add_product' %}" class="text-white d-flex align-items-center">
+          <span class="text-267">New</span>
+          <i class="bi bi-plus-circle"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Product Table -->
+    <div class="table-responsive">
+      <table class="table table-bordered">
+        <thead class="bg-black text-white">
+          <tr>
+            <th scope="col" class="text-122">Product</th>
+            <th scope="col" class="text-168">Product ID</th>
+            <th scope="col" class="text-169">Price</th>
+            <th scope="col" class="text-170">Added on</th>
+            <th scope="col" class="text-171">Category</th>
+            <th scope="col" class="text-172">Stock</th>
+            <th scope="col" class="text-173">Status</th>
+            <th scope="col" class="text-173">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in products %}
+          <tr class="bg-light">
+            <td>{{ product.name }}</td>
+            <td class="text-rgb-59-51-137">{{ product.id }}</td>
+            <td>${{ product.variants.first.price }}</td>
+            <td>{{ product.created_at|date:"d-m-Y" }}</td>
+            <td>{{ product.category }}</td>
+            <td>{{ product.variants.first.stock }}</td>
+            <td>
+              <div class="frame-293-102 d-flex justify-content-center align-items-center gap-2 px-3 py-1 bg-success-subtle border border-success rounded">
+                <span class="text-rgb-0-135-103">{{ product.is_available }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="d-flex gap-2">
+                <a href="{% url 'edit_product' product.slug %}" class="cell-action-button btn btn-light p-2" title="Edit">
+                <button class="cell-action-button btn btn-light p-2" title="Edit">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                </button>
+                <button class="cell-action-button btn btn-light p-2" title="Delete">
+                  <i class="bi bi-trash"></i>
+                </button>
+                <a href="{% url 'admin_product_details' product.slug %}" class="cell-action-button btn btn-light p-2" title="View">
+                <button class="fi-sr-eye btn btn-light p-2" title="View">
+                  <i class="bi bi-eye"></i>
+                </a>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="text-center">No products available.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+<div class="d-flex justify-content-center mt-4">
+  {% if products.has_other_pages %}
+    <ul class="pagination">
+      {% if product.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?q={{ request.GET.q }}&page={{ products.previous_page_number }}">&laquo;</a>
+        </li>
+      {% endif %}
+
+      {% for page_num in products.paginator.page_range %}
+        {% if products.number == page_num %}
+          <li class="page-item active">
+            <a class="page-link">{{ page_num }}</a>
+          </li>
+        {% else %}
+          <li class="page-item">
+            <a class="page-link" href="?q={{ request.GET.q }}&page={{ page_num }}">{{ page_num }}</a>
+          </li>
+        {% endif %}
+      {% endfor %}
+
+      {% if products.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?q={{ request.GET.q }}&page={{ products.next_page_number }}">&raquo;</a>
+        </li>
+      {% endif %}
+    </ul>
+  {% endif %}
+</div>
+</div>
+{% endblock %}

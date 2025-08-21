@@ -1,11 +1,14 @@
 from django.db import models
 from django.utils.text import slugify
 from django.conf import settings
+from cloudinary.models import CloudinaryField
+
 
 # Create your models here.
 #Gender model
 class Gender(models.Model):
     label = models.CharField(max_length=50)
+    description = models.TextField(blank=True)  # Optional description field
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -35,7 +38,7 @@ class Brand(models.Model):
 class Category(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
-    slug = models.SlugField(max_length=150, unique=True)
+    slug = models.SlugField(max_length=150, unique=True,blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -50,17 +53,6 @@ class Category(models.Model):
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
 
-class ProductType(models.Model):
-    name = models.CharField(max_length=100)
-    slug = models.SlugField(max_length=150, unique=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = "Product Type"
-        verbose_name_plural = "Product Types"
-
-    def __str__(self):
-        return self.name
 
 class Size(models.Model):
     label = models.CharField(max_length=50)
@@ -76,7 +68,6 @@ class Size(models.Model):
 class Color(models.Model):
     name = models.CharField(max_length=50)
     hex_code = models.CharField(max_length=7)  # e.g., #FFFFFF
-    product = models.ForeignKey('Product', on_delete=models.CASCADE, related_name='colors')
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -90,15 +81,14 @@ class Color(models.Model):
 class Product(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    stock = models.PositiveIntegerField()
-    image = models.URLField(max_length=500, blank=True)  # Main product image    is_available = models.BooleanField(default=True)
+    primary_image = CloudinaryField(blank=True, null=True)  # Primary image for the product
+    is_available = models.BooleanField(default=True)
+    is_listed = models.BooleanField(default=True)  # Add is_listed field for product listing status 
     slug = models.SlugField(max_length=250, unique=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='products')
     brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, related_name='products')
     added_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='added_products')
     gender = models.ForeignKey(Gender, on_delete=models.SET_NULL, null=True, related_name='products')
-    product_type = models.ForeignKey(ProductType, on_delete=models.SET_NULL, null=True, related_name='products')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -114,19 +104,6 @@ class Product(models.Model):
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
 
-class Image(models.Model):
-    url = models.URLField(max_length=500) # URL of the image from Cloudinary
-    alt_text = models.CharField(max_length=255, blank=True)  # Optional alt text for the image
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-    product = models.ForeignKey('Product', on_delete=models.CASCADE, related_name='images')
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = "Image"
-        verbose_name_plural = "Images"
-
-    def __str__(self):
-        return f"Image for {self.product.name}"
 
 class ProductVariant(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
@@ -140,6 +117,21 @@ class ProductVariant(models.Model):
     class Meta:
         verbose_name = "Product Variant"
         verbose_name_plural = "Product Variants"
+        unique_together = ('product', 'size', 'color') # Ensure unique combination of product, size, and color
 
     def __str__(self):
         return f"{self.product.name} - {self.size.label if self.size else ''} {self.color.name if self.color else ''}"
+    
+class Image(models.Model):
+    variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name='images',default=None,null=True,blank=True)  # One-to-many relationship with variant-based images
+    url = models.URLField(max_length=500, blank=True, null=True, default=None) # URL of the image from Cloudinary
+    alt_text = models.CharField(max_length=255, blank=True)  # Optional alt text for the image
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Image"
+        verbose_name_plural = "Images"
+
+    def __str__(self):
+        return f"Image for {self.variant.product.name} - {self.alt_text or 'No Alt Text'}"

@@ -1,0 +1,151 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Walkon Admin{% endblock %}</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css?family=Inter|Open+Sans|Roboto&display=swap" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{% static 'admin/style.css' %}">
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Custom Fonts -->
+  
+  <style>
+    @font-face {
+      font-family: 'Outfit';
+      src: url('fonts/outfit.woff2') format('woff2'),
+           url('fonts/outfit.woff') format('woff');
+      font-weight: normal;
+      font-style: normal;
+    }
+  </style>
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{% block css %}styles.css{% endblock %}">
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+  <div class="container-fluid">
+    <!-- Empty space left side -->
+    <div class="d-none d-lg-block" style="width:100px;"></div>
+
+    <!-- Center logo -->
+    <a class="navbar-brand mx-auto d-flex align-items-center justify-content-center" href="{% url 'dashboard' %}">
+      <img src="{% static 'images/logo.png' %}" alt="Logo" width="60" height="40" class="me-2">
+    
+    </a>
+
+    <!-- Right side profile -->
+    <ul class="navbar-nav ms-auto">
+      <li class="nav-item">
+        <a class="nav-link" href="#">
+          <i class="bi bi-person-circle me-1" style="font-size: 24px;"></i>
+          Profile
+        </a>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+
+
+  <!-- Sidebar and Main Content -->
+  <div class="d-flex">
+    <!-- Sidebar -->
+    <div class="d-flex flex-column flex-shrink-0 p-3 bg-dark text-white" style="width: 250px; min-height: 100vh;">
+      <h5 class="mb-3">Menu</h5>
+      <ul class="nav nav-pills flex-column mb-auto">
+        <li class="nav-item">
+          <a href="{% url 'dashboard' %}" class="nav-link text-white d-flex align-items-center">
+            <i class="bi bi-house-door me-2" style="font-size: 20px;"></i>
+            Dashboard
+          </a>
+        </li>
+        <li>
+          <a href="#" class="nav-link text-white d-flex align-items-center">
+            <i class="bi bi-cart me-2" style="font-size: 20px;"></i>
+            Orders
+          </a>
+        </li>
+        <li>
+          <a href="#" class="nav-link text-white d-flex align-items-center">
+            <i class="bi bi-graph-up me-2" style="font-size: 20px;"></i>
+            Sales Report
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'products' %}" class="nav-link text-white d-flex align-items-center">
+            <i class="bi bi-box me-2" style="font-size: 20px;"></i>
+            Products
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'user_management' %}" class="nav-link text-white d-flex align-items-center">
+            <i class="bi bi-person-circle me-2" style="font-size: 20px;"></i>
+            Customer
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'add_category' %}" class="nav-link text-white d-flex align-items-center">
+            <i class="bi bi-tags me-2" style="font-size: 20px;"></i>
+            Category
+          </a>
+        </li>
+        <li>
+          <a href="#" class="nav-link text-white d-flex align-items-center">
+            <i class="bi bi-ticket me-2" style="font-size: 20px;"></i>
+            Coupon
+          </a>
+        </li>
+        <li>
+          <a href="#" class="nav-link text-white d-flex align-items-center">
+            <i class="bi bi-arrow-left-right me-2" style="font-size: 20px;"></i>
+            Refund/Return
+          </a>
+        </li>
+        <li>
+          <a href="#" class="nav-link text-white d-flex align-items-center">
+            <i class="bi bi-image me-2" style="font-size: 20px;"></i>
+            Banners
+          </a>
+        </li>
+        <li>
+          <a href="#" class="nav-link text-white d-flex align-items-center">
+            <i class="bi bi-person-plus me-2" style="font-size: 20px;"></i>
+            Referrals
+          </a>
+        </li>
+        <li>
+          <a href="#" class="nav-link text-white d-flex align-items-center">
+            <i class="bi bi-box-arrow-right me-2" style="font-size: 20px;"></i>
+            Sign Out
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-grow-1 p-4">
+      {% block content %}
+
+      {% endblock %}
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-light text-center py-3 mt-auto">
+    <p class="mb-0">© 2025 | Walkon | All Rights Reserved. | We Give You Style.</p>
+  </footer>
+
+  <!-- Bootstrap JS and Popper.js -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>
