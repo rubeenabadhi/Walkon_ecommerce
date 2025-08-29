@@ -1,87 +1,171 @@
 {% extends 'admin/base.html' %}
-{% load static %}
-{% block title %}Add Product - Walkon Admin{% endblock %}
-
 {% block content %}
-<div class="container-fluid py-4">
-    <!-- Messages -->
+<div class="container mt-3 p-2 bg-light rounded shadow-sm" style="max-width: 800px; width: 100%;">
+    <div class="date-time text-muted text-end mb-1" style="font-size: 0.7em;">Date & Time: Wednesday, August 27, 2025, 10:56 PM IST</div>
+    <h2 class="mb-2 text-center" style="font-size: 1.3rem;">
+        {% if product.id %}Edit Product: {{ product.name }}{% else %}Add Product{% endif %}
+    </h2>
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <div class="alert alert-success alert-dismissible fade show" role="alert" style="font-size: 0.8rem; padding: 0.5rem;">
                 {{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         {% endfor %}
     {% endif %}
+    <form method="post" enctype="multipart/form-data" class="row g-1" style="font-size: 0.9rem;">
+        {% csrf_token %}
 
-    <h2 class="mb-4 text-primary">➕ Add New Product</h2>
+        <div class="row">
+            <div class="col-md-8">
+                <div class="col-12 mb-1">
+                    <label for="id_name" class="form-label fw-bold" style="font-size: 0.9rem;">Name</label>
+                    <input type="text" name="name" class="form-control" id="id_name" value="{{ product.name|default:'' }}" required style="font-size: 0.9rem; padding: 0.3rem;">
+                </div>
 
-    <form method="POST" enctype="multipart/form-data" action="{% url 'add_product' %}">
-    {% csrf_token %}
-    
-    <!-- Product Name -->
-    <div class="mb-3">
-      <label class="form-label">Product Name</label>
-      <input type="text" name="name" class="form-control" placeholder="Enter product name" required>
-    </div>
-    
-    <!-- Description -->
-    <div class="mb-3">
-      <label class="form-label">Description</label>
-      <textarea name="description" class="form-control" rows="3"></textarea>
-    </div>
-    
-    <!-- Category -->
-<div class="mb-3">
-  <label class="form-label">Category</label>
-  <select name="category" class="form-select" required>
-    {% for cat in categories %}
-      <option value="{{ cat.id }}">{{ cat.name }}</option>
-    {% endfor %}
-  </select>
-</div>
+                <div class="col-12 mb-1">
+                    <label for="id_description" class="form-label fw-bold" style="font-size: 0.9rem;">Description</label>
+                    <textarea name="description" class="form-control" id="id_description" rows="2" required style="font-size: 0.9rem; padding: 0.3rem; height: 60px;">{{ product.description|default:'' }}</textarea>
+                </div>
 
-<!-- Brand -->
-<div class="mb-3">
-  <label class="form-label">Brand</label>
-  <select name="brand" class="form-select" required>
-    {% for brand in brands %}
-      <option value="{{ brand.id }}">{{ brand.name }}</option>
-    {% endfor %}
-  </select>
-</div>
+                <div class="col-12 mb-1">
+                    <label for="id_primary_image" class="form-label fw-bold" style="font-size: 0.9rem;">Primary Image</label>
+                    <input type="file" name="primary_image" class="form-control" id="id_primary_image" style="font-size: 0.9rem; padding: 0.3rem; display: inline-block; width: auto;">
+                    <div class="image-preview mt-1" id="primaryImagePreview" style="min-height: 80px; display: inline-block; vertical-align: middle; margin-left: 10px;">
+                        {% if product.primary_image %}
+                            <img src="{{ product.primary_image.url }}" alt="Current Primary Image" style="max-width: 80px; max-height: 80px; margin: 5px; border: 1px solid #ddd;">
+                        {% else %}
+                            <span>No primary image</span>
+                        {% endif %}
+                    </div>
+                </div>
 
-<!-- Gender -->
-<div class="mb-3">
-  <label class="form-label">Gender</label>
-  <select name="gender" class="form-select" required>
-    {% for gender in genders %}
-      <option value="{{ gender.id }}">{{ gender.label }}</option>
-    {% endfor %}
-  </select>
-</div>
+                <div class="col-12 mb-1">
+                    <label class="form-label fw-bold" style="font-size: 0.9rem;">Additional Images</label>
+                </div>
+                <div class="col-12" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                    {% for image in product.images.all %}
+                        <div class="mb-1">
+                            <img src="{{ image.image }}" alt="Existing Image" style="max-width: 80px; max-height: 80px; margin: 2px; border: 1px solid #ddd;">
+                            <input type="checkbox" name="delete_image_{{ forloop.counter0 }}" id="delete_image_{{ forloop.counter0 }}">
+                            <label for="delete_image_{{ forloop.counter0 }}">Delete</label>
+                        </div>
+                    {% endfor %}
+                    {% for i in "123"|make_list %}
+                        <div class="mb-1">
+                            <label for="id_additional_image{{ i }}" class="form-label" style="font-size: 0.9rem;">Image {{ i }}</label>
+                            <input type="file" name="additional_images" class="form-control" id="id_additional_image{{ i }}" style="font-size: 0.9rem; padding: 0.3rem; display: inline-block; width: auto;" multiple>
+                            <div class="image-preview mt-1" id="additionalImagePreview{{ i }}" style="min-height: 80px; display: inline-block; vertical-align: middle; margin-left: 10px;">
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
 
+            <div class="col-md-4">
+                <div class="col-12 mb-1">
+                    <label for="id_category" class="form-label fw-bold" style="font-size: 0.9rem;">Category</label>
+                    <select name="category" class="form-select" id="id_category" required style="font-size: 0.9rem; padding: 0.3rem;">
+                        {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if product.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-    <!-- Primary Image -->
-    <div class="mb-3">
-      <label class="form-label">Primary Image</label>
-      <input type="file" name="primary_image" class="form-control" required>
-    </div>
-    
-    <button type="submit" class="btn btn-primary">Save Product</button>
-  </form>
+                <div class="col-12 mb-1">
+                    <label for="id_brand" class="form-label fw-bold" style="font-size: 0.9rem;">Brand</label>
+                    <select name="brand" class="form-select" id="id_brand" required style="font-size: 0.9rem; padding: 0.3rem;">
+                        {% for b in brands %}
+                            <option value="{{ b.id }}" {% if product.brand_id == b.id %}selected{% endif %}>{{ b.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
 
+                <div class="col-12 mb-1">
+                    <label for="id_gender" class="form-label fw-bold" style="font-size: 0.9rem;">Gender</label>
+                    <select name="gender" class="form-select" id="id_gender" required style="font-size: 0.9rem; padding: 0.3rem;">
+                        {% for g in genders %}
+                            <option value="{{ g.id }}" {% if product.gender_id == g.id %}selected{% endif %}>{{ g.label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
 
+                <div class="col-12 mb-1">
+                    <label class="form-label fw-bold" style="font-size: 0.9rem;">Sizes</label><br>
+                    {% for size in sizes %}
+                        <div class="form-check form-check-inline">
+                            <input type="checkbox" name="sizes" value="{{ size.id }}" class="form-check-input" {% if size.id in selected_sizes %}checked{% endif %} style="font-size: 0.9rem;">
+                            <label class="form-check-label" style="font-size: 0.9rem;">{{ size.label }}</label>
+                        </div>
+                    {% endfor %}
+                </div>
 
-    <!-- Sidebar Options -->
-    <div class="mt-5">
-        <h3 class="h5 mb-3">Additional Options</h3>
-        <div class="card shadow-sm p-3 mb-3">
-            <div class="d-flex align-items-center">
-                <i class="bi bi-tags me-2" style="font-size: 20px;"></i>
-                <span>Add color</span>
+                <div class="col-12 mb-1">
+                    <label class="form-label fw-bold" style="font-size: 0.9rem;">Colors</label><br>
+                    {% for color in colors %}
+                        <div class="form-check form-check-inline">
+                            <input type="checkbox" name="colors" value="{{ color.id }}" class="form-check-input" {% if color.id in selected_colors %}checked{% endif %} style="font-size: 0.9rem;">
+                            <label class="form-check-label" style="font-size: 0.9rem;">{{ color.name }}</label>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="col-12 mb-1">
+                    <label for="id_price" class="form-label fw-bold" style="font-size: 0.9rem;">Price</label>
+                    <input type="number" step="0.01" name="price" class="form-control" id="id_price" value="{% if product.variants.exists %}{{ product.variants.first.price|default:'' }}{% endif %}" required style="font-size: 0.9rem; padding: 0.3rem;">
+                </div>
+
+                <div class="col-12 mb-1">
+                    <label for="id_stock" class="form-label fw-bold" style="font-size: 0.9rem;">Stock</label>
+                    <input type="number" name="stock" class="form-control" id="id_stock" value="{% if product.variants.exists %}{{ product.variants.first.stock|default:'' }}{% endif %}" required style="font-size: 0.9rem; padding: 0.3rem;">
+                </div>
+
+                <div class="col-12 mb-1">
+                    <div class="form-check">
+                        <input type="checkbox" name="is_available" class="form-check-input" id="id_is_available" {% if product.is_available %}checked{% endif %} style="font-size: 0.9rem;">
+                        <label class="form-check-label" for="id_is_available" style="font-size: 0.9rem;">Available</label>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+
+        <div class="col-12 text-center mt-2">
+            <button type="submit" class="btn btn-primary btn-sm" style="font-size: 0.9rem; padding: 0.3rem;">
+                {% if product.id %}Update Product{% else %}Add Product{% endif %}
+            </button>
+            <a href="{% url 'products' %}" class="btn btn-secondary btn-sm ms-2" style="font-size: 0.9rem; padding: 0.3rem;">Go Back</a>
+        </div>
+    </form>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $('#id_primary_image').change(function() {
+        var file = this.files[0];
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                $('#primaryImagePreview').html('<img src="' + e.target.result + '" alt="Primary Image" style="max-width: 80px; max-height: 80px; margin: 5px; border: 1px solid #ddd;">');
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
+    $('input[name="additional_images"]').change(function() {
+        var $preview = $(this).closest('div').find('.image-preview');
+        var files = this.files;
+        if (files.length > 0) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                $preview.html('<img src="' + e.target.result + '" alt="Preview" style="max-width: 80px; max-height: 80px; margin: 5px; border: 1px solid #ddd;">');
+            }
+            reader.readAsDataURL(files[0]); // Preview first file
+        }
+    });
+</script>
+<style>
+    .date-time { margin-bottom: 2px; }
+    .image-preview { border: 1px solid #ddd; padding: 2px; text-align: center; background-color: #e9ecef; border-radius: 4px; min-height: 80px; }
+    .form-control, .form-select { height: 30px; }
+</style>
 {% endblock %}

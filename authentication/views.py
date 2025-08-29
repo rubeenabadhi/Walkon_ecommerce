@@ -1,4 +1,4 @@
-import random
+import random, time
 from django.core.mail import send_mail
 from django.conf import settings
 from django.shortcuts import render, redirect
@@ -6,7 +6,7 @@ from django.contrib import messages
 from .models import CustomUser
 from django.contrib.auth import login
 from django.db.models import Q
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
@@ -16,15 +16,13 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from product.models import Product  # 
 from django.views.decorators.cache import never_cache
+from .forms import EditProfileForm
+
 
 
 
 #user-defined views for signup and OTP verification,home view
 def home(request):
-    products = Product.objects.all()  # Assuming you have a Product model
-    context = {
-        'products': products,
-    }
     return render(request, 'user/index.html')
 def signup(request):
     if request.method == 'POST':
@@ -67,57 +65,63 @@ def signup(request):
     return render(request, 'signup.html')
 
 
+
 def verify_otp_view(request):
     if request.method == 'POST':
         entered_otp = request.POST.get('otp')
         session_otp = request.session.get('signup_otp')
-        if not session_otp:
-            messages.error(request, 'Session expired. Please sign up again.')
-            return redirect('signup')
-        if not entered_otp:
-            messages.error(request, 'Please enter the OTP.')
+        otp_expiry = request.session.get('otp_expiry')
+
+        if not session_otp or not otp_expiry:
+            messages.error(request, 'OTP not generated. Please request a new one.')
             return redirect('verify_otp')
-        if len(entered_otp) != 6 or not entered_otp.isdigit():
-            messages.error(request, 'Invalid OTP format. Please enter a 6-digit number.')
+
+        # Check expiry
+        if time.time() > otp_expiry:
+            messages.error(request, 'OTP expired. Please request a new one.')
             return redirect('verify_otp')
-        # Get email and password from session
-        username = request.session.get('signup_username')
-        email = request.session.get('signup_email')
-        password = request.session.get('signup_password')
 
         if entered_otp == session_otp:
-            # Create user
-            user = CustomUser.objects.create_user(username=username, email=email, password=password)
+            username = request.session.get('signup_username')
+            email = request.session.get('signup_email')
+            password = request.session.get('signup_password')
+
+            user = CustomUser.objects.create_user(
+                username=username, email=email, password=password
+            )
             user.is_active = True
             user.save()
 
             messages.success(request, 'Account created successfully! You can now log in.')
-
-            # Clear session
             request.session.flush()
-
             return redirect('login')
+
         else:
             messages.error(request, 'Invalid OTP. Please try again.')
             return redirect('verify_otp')
 
     return render(request, 'otp_signup.html')
+
+
+
+
 def resend_otp(request):
     email = request.session.get('signup_email')
     if email:
         otp = random.randint(100000, 999999)
         request.session['signup_otp'] = str(otp)
+        request.session['otp_expiry'] = time.time() + 60  # 60 sec validity
 
         send_mail(
             "Your OTP Code",
-            f"Your new OTP is {otp}",
+            f"Your OTP is {otp}. It is valid for 1 minute.",
             settings.DEFAULT_FROM_EMAIL,
             [email],
             fail_silently=False,
         )
-        messages.success(request, "New OTP sent to your email.")
+        messages.success(request, "A new OTP has been sent to your email.")
     else:
-        messages.error(request, "No email found in session.")
+        messages.error(request, "No email found in session. Please signup again.")
         return redirect('signup')
 
     return redirect('verify_otp')
@@ -127,7 +131,7 @@ def user_login(request):
         password = request.POST['password']
 
         user = auth.authenticate(request, username=email, password=password)
-        # If you use custom user with EMAIL as USERNAME_FIELD, then 'username=email' is correct
+        # If  use custom user with EMAIL as USERNAME_FIELD, then 'username=email' is correct
 
         if user is not None:
             if user.is_active and not user.is_staff and not user.is_superuser:
@@ -190,6 +194,149 @@ def reset_password(request):
             messages.error(request, 'User not found')
     return render(request, 'user/reset_password.html')
 
+
+#user profile view
+@login_required(login_url='login')
+def user_profile(request, user_id):
+    user = get_object_or_404(CustomUser, id=user_id)
+    return render(request, 'user/profile.html', {'user': user})
+
+#edit profile view
+
+@login_required(login_url="login")
+def edit_profile(request):
+    user = request.user
+    if request.method == "POST":
+        form = EditProfileForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Profile updated successfully.")
+            return redirect("user_profile", user.id)
+    else:
+        form = EditProfileForm(instance=user)
+
+    return render(request, "user/edit_profile.html", {"form": form, "user": user})
+@login_required(login_url="login")
+def request_email_change(request):
+    if request.method == "POST":
+        new_email = request.POST.get("new_email")
+
+        # check email already exists
+        if CustomUser.objects.filter(email=new_email).exists():
+            messages.error(request, "This email is already in use.")
+            return redirect("request_email_change")
+
+        # generate OTP
+        otp = str(random.randint(100000, 999999))
+
+        # save otp + email in session
+        request.session["email_otp"] = otp
+        request.session["pending_email"] = new_email
+
+        # send OTP to new email
+        send_mail(
+            subject="Verify your new email",
+            message=f"Your OTP code is {otp}",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[new_email],
+            fail_silently=False,
+        )
+
+        messages.info(request, f"OTP has been sent to {new_email}.")
+        return redirect("verify_email_change_otp")
+
+    return render(request, "user/request_email_change.html")
+
+
+@login_required(login_url="login")
+def verify_email_otp(request):
+    user = request.user
+    if request.method == "POST":
+        entered_otp = request.POST.get("otp")
+        saved_otp = request.session.get("email_otp")
+        new_email = request.session.get("pending_email")
+
+        if not saved_otp or not new_email:
+            messages.error(request, "No OTP session found. Please request again.")
+            return redirect("request_email_change")
+
+        # ✅ Always compare as string
+        if str(entered_otp) == str(saved_otp):
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+
+            if User.objects.filter(email=new_email).exclude(id=user.id).exists():
+                messages.error(request, "This email is already registered. Please use another one.")
+                return redirect("verify_email_change_otp")
+
+            user.email = new_email
+            user.save()
+
+            # Clear session
+            request.session.pop("email_otp", None)
+            request.session.pop("pending_email", None)
+
+            messages.success(request, "Your email has been updated successfully.")
+            return redirect("user_profile", user.id)
+        else:
+            messages.error(request, "Invalid OTP. Please try again.")
+
+    return render(request, "user/verify_email_otp.html")
+
+@login_required(login_url="login")
+def resend_email_change_otp(request):
+    new_email = request.session.get("pending_email")
+    if not new_email:
+        messages.error(request, "No pending email change request.")
+        return redirect("edit_profile")
+
+    otp = str(random.randint(100000, 999999))
+    request.session["email_otp"] = otp
+
+    send_mail(
+        "Resend Email Change OTP",
+        f"Your new OTP is {otp}",
+        settings.DEFAULT_FROM_EMAIL,
+        [new_email],
+        fail_silently=False,
+    )
+
+    messages.success(request, f"New OTP has been sent to {new_email}.")
+    return redirect("verify_email_change_otp")
+
+#change password view
+@login_required(login_url='login')
+def change_password(request):
+    if request.method == 'POST':
+        old_password = request.POST.get('old_password')
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+
+        user = request.user  # logged-in user
+
+        # Check old password
+        if not user.check_password(old_password):
+            messages.error(request, '❌ Old password is incorrect')
+            return redirect('change_password')
+
+        # Check new password match
+        if new_password != confirm_password:
+            messages.error(request, '⚠️ New passwords do not match')
+            return redirect('change_password')
+
+        # Update password
+        user.set_password(new_password)
+        user.save()
+
+        # Keep user logged in after password change
+        update_session_auth_hash(request, user)
+
+        messages.success(request, '✅ Password changed successfully!')
+        return redirect('user_profile', user.id)
+
+    return render(request, 'user/change_password.html')
+
+
 #admin login view
 def admin_login(request):
     if request.method == "POST":
@@ -211,18 +358,16 @@ def admin_login(request):
     return render(request, "admin/admin_login.html")
 
 #logut view
-@login_required(login_url='admin_login' or 'login')
 @never_cache
 def logout_view(request):  
-    # Save whether the current user is staff before logging them out
-    was_staff = request.user.is_staff
-    auth.logout(request)
-    if was_staff :
-        # Redirect to admin login page
+    is_staff = request.user.is_staff  
+    logout(request)
+    request.session.flush()  
+    
+    if is_staff:
         return redirect('admin_login')
-    else:
-        # Redirect to home page
-        return redirect('home')
+    return redirect('home')
+
 
 # Admin User Management
 
@@ -245,9 +390,9 @@ def admin_user_management(request):
         users = CustomUser.objects.filter(is_staff=False,is_superuser=False).order_by('-date_joined')  # Latest first
 
     # ---- PAGINATION ----
-    paginator = Paginator(users, 2)  # 2 users per page
-    page_number = request.GET.get('page')
-    users = paginator.get_page(page_number)
+    paginator = Paginator(users, 3)  # 2 users per page
+    page_number = request.GET.get('page') # Get page number from GET request
+    users = paginator.get_page(page_number)# Get page object from paginator
 
     context = {
         "users": users,

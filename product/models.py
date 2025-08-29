@@ -123,8 +123,9 @@ class ProductVariant(models.Model):
         return f"{self.product.name} - {self.size.label if self.size else ''} {self.color.name if self.color else ''}"
     
 class Image(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images", null=True, blank=True)
     variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name='images',default=None,null=True,blank=True)  # One-to-many relationship with variant-based images
-    url = models.URLField(max_length=500, blank=True, null=True, default=None) # URL of the image from Cloudinary
+    image = CloudinaryField(blank=True, null=True) 
     alt_text = models.CharField(max_length=255, blank=True)  # Optional alt text for the image
     uploaded_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -134,4 +135,6 @@ class Image(models.Model):
         verbose_name_plural = "Images"
 
     def __str__(self):
-        return f"Image for {self.variant.product.name} - {self.alt_text or 'No Alt Text'}"
+        if self.variant:
+            return f"Image for {self.variant.product.name} - {self.alt_text or 'No Alt Text'}"
+        return f"Image (Unassigned) - {self.alt_text or 'No Alt Text'}"

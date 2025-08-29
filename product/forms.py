@@ -2,6 +2,7 @@ from django import forms
 from .models import *
 from cloudinary.forms import CloudinaryFileField
 from django.utils.text import slugify
+from django.forms.models import inlineformset_factory
 
 class GenderForm(forms.ModelForm):
     class Meta:
@@ -105,66 +106,48 @@ class ColorForm(forms.ModelForm):
         }
 
 
-#product forms
-class ProductForm(forms.ModelForm):
-    primary_image = CloudinaryFileField(
-        options={'folder': 'products'},
-        required=False
+# Main Product Formclass ProductForm(forms.ModelForm):
+# Product Form
+
+# Variant Form
+class ProductFilterForm(forms.Form):
+    category = forms.ModelChoiceField(
+        queryset=Category.objects.all(),
+        required=False,
+        empty_label="All Categories"
     )
 
-    class Meta:
-        model = Product
-        fields = [
-            'name', 'description', 'primary_image',
-            'is_available', 'category', 'brand', 'gender'
-        ]
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter product name'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Product description'}),
-            'primary_image': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
-            'is_available': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'category': forms.Select(attrs={'class': 'form-select'}),
-            'brand': forms.Select(attrs={'class': 'form-select'}),
-            'gender': forms.Select(attrs={'class': 'form-select'}),
-        }
-        labels = {
-            'name': 'Product Name',
-            'description': 'Description',
-            'primary_image': 'Primary Image',
-            'is_available': 'Available for Sale',
-            'category': 'Category',
-            'brand': 'Brand',
-            'gender': 'Gender',
-        }
+    brand = forms.ModelChoiceField(
+        queryset=Brand.objects.all(),
+        required=False,
+        empty_label="All Brands"
+    )
 
+    gender = forms.ModelChoiceField(
+        queryset=Gender.objects.all(),
+        required=False,
+        empty_label="All"
+    )
 
-class ImageForm(forms.ModelForm):
-    class Meta:
-        model = Image
-        fields = ['url', 'alt_text']
-        widgets = {
-            'url': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'Image URL'}),
-            'alt_text': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Alt text for the image'}),
-        }
-        labels = {
-            'url': 'Image URL',
-            'alt_text': 'Alt Text',
-        }
+    min_price = forms.DecimalField(
+        required=False,
+        min_value=0,
+        label="Min Price"
+    )
 
-class ProductVariantForm(forms.ModelForm):
-    class Meta:
-        model = ProductVariant
-        fields = ['size', 'price', 'stock' , 'color']
-        widgets = {
-            'size': forms.Select(attrs={'class': 'form-select'}),
-            'price': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter variant price'}),
-            'stock': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter variant stock quantity'}),
-            'color': forms.Select(attrs={'class': 'form-select'}),
+    max_price = forms.DecimalField(
+        required=False,
+        min_value=0,
+        label="Max Price"
+    )
 
-        }
-        labels = {
-            'size': 'Size',
-            'price': 'Price ',
-            'stock': 'Stock Quantity',
-            'color': 'Color',
-        }
+    sort_by = forms.ChoiceField(
+        choices=[
+            ("", "Sort By"),
+            ("price_low", "Price: Low to High"),
+            ("price_high", "Price: High to Low"),
+            ("latest", "Latest"),
+            ("oldest", "Oldest"),
+        ],
+        required=False
+    )

@@ -1,0 +1,92 @@
+{% extends 'user/base.html' %}
+{% load static %}
+{% block title %}Edit Profile - Walkon{% endblock %}
+{% block content %}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <!-- Heading -->
+            <div class="text-center mb-4">
+                <h2 class="fw-bold text-uppercase" style="font-family: var(--font-family-inter); font-size: 36px;">
+                    Edit Profile
+                </h2>
+                <p class="text-muted" style="font-family: var(--font-family-inter); font-weight: 300; font-size: 16px;">
+                    👟 Step up your shoe game or try a fresh pair. Update your profile below.
+                </p>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+            <div class="mb-3">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Card -->
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-4">
+                    <h4 class="mb-3 text-center fw-semibold">Your Details</h4>
+                    <form method="post" enctype="multipart/form-data" class="needs-validation">
+    {% csrf_token %}
+
+    <!-- Username -->
+    <div class="mb-3">
+        {{ form.username.label_tag }}
+        {{ form.username }}
+    </div>
+
+    <!-- Email + Change Icon -->
+    <div class="mb-3 d-flex align-items-center">
+        <div class="flex-grow-1">
+            {{ form.email.label_tag }}
+            {{ form.email }}
+        </div>
+        <a href="{% url 'change_email' %}" class="btn btn-outline-secondary ms-2 rounded-circle" title="Change Email">
+            <i class="bi bi-pencil-square"></i> <!-- Bootstrap icon -->
+        </a>
+    </div>
+
+    <!-- First Name -->
+    <div class="mb-3">
+        {{ form.first_name.label_tag }}
+        {{ form.first_name }}
+    </div>
+
+    <!-- Last Name -->
+    <div class="mb-3">
+        {{ form.last_name.label_tag }}
+        {{ form.last_name }}
+    </div>
+
+    <!-- Mobile Number -->
+    <div class="mb-3">
+        {{ form.mobile_number.label_tag }}
+        {{ form.mobile_number }}
+    </div>
+
+    <!-- Profile Picture -->
+    <div class="mb-3">
+        {{ form.profile_picture.label_tag }}
+        {{ form.profile_picture }}
+    </div>
+
+    <!-- Buttons -->
+    <div class="d-flex justify-content-between mt-4">
+        <a href="{% url 'user_profile' user.id %}" class="btn btn-outline-dark px-4 rounded-pill">Cancel</a>
+        <button type="submit" class="btn btn-dark px-4 rounded-pill">💾 Save Changes</button>
+    </div>
+</form>
+
+                </div>
+            </div>
+            <!-- End Card -->
+        </div>
+    </div>
+</div>
+{% endblock %}

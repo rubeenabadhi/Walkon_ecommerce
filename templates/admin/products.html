@@ -51,7 +51,7 @@
           <tr class="bg-light">
             <td>{{ product.name }}</td>
             <td class="text-rgb-59-51-137">{{ product.id }}</td>
-            <td>${{ product.variants.first.price }}</td>
+            <td>₹{{ product.variants.first.price }}</td>
             <td>{{ product.created_at|date:"d-m-Y" }}</td>
             <td>{{ product.category }}</td>
             <td>{{ product.variants.first.stock }}</td>
@@ -67,8 +67,14 @@
                   <i class="bi bi-pencil"></i>
                 </a>
                 </button>
-                <button class="cell-action-button btn btn-light p-2" title="Delete">
+                <a href="javascript:void(0);" 
+   class="btn btn-light cell-action-button p-2 delete-product" 
+   title="Delete" 
+   data-slug="{{ product.slug }}">
+    <button class="cell-action-button btn btn-light p-2" title="Delete">
                   <i class="bi bi-trash"></i>
+</a>
+                
                 </button>
                 <a href="{% url 'admin_product_details' product.slug %}" class="cell-action-button btn btn-light p-2" title="View">
                 <button class="fi-sr-eye btn btn-light p-2" title="View">

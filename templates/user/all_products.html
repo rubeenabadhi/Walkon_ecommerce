@@ -1,11 +1,11 @@
 {% extends "user/base.html" %}
 {% load static %}
-
+{% load widget_tweaks %}
 {% block title %}All Products - Walkon{% endblock %}
 {% block content %}
-<div class="container-fluid py-5">
+<div class="container-fluid py-4">
     <!-- Header Section -->
-    <div class="text-center mb-5">
+    <div class="text-center mb-4">
         <h2 class="fw-bold text-uppercase" style="font-family: var(--font-family-inter); font-size: 36px;">
             ALL PRODUCTS
         </h2>
@@ -13,95 +13,88 @@
             👟 Step up your shoe game or try a fresh pair. Explore all styles here.
         </p>
         
-        <!-- Men, Women, Kids Buttons -->
-        <div class="d-flex justify-content-center gap-3 mt-3">
-            <button class="btn btn-dark px-4">Men</button>
-            <button class="btn btn-outline-dark px-4">Women</button>
-            <button class="btn btn-outline-dark px-4">Kids</button>
-        </div>
+        <!-- Gender Filter Buttons -->
+<div class="d-flex justify-content-center gap-3 mt-3">
+  <!-- All Button -->
+  <a href="{% url 'all_products' %}"
+     class="btn px-4 {% if not request.GET.gender %}btn-dark{% else %}btn-outline-dark{% endif %}">
+     All
+  </a>
+
+  <!-- Gender Buttons -->
+  {% for g in genders %}
+    <a href="?gender={{ g.id }}"
+       class="btn px-4 {% if request.GET.gender == g.id|stringformat:'s' %}btn-dark{% else %}btn-outline-dark{% endif %}">
+       {{ g.label }}
+    </a>
+  {% endfor %}
+</div>
+
+
+
+
+
     </div>
 
     <div class="row">
         <!-- Mobile Filter Toggle Button -->
-        <div class="d-block d-md-none mb-3 text-center">
-            <button class="btn btn-outline-dark w-100" type="button" data-bs-toggle="collapse"
-                data-bs-target="#filterSidebar" aria-expanded="false" aria-controls="filterSidebar">
-                Filters & Sort
-            </button>
-        </div>
+<div class="d-block d-md-none mb-3 text-center">
+    <button class="btn btn-outline-dark w-100" type="button" data-bs-toggle="collapse"
+        data-bs-target="#filterSidebar" aria-expanded="false" aria-controls="filterSidebar">
+        Filters & Sort
+    </button>
+</div>
 
-        <!-- Filters Section -->
-        <div class="col-lg-3 col-md-4 collapse d-md-block mb-4" id="filterSidebar">
-            <div class="card p-3 shadow-sm border-0 rounded-3">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <p class="filter-title fw-semibold">Filters & Sort</p>
-                    <a href="#" class="text-decoration-none small text-danger">Clear All</a>
-                </div>
+<!-- Filters Section -->
+<div class="col-lg-3 col-md-4 collapse d-md-block mb-4" id="filterSidebar">
+    <div class="card p-3 shadow-sm border-0 rounded-3">
+        <form method="get" class="p-3 border rounded bg-light">
+  <h5 class="fw-bold mb-3">Filters</h5>
 
-                <!-- Sort -->
-                <div class="mb-3 filter-item">
-                    <select class="form-select">
-                        <option>Lower Price</option>
-                        <option>Higher Price</option>
-                        <option>Newest</option>
-                        <option>Popularity</option>
-                    </select>
-                    <hr>
-                </div>
+  <!-- Category -->
+  <div class="mb-3">
+    <label for="id_category" class="form-label fw-semibold">Category</label>
+    {{ filter_form.category|add_class:"form-select" }}
+  </div>
 
-                <div class="mb-3 filter-item">
-                    <select class="form-select">
-                        <option>Lower Price</option>
-                        <option>Higher Price</option>
-                        <option>Newest</option>
-                        <option>Popularity</option>
-                    </select>
-                    <hr>
-                </div>
+  <!-- Brand -->
+  <div class="mb-3">
+    <label for="id_brand" class="form-label fw-semibold">Brand</label>
+    {{ filter_form.brand|add_class:"form-select" }}
+  </div>
 
-                <div class="mb-3 filter-item">
-                    <select class="form-select">
-                        <option>Lower Price</option>
-                        <option>Higher Price</option>
-                        <option>Newest</option>
-                        <option>Popularity</option>
-                    </select>
-                    <hr>
-                </div>
+  <!-- Gender -->
+  <div class="mb-3">
+    <label for="id_gender" class="form-label fw-semibold">Gender</label>
+    {{ filter_form.gender|add_class:"form-select" }}
+  </div>
 
-                <div class="mb-3 filter-item">
-                    <select class="form-select">
-                        <option>Lower Price</option>
-                        <option>Higher Price</option>
-                        <option>Newest</option>
-                        <option>Popularity</option>
-                    </select>
-                    <hr>
-                </div>
+  <!-- Price Range -->
+  <div class="mb-3">
+    <label class="form-label fw-semibold">Price Range</label>
+    <div class="d-flex gap-2">
+      {{ filter_form.min_price|add_class:"form-control" }}
+      {{ filter_form.max_price|add_class:"form-control" }}
+    </div>
+  </div>
 
-                <div class="mb-3 filter-item">
-                    <select class="form-select">
-                        <option>Lower Price</option>
-                        <option>Higher Price</option>
-                        <option>Newest</option>
-                        <option>Popularity</option>
-                    </select>
-                    <hr>
-                </div>
+  <!-- Sort By -->
+  <div class="mb-3">
+    <label for="id_sort_by" class="form-label fw-semibold">Sort By</label>
+    {{ filter_form.sort_by|add_class:"form-select" }}
+  </div>
 
-                <div class="mb-3 filter-item">
-                    <select class="form-select">
-                        <option>Lower Price</option>
-                        <option>Higher Price</option>
-                        <option>Newest</option>
-                        <option>Popularity</option>
-                    </select>
-                    <hr>
-                </div>
+  <!-- Buttons -->
+  <div class="d-flex justify-content-between">
+    <button type="submit" class="btn btn-dark w-50 me-2">Apply</button>
+    <a href="{% url 'all_products' %}" class="btn btn-outline-secondary w-50">Clear</a>
+  </div>
+</form>
 
-                <!-- Other filters same as before ... -->
-            </div>
-        </div>
+
+    </div>
+</div>
+
 
         <!-- Products Section -->
         <div class="col-lg-9 col-md-8">
@@ -122,10 +115,10 @@
                 {% if product.primary_image %}
                 <a href="{% url 'product_details' product.slug %}" class="text-dark text-decoration-none">
                     <img src="{{ product.primary_image.url }}"
-                         class="card-img-top p-3 rounded-3"
-                         alt="{{ product.name }}"
-                         style="height: 230px; object-fit: contain;"
-                         onerror="this.src='#'">
+     class="card-img-top p-3 rounded-3"
+     alt="{{ product.name }}"
+     style="height: 180px; object-fit: contain;">
+
                 </a>
                 {% else %}
                     <div class="d-flex align-items-center justify-content-center bg-light rounded-3"
@@ -135,59 +128,95 @@
                 {% endif %}
 
                 <!-- Product Details -->
-                <div class="card-body text-center">
-                    <h6 class="card-title fw-bold text-truncate">{{ product.name|default:"No Name" }}</h6>
-                    <p class="card-text text-success fw-bold fs-5 mb-2">
-                        ₹{{ product.variants.first.price|default:"N/A" }}
-                    </p>
-                    
-                    <!-- Rating -->
-                    <div class="mb-2">
-                        {% for i in "12345" %}
-                            <i class="bi {% if i|add:0 <= rating|floatformat:0 %}bi-star-fill text-warning{% else %}bi-star{% endif %}"></i>
-                        {% endfor %}
-                        <span class="text-muted small">({{ rating|floatformat:1 }})</span>
-                    </div>
+              <div class="card-body text-center p-2">
+    <!-- Product Name -->
+    <h6 class="fw-bold text-uppercase text-truncate mb-1" 
+        style="letter-spacing: .5px; color:#222;">
+        {{ product.name|default:"No Name" }}
+    </h6>
 
-                    <!-- Add to Cart Button -->
-                    <form action="" method="post" class="mt-2">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-dark w-100 rounded-pill fw-semibold py-2 shadow-sm">
-                            <i class="bi bi-cart-plus fs-5 me-1"></i> Add to Cart
-                        </button>
-                    </form>
-                </div>
+    <!-- Category -->
+    <p class="text-primary fw-semibold small mb-1" 
+       style="font-size: 13px; letter-spacing:.3px;">
+       {{ product.category|default:"No Category" }}
+    </p>
+
+    <!-- Brand -->
+    <p class="text-muted small mb-1">
+        <i class="bi bi-tags-fill me-1 text-secondary"></i> 
+        {{ product.brand|default:"No Brand" }}
+    </p>
+
+    <!-- Gender -->
+    <p class="badge bg-light text-dark rounded-pill px-2 py-1 mb-2" 
+       style="font-size: 11px;">
+        {{ product.gender|default:"No Gender" }}
+    </p>
+
+    <!-- Price -->
+    <p class="text-success fw-bold fs-5 mb-1">
+        ₹{{ product.variants.first.price|default:"N/A" }}
+    </p>
+
+
+
+    <div class="mb-1">
+        {% for i in "12345" %}
+            <i class="bi {% if i|add:0 <= rating|floatformat:0 %}bi-star-fill text-warning{% else %}bi-star{% endif %}"
+               style="font-size: 12px;"></i>
+        {% endfor %}
+        <span class="text-muted small">({{ rating|floatformat:1 }})</span>
+    </div>
+
+    <form action="" method="post" class="mt-1">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-dark w-100 rounded-pill fw-semibold py-1 shadow-sm">
+    <i class="bi bi-cart-plus me-1"></i> Add to Cart
+</button>
+
+    </form>
+</div>
+
             </div>
         </div>
         {% empty %}
         <p>No products available. Check database or Cloudinary setup.</p>
         {% endfor %}
-    </div> <!-- ✅ close row after loop -->
-</div> <!-- ✅ close col-9 -->
+    </div> 
+
+<!-- Pagination -->    
+<div class="d-flex justify-content-center mt-4">
+  {% if products.has_other_pages %}
+    <ul class="pagination">
+      {% if products.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ products.previous_page_number }}">&laquo;</a>
+        </li>
+      {% endif %}
+
+      {% for page_num in products.paginator.page_range %}
+        {% if products.number == page_num %}
+          <li class="page-item active">
+            <a class="page-link">{{ page_num }}</a>
+          </li>
+        {% else %}
+          <li class="page-item">
+            <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ page_num }}">{{ page_num }}</a>
+          </li>
+        {% endif %}
+      {% endfor %}
+
+      {% if products.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ products.next_page_number }}">&raquo;</a>
+        </li>
+      {% endif %}
+    </ul>
+  {% endif %}
+</div>
+</div>
 
 
-
-
-            <!-- Pagination -->
-            <nav aria-label="Page navigation" class="mt-4">
-                <ul class="pagination justify-content-center">
-                    <li class="page-item">
-                        <a class="page-link" href="#" aria-label="Previous">
-                            <i class="bi bi-chevron-left"></i>
-                        </a>
-                    </li>
-                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                    <li class="page-item"><a class="page-link" href="#">...</a></li>
-                    <li class="page-item"><a class="page-link" href="#">9</a></li>
-                    <li class="page-item"><a class="page-link" href="#">10</a></li>
-                    <li class="page-item">
-                        <a class="page-link" href="#" aria-label="Next">
-                            <i class="bi bi-chevron-right"></i>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
         </div>
     </div>
 </div>

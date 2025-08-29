@@ -32,7 +32,7 @@ SECRET_KEY = 'django-insecure-w@4r%f)iu(7+i$(=a7$zu+32st7ite^&%t@da04=2q^o01c2q@
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -63,6 +63,8 @@ INSTALLED_APPS = [
     'address',
     'wallet',
     'django_bootstrap_breadcrumbs',
+    "widget_tweaks",
+    "grappelli",
     
 ]
 
@@ -226,3 +228,5 @@ EMAIL_HOST_USER = 'rubivv255@gmail.com'  # my email address
 EMAIL_HOST_PASSWORD = 'zaus ciih uiyn clrw'  # Use an app-specific password for Gmail
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER # Use the same email for default from address
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

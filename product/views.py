@@ -8,11 +8,13 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q, Min, Avg, Count, Sum
+from django.db.models import Q, Min, Avg, Count, Sum, Max
 from django.db.models.functions import Coalesce # Import the Coalesce function for NULL handling
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.forms.models import modelform_factory
+from django.db import transaction
+import cloudinary
 
 
 
@@ -104,89 +106,88 @@ def add_color(request):
 # Product Management
 @staff_member_required
 def add_product(request):
-    Categories = Category.objects.all()
-    Brands = Brand.objects.all()
-    Genders = Gender.objects.all()
+    if request.method == "POST":
+        name = request.POST.get("name")
+        description = request.POST.get("description")
+        category_id = request.POST.get("category")
+        brand_id = request.POST.get("brand")
+        gender_id = request.POST.get("gender")
+        is_available = True if request.POST.get("is_available") == "on" else False
 
-    if request.method == 'POST':
-        product_form = ProductForm(request.POST, request.FILES)
+        # Primary Image (Cloudinary with cropping)
+        primary_image = request.FILES.get("primary_image")
+        if primary_image:
+            upload_result = cloudinary.uploader.upload(primary_image, transformation=[
+                {"width": 300, "height": 300, "crop": "fill", "gravity": "auto"}
+            ])
+            primary_image_url = upload_result['secure_url']
 
-        if product_form.is_valid():
-            product = product_form.save(commit=False)# commit=False means we don't save the product yet
-            print("Product form is valid")
-            product.added_by = request.user   # Assign the current correct admin user
-            product.save()
-            print("Product saved successfully")
-            messages.success(request, 'Product added successfully!')
-            return redirect('add_variant', slug=product.slug)
-        else:
-            print(product_form.errors)
-            messages.error(request, 'Please correct the errors below.')
+        # Create Product
+        product = Product.objects.create(
+            name=name,
+            description=description,
+            category_id=category_id,
+            brand_id=brand_id,
+            gender_id=gender_id,
+            is_available=is_available,
+            added_by=request.user,
+            primary_image=primary_image_url,
+            slug=slugify(name)
+        )
 
-    else:
-        product_form = ProductForm()
-        
-    return render(request, 'admin/add_product.html', {
-        'product_form': product_form,
-        'categories': Categories,
-        'brands': Brands,
-        'genders': Genders
-    })
+        # Additional Images (Cloudinary with cropping)
+        additional_images = request.FILES.getlist("additional_images")
+        for img in additional_images:
+            if img:
+                upload_result = cloudinary.uploader.upload(img, transformation=[
+                    {"width": 300, "height": 300, "crop": "fill", "gravity": "auto"}
+                ])
+                Image.objects.create(product=product, image=upload_result['secure_url'])
 
-# Variant Management
-@staff_member_required
-def add_variant(request, slug):
-    product = get_object_or_404(Product, slug=slug)
-    ImageFormSet = modelformset_factory(Image, form=ImageForm, extra=3)
-    VariantFormSet = modelformset_factory(ProductVariant, form=ProductVariantForm, extra=2)
-    sizes = Size.objects.all()
-    colors = Color.objects.all()
+        # Sizes & Colors (checkboxes)
+        size_ids = request.POST.getlist("sizes")
+        color_ids = request.POST.getlist("colors")
+        price = request.POST.get("price")
+        stock = request.POST.get("stock")
 
-    if request.method == 'POST':
-        variant_formset = VariantFormSet(request.POST, queryset=ProductVariant.objects.filter(product=product))
-        image_formset = ImageFormSet(request.POST, request.FILES, queryset=Image.objects.filter(variant__product=product))
+        # Create variants for each size-color combo
+        for size_id in size_ids:
+            for color_id in color_ids:
+                variant = ProductVariant.objects.create(
+                    product=product,
+                    size_id=size_id,
+                    color_id=color_id,
+                    stock=stock,
+                    price=price
+                )
 
-        if variant_formset.is_valid() and image_formset.is_valid():
-            variants = variant_formset.save(commit=False)# means we don't save the variants yet
-            print("Variants are valid and ready to be saved")
-            # Save each variant and associate it with the product
-            images = image_formset.save(commit=False) #means we don't save the images yet
-            print("Images are valid and ready to be saved")
+                # Variant-specific images (optional)
+                variant_images = request.FILES.getlist(f"variant_images_{size_id}_{color_id}")
+                for vimg in variant_images:
+                    if vimg:
+                        upload_result = cloudinary.uploader.upload(vimg, transformation=[
+                            {"width": 300, "height": 300, "crop": "fill", "gravity": "auto"}
+                        ])
+                        Image.objects.create(product=product, variant=variant, image=upload_result['secure_url'])
 
-            for variant in variants:
-                variant.product = product
-                variant.save()
-            print('Variants saved successfully')
+        return redirect("products")  # Change to your product list page
 
-            for idx, variant in enumerate(variants):
-                variant.product = product
-                variant.save()
-                if idx < len(images):
-                    images[idx].variant = variant
-                    images[idx].save()
+    context = {
+        "categories": Category.objects.all(),
+        "brands": Brand.objects.all(),
+        "genders": Gender.objects.all(),
+        "sizes": Size.objects.all(),
+        "colors": Color.objects.all(),
+    }
+    return render(request, "admin/add_product.html", context)
 
-            print("Images saved successfully")
-            messages.success(request, 'Variants and images added successfully!')
-            return redirect('add_variant', slug=product.slug)
-        else:
-            messages.error(request, 'Please correct the errors below.')
-    else:
-        variant_formset = VariantFormSet(queryset=ProductVariant.objects.filter(product=product))
-        image_formset = ImageFormSet(queryset=Image.objects.filter(variant__product=product))
-    return render(request, 'admin/add_variant.html', {
-        'product': product,
-        'variant_formset': variant_formset,
-        'image_formset': image_formset,
-        'sizes': sizes,
-        'colors': colors
-    })
 # view to list all products
 @staff_member_required
 def product_list(request):
     products = Product.objects.all().order_by('-created_at')
 
     # ---- PAGINATION ----
-    paginator = Paginator(products, 1)  # 2 users per page
+    paginator = Paginator(products, 2)  # 2 users per page
     page_number = request.GET.get('page')
     products = paginator.get_page(page_number)
     return render(request, 'admin/products.html', {'products': products})
@@ -194,72 +195,128 @@ def product_list(request):
 @staff_member_required
 def product_view(request, slug):
     product = get_object_or_404(Product, slug=slug)
-    variants = ProductVariant.objects.filter(product=product).prefetch_related('images')
-    
+    variants = ProductVariant.objects.filter(product=product).select_related('size', 'color').prefetch_related('images') #means to pre-fetch images for each variant from the database 
+    unique_sizes = variants.values_list("size__label", flat=True).distinct()
+    unique_colors = variants.values_list("color__name", flat=True).distinct()
+
     if request.method == 'POST':
         # Handle any form submissions related to the product details here
         pass
     
     return render(request, 'admin/product_details.html', {
         'product': product,
-        'variants': variants
+        'variants': variants,
+        'unique_sizes': unique_sizes,
+        'unique_colors': unique_colors
     })
 #edit product view
+
 @staff_member_required
-def edit_product(request, slug): 
-    product = get_object_or_404(Product, slug=slug)
-
-    ProductFormCls = modelform_factory(Product, fields=['name', 'description', 'is_available', 'is_listed', 'category', 'brand', 'gender'])
-    VariantFormSet = modelformset_factory(ProductVariant, form=ProductVariantForm, extra=1, can_delete=True)
-    ImageFormSet = modelformset_factory(Image, form=ImageForm, extra=3, can_delete=True)  #  3 extra images form
-
-    if request.method == 'POST':
-        product_form = ProductFormCls(request.POST, instance=product)
-        variant_formset = VariantFormSet(request.POST, queryset=product.variants.all(), prefix='variants')
-        image_formset = ImageFormSet(request.POST, request.FILES, queryset=Image.objects.filter(variant__product=product), prefix='images')  
-        # request.FILES adds support for file uploads
-
-        if product_form.is_valid() and variant_formset.is_valid() and image_formset.is_valid():
-            product_form.save()  # save product update
-
-        variants = variant_formset.save(commit=False)
-        for variant in variants:
-            variant.product = product
-            variant.save()
-
-        #  Save images
-        images = image_formset.save(commit=False)
-        for image in images:
-            if not image.variant:  
-                # auto-assign to first variant
-                first_variant = product.variants.first()
-                if first_variant:
-                    image.variant = first_variant
-            image.save()
-
-        # delete removed images
-        for obj in image_formset.deleted_objects:
-            obj.delete()
-
-        messages.success(request, "Product, variants and images updated successfully!")
-        return redirect('edit_product', slug=product.slug)
+def edit_product(request, slug=None):
+    if slug:
+        product = get_object_or_404(Product, slug=slug)
     else:
-        product_form = ProductFormCls(instance=product)
-        variant_formset = VariantFormSet(queryset=product.variants.all(), prefix='variants')
-        image_formset = ImageFormSet(queryset=Image.objects.filter(variant__product=product), prefix='images')
+        product = None  # For adding a new product
 
-    return render(request, 'admin/edit_product.html', {
-        'product_form': product_form,
-        'variant_formset': variant_formset,
-        'image_formset': image_formset,
+    # Get existing selected sizes and colors for pre-selection
+    selected_sizes = set(product.variants.values_list('size_id', flat=True)) if product else set()
+    selected_colors = set(product.variants.values_list('color_id', flat=True)) if product else set()
+
+    if request.method == "POST":
+        name = request.POST.get("name")
+        description = request.POST.get("description")
+        category_id = request.POST.get("category")
+        brand_id = request.POST.get("brand")
+        gender_id = request.POST.get("gender")
+        is_available = True if request.POST.get("is_available") == "on" else False
+
+        # Handle product creation or update
+        if product:
+            primary_image = request.FILES.get("primary_image")
+            if primary_image:
+                product.primary_image = primary_image
+            product.name = name
+            product.description = description
+            product.category_id = category_id
+            product.brand_id = brand_id
+            product.gender_id = gender_id
+            product.is_available = is_available
+            product.slug = slugify(name)
+            product.save()
+        else:
+            product = Product.objects.create(
+                name=name,
+                description=description,
+                category_id=category_id,
+                brand_id=brand_id,
+                gender_id=gender_id,
+                is_available=is_available,
+                slug=slugify(name)
+            )
+            if request.FILES.get("primary_image"):
+                product.primary_image = request.FILES.get("primary_image")
+                product.save()
+
+        # Handle additional images
+        existing_images = product.images.all()
+        for image in existing_images:
+            index = list(existing_images).index(image)
+            if f"delete_image_{index}" in request.POST:
+                image.delete()
+
+        new_images = request.FILES.getlist("additional_images")
+        print(f"New images received: {len(new_images)} files - {[img.name for img in new_images]}")
+        for img in new_images:
+            if img:
+                Image.objects.create(product=product, image=img)
+
+        # Handle variants with single price and stock
+        size_ids = request.POST.getlist("sizes")
+        color_ids = request.POST.getlist("colors")
+        price = request.POST.get("price")
+        stock = request.POST.get("stock")
+
+        print(f"Received Size IDs: {size_ids}, Received Color IDs: {color_ids}, Price: {price}, Stock: {stock}")
+        if size_ids and color_ids and (price or stock):
+            # Delete existing variants not in the new selection
+            new_combinations = {(size_id, color_id) for size_id in size_ids for color_id in color_ids}
+            for variant in product.variants.all():
+                if (variant.size_id, variant.color_id) not in new_combinations:
+                    variant.delete()
+
+            # Create or update variants
+            for size_id in size_ids:
+                for color_id in color_ids:
+                    variant, created = ProductVariant.objects.get_or_create(
+                        product=product,
+                        size_id=size_id,
+                        color_id=color_id,
+                        defaults={'price': price, 'stock': stock}
+                    )
+                    if not created:
+                        if price:
+                            variant.price = float(price)
+                        if stock:
+                            variant.stock = int(stock)
+                        variant.save()
+
+        messages.success(request, f"{'Product, variants, and images updated' if slug else 'New product, variants, and images added'} successfully!")
+        return redirect('admin_product_details', slug=product.slug)
+
+    context = {
         'product': product,
-    })
-
-
-#delete product 
+        'categories': Category.objects.all(),
+        'brands': Brand.objects.all(),
+        'genders': Gender.objects.all(),
+        'sizes': Size.objects.all(),
+        'colors': Color.objects.all(),
+        'selected_sizes': selected_sizes,
+        'selected_colors': selected_colors,
+    }
+    return render(request, 'admin/add_product.html', context)#delete product 
 @login_required
 def delete_product(request, slug):
-    if request.method == "POST" and request.headers.get("x-requested-with") == "XMLHttpRequest":
+    if request.method == "POST" and request.headers.get("x-requested-with") == "XMLHttpRequest": # means it's an AJAX request for a specific product
         product = get_object_or_404(Product, slug=slug)
         
         # delete product + variants
@@ -270,27 +327,72 @@ def delete_product(request, slug):
     return JsonResponse({"success": False, "message": "Invalid request!"}, status=400)
 
 
-                             ####User views
-#all products list view
-def user_product_list(request):
-    products = (Product.objects
-                .all()
-                .prefetch_related('variants__images')  # Pre-fetch variants and images
-                .select_related('category', 'brand', 'gender'))
-    return render(request, 'user/all_products.html', {'products': products})  
+                             ####   User views  ####
 
+def user_product_list(request):
+    products = Product.objects.all()
+    filter_form = ProductFilterForm(request.GET or None)
+    genders = Gender.objects.all()
+
+    if filter_form.is_valid():
+        category = filter_form.cleaned_data.get("category")
+        brand = filter_form.cleaned_data.get("brand")
+        gender = filter_form.cleaned_data.get("gender")
+        min_price = filter_form.cleaned_data.get("min_price")
+        max_price = filter_form.cleaned_data.get("max_price")
+        sort_by = filter_form.cleaned_data.get("sort_by")
+
+        # Apply filters
+        if category:
+            products = products.filter(category=category)
+        if brand:
+            products = products.filter(brand=brand)
+        if gender:
+            products = products.filter(gender=gender)
+        if min_price:
+            products = products.filter(variants__price__gte=min_price)
+        if max_price:
+            products = products.filter(variants__price__lte=max_price)
+
+        # Sorting
+        if sort_by == "price_low":
+            products = products.order_by("variants__price")
+        elif sort_by == "price_high":
+            products = products.order_by("-variants__price")
+        elif sort_by == "latest":
+            products = products.order_by("-created_at")
+        elif sort_by == "popular":
+            products = products.order_by("-views")
+
+    products = products.distinct()
+
+    # Pagination
+    paginator = Paginator(products, 3)  # 3 products per page if needed
+    page_number = request.GET.get("page")
+    products = paginator.get_page(page_number)
+
+    return render(request, "user/all_products.html", {
+        "products": products,
+        "filter_form": filter_form,
+        "genders": genders,
+    })
 #product details view
+
 def product_details(request, slug):
     product = get_object_or_404(Product, slug=slug)
 
-    # All variants of the product
-    variants = ProductVariant.objects.filter(product=product).select_related('color', 'size')
+    # All variants of the product with related color and size
+    variants = ProductVariant.objects.filter(product=product).prefetch_related('images') 
 
     # Unique colors for this product
     colors = {v.color.id: v.color for v in variants if v.color}.values()
 
-    # Unique sizes for this product (optional, if needed)
+    # Unique sizes for this product
     sizes = Size.objects.filter(variants__product=product).distinct()
+
+    if request.method == 'POST':
+        # Handle any form submissions (e.g., adding to cart, selecting variant)
+        pass
 
     return render(request, 'user/product_details.html', {
         'product': product,
@@ -298,3 +400,12 @@ def product_details(request, slug):
         'colors': colors,
         'sizes': sizes,
     })
+#kids products
+def kids_products(request):
+    products = Product.objects.filter(gender__label='Kids')
+    categories = Category.objects.all()
+
+    Category_params = request.GET.get("category")
+    if Category_params:
+        products = products.filter(category__name__iexact=Category_params)
+    return render(request, 'user/kids.html', {'products': products, 'categories': categories})

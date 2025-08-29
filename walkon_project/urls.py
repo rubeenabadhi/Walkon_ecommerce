@@ -19,11 +19,23 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include
+from django.shortcuts import render
+from django.conf.urls import handler404
+from django.conf.urls.static import static
+
+
+
 
 urlpatterns = [
+    path("grappelli/", include("grappelli.urls")),
     path('admin/', admin.site.urls),
     path('', include('authentication.urls')),
     path('accounts/', include('allauth.urls')),
     path('', include('admin_dashboard.urls')),
     path('', include('product.urls')),
 ]
+def custom_404_view(request, exception):
+    return render(request, "404.html", status=404)
+handler404 = custom_404_view
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
