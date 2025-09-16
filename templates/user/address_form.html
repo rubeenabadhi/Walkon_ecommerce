@@ -1,0 +1,66 @@
+{% extends 'user/base.html' %} 
+{% load static %}
+
+{% block title %}Add Address - Walkon{% endblock %}
+{% block content %}
+
+<div class="container my-5">
+  
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="row">
+    
+    <!-- Sidebar -->
+    <div class="col-lg-3 mb-4">
+      {% include "user/user_sidebar.html" %}
+    </div>
+
+    <!-- Form Section -->
+    <div class="col-lg-9">
+      <!-- Page Title -->
+      <h2 class="fw-bold mb-4 border-bottom pb-2">🏠 Add New Address</h2>
+      
+      <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-4">
+          
+          <!-- Username -->
+          <p class="text-muted mb-4">
+            Logged in as: <strong>{{ request.user.username }}</strong>
+          </p>
+
+          <!-- Address Form -->
+          <form method="post" class="needs-validation" novalidate>
+            {% csrf_token %}
+            <div class="row g-3">
+              {% for field in form %}
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">{{ field.label }}</label>
+                  {{ field }}
+                  {% if field.errors %}
+                    <div class="text-danger small">{{ field.errors|striptags }}</div>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex justify-content-end mt-4">
+              <a href="{% url 'address' %}" class="btn btn-outline-secondary me-2">Cancel</a>
+              <button type="submit" class="btn btn-dark px-4">Save Address</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

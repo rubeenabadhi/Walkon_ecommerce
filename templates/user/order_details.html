@@ -1,0 +1,238 @@
+{% extends 'user/base.html' %}
+{% load static %}
+{% block title %}Order Details - WalkOn{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <!-- Page Title -->
+    <h2 class="mb-3 fw-bold text-center" style="color: #1a73e8;">Order Details: {{ order.order_id }}</h2>
+            <!-- message   -->
+    <div class="mb-4 text-center">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3 shadow-sm d-inline-block" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+        
+
+    <!-- Order Summary -->
+    <div class="card shadow-sm mb-3 p-3" style="border: 2px solid #e8f0fe; border-radius: 10px; background: linear-gradient(to right, #f8f9fa, #e9ecef);">
+        <div class="row g-2">
+            <div class="col-12">
+                <p class="mb-1" style="color: #6c757d;">
+                    <span class="fw-bold">Status:</span> 
+                    <span style="color: 
+                        {% if order.status == 'pending' %}#6c757d
+                        {% elif order.status == 'confirmed' %}#1a73e8
+                        {% elif order.status == 'shipped' %}#ffb300
+                        {% elif order.status == 'delivered' %}#2e7d32
+                        {% elif order.status == 'cancelled' %}#d32f2f
+                        {% elif order.status == 'returned' %}#343a40
+                        {% endif %};">
+                        {{ order.get_status_display }}
+                    </span><br>
+                    <span class="fw-bold">Ordered:</span> {{ order.order_date|date:"M d, Y h:i A" }} IST<br>
+                    <span class="fw-bold">Total:</span> <span style="color: #2e7d32;">₹{{ order.total_amount }}</span><br>
+                    <span class="fw-bold">Payment Method:</span> {{ order.payment_method|default:"N/A" }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Items -->
+    <div class="card shadow-sm mb-3 p-3" style="border: 2px solid #e8f0fe; border-radius: 10px;">
+        <h5 class="fw-bold mb-2" style="color: #0288d1;">Order Items</h5>
+        {% for item in order.items.all %}
+            <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+                <div class="d-flex align-items-center">
+                    <img src="{{ item.product_variant.product.primary_image.url }}" 
+                         alt="{{ item.product_variant.product.name }}" 
+                         class="img-fluid rounded border me-2" 
+                         style="border: 2px solid #4caf50; max-height: 60px; width: 60px;">
+                    <div>
+                        <p class="mb-0 fw-bold" style="color: #d81b60;">{{ item.product_variant.product.name }}</p>
+                        <small style="color: #6c757d;">
+                            Color: {{ item.product_variant.color.name }} | Size: {{ item.product_variant.size }}<br>
+                            Qty: {{ item.quantity }} | Price: ₹{{ item.price }} | Total: ₹{{ item.total_price }}
+                        </small>
+                        {% if item.is_cancelled %}
+                            <p class="mb-0 text-danger fw-bold">Cancelled {% if item.cancel_reason %} ({{ item.cancel_reason }}) {% endif %}</p>
+                        {% elif item.is_returned %}
+                            <p class="mb-0 text-dark fw-bold">Returned {% if item.return_reason %} ({{ item.return_reason }}) {% endif %}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if order.status in 'pending confirmed' and not item.is_cancelled %}
+                    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelItemModal{{ item.id }}">Cancel Item</button>
+                {% elif order.status == 'delivered' and not item.is_returned %}
+                    <button class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#returnItemModal{{ item.id }}">Return Item</button>
+                {% endif %}
+            </div>
+
+            <!-- Cancel Item Modal -->
+            <div class="modal fade" id="cancelItemModal{{ item.id }}" tabindex="-1" aria-labelledby="cancelItemLabel{{ item.id }}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="cancelItemLabel{{ item.id }}">Cancel Item: {{ item.product_variant.product.name }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form action="{% url 'cancel_item' item.id %}" method="POST">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="reason" class="form-label">Reason (optional)</label>
+                                    <textarea class="form-control" id="reason" name="reason" rows="3"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-danger">Confirm Cancel</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Return Item Modal -->
+            <div class="modal fade" id="returnItemModal{{ item.id }}" tabindex="-1" aria-labelledby="returnItemLabel{{ item.id }}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="returnItemLabel{{ item.id }}">Return Item: {{ item.product_variant.product.name }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form action="" method="POST">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="reason" class="form-label">Reason (mandatory)</label>
+                                    <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-dark">Confirm Return</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Order Tracking -->
+    <div class="card shadow-sm mb-3 p-3" style="border: 2px solid #e8f0fe; border-radius: 10px;">
+        <h5 class="fw-bold mb-2" style="color: #0288d1;">Order Tracking</h5>
+        <ul class="list-group list-group-flush">
+            {% for tracking in order.trackings.all %}
+                <li class="list-group-item" style="color: #6c757d;">
+                    <span class="fw-bold" style="color: 
+                        {% if tracking.status == 'pending' %}#6c757d
+                        {% elif tracking.status == 'confirmed' %}#1a73e8
+                        {% elif tracking.status == 'shipped' %}#ffb300
+                        {% elif tracking.status == 'delivered' %}#2e7d32
+                        {% elif tracking.status == 'cancelled' %}#d32f2f
+                        {% elif tracking.status == 'returned' %}#343a40
+                        {% endif %};">{{ tracking.get_status_display|default:tracking.status|capfirst }}</span>
+                    - {{ tracking.created_at|date:"M d, Y h:i A" }}
+                    {% if tracking.location %}<br>Location: {{ tracking.location }}{% endif %}
+                    {% if tracking.note %}<br>Note: {{ tracking.note }}{% endif %}
+                </li>
+            {% empty %}
+                <li class="list-group-item text-muted">No tracking updates available.</li>
+            {% endfor %}
+        </ul>
+        <!-- Progress Bar -->
+        <div class="progress mt-3" style="height: 8px; border-radius: 5px;">
+            <div class="progress-bar 
+                {% if order.status == 'pending' %}bg-secondary
+                {% elif order.status == 'confirmed' %}bg-info
+                {% elif order.status == 'shipped' %}bg-warning
+                {% elif order.status == 'delivered' %}bg-success
+                {% elif order.status == 'cancelled' %}bg-danger
+                {% elif order.status == 'returned' %}bg-dark
+                {% endif %}" 
+                role="progressbar"
+                style="width: 
+                    {% if order.status == 'pending' %}25%
+                    {% elif order.status == 'confirmed' %}50%
+                    {% elif order.status == 'shipped' %}75%
+                    {% elif order.status == 'delivered' %}100%
+                    {% elif order.status == 'cancelled' %}100%
+                    {% elif order.status == 'returned' %}100%
+                    {% endif %};">
+            </div>
+        </div>
+    </div>
+
+    <!-- Shipping Address -->
+    <div class="card shadow-sm mb-3 p-3" style="border: 2px solid #e8f0fe; border-radius: 10px;">
+        <h5 class="fw-bold mb-2" style="color: #0288d1;">Shipping Address</h5>
+        {% if order.address %}
+            <p class="mb-0 small" style="color: #6c757d;">
+                {{ order.address.full_name }}<br>
+                {{ order.address.address }}, {{ order.address.street }}<br>
+                {{ order.address.city }}, {{ order.address.state }} - {{ order.address.pincode }}<br>
+                {{ order.address.country }}<br>
+                Phone: {{ order.address.phone_number }}
+            </p>
+        {% else %}
+            <p class="mb-0 text-muted small">No address provided.</p>
+        {% endif %}
+    </div>
+
+    <!-- Transaction Details -->
+    <div class="card shadow-sm mb-3 p-3" style="border: 2px solid #e8f0fe; border-radius: 10px;">
+        <h5 class="fw-bold mb-2" style="color: #0288d1;">Transaction Details</h5>
+            {% if transaction %}
+                <p class="mb-0 small" style="color: #6c757d;">
+                    <span class="fw-bold">Type:</span> {{ transaction.get_transaction_type_display }}<br>
+                    <span class="fw-bold">Status:</span> {{ transaction.transaction_status|capfirst }}<br>
+                    <span class="fw-bold">Amount:</span> <span style="color: #2e7d32;">₹{{ transaction.amount }}</span><br>
+                    <span class="fw-bold">Reference:</span> {{ transaction.reference|default:"N/A" }}<br>
+                    <span class="fw-bold">Processed:</span> {{ transaction.processed_at|date:"M d, Y h:i A"|default:"N/A" }}
+                </p>
+            {% else %}
+                <p class="mb-0 text-muted small">No transaction details available.</p>
+            {% endif %}
+       
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="d-flex justify-content-end gap-2">
+        <a href="{% url 'invoice_pdf' order.id %}" class="btn btn-sm btn-outline-primary" target="_blank">Download Invoice</a>
+        {% if order.status in 'pending confirmed' %}
+            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal{{ order.id }}">Cancel Order</button>
+        {% endif %}
+    </div>
+
+    <!-- Cancel Order Modal -->
+    <div class="modal fade" id="cancelOrderModal{{ order.id }}" tabindex="-1" aria-labelledby="cancelOrderLabel{{ order.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cancelOrderLabel{{ order.id }}">Cancel Order: {{ order.order_id }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="{% url 'cancel_order' order.id %}" method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="reason" class="form-label">Reason (optional)</label>
+                            <textarea class="form-control" id="reason" name="reason" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-danger">Confirm Cancel</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+    .progress-bar {
+        transition: width 0.6s ease;
+    }
+</style>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends 'user/base.html' %}
+{% load static %}
+{% block title %}Cart - Walkon{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/cart.css' %}">
+{% endblock %}
+{% block content %}
+
+
+<body>
+    <div class="container py-4 cart-1">
+        <h1 class="cart-title">YOUR CART</h1>
+        <div class="row">
+            <div class="col-lg-8">
+                {% for item in cart_items %}
+                <div class="cart-item d-flex align-items-start mb-3" id="cart-item-{{ item.id }}">
+                    <img src="{{ item.product.primary_image.url }}" alt="Product Image" class="me-3">
+                    <div class="flex-grow-1">
+                        <p class="in-stock">In stock</p>
+                        <p class="free-delivery">Free Delivery</p>
+                        <div class="item-details">
+                            <p class="item-color">{{ item.variant.color.name }}</p>
+                            <p class="item-size">Size: {{ item.variant.size }}</p>
+                        </div>
+                        <p class="qty">Qty: <span id="quantity-{{ item.id }}">{{ item.quantity }}</span></p>
+                        <p class="item-price">₹<span id="price-{{ item.id }}">{{ item.item_total  }}</span></p>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="quantity-controls">
+                            <button class="btn btn-outline-secondary quantity-btn decrement" data-item-id="{{ item.id }}">-</button>
+                            <span id="control-quantity-{{ item.id }}">{{ item.quantity }}</span>
+                            <button class="btn btn-outline-secondary quantity-btn increment" data-item-id="{{ item.id }}">+</button>
+                        </div>
+
+                        <button class="btn btn-danger btn-sm mt-2 remove-item" data-item-id="{{ item.id }}">Remove</button>
+                    </div>
+                </div>
+                <hr>
+                {% endfor %}
+            </div>
+
+            <div class="col-lg-4">
+                <div class="order-summary p-3">
+                    <h3>Order Summary</h3>
+                    <p>In Rupees</p>
+                    {% for product in cart_items %}
+                    <p class="qty"><span id="control-quantity-{{ product.id }}">{{ product.quantity }}</span> x : ₹{{ product.variant.price }}</p>
+                    {% endfor %}
+                    <p class="text-success">Delivery Charges: ₹ Free</p>
+                    <p>Platform fee: ₹ 0</p>
+                    <p class="fw-bold">Total: ₹<span id="grand-total">{{ total_price }}</span></p>
+                    <div class="discount-code my-3">
+                        <p>Discount code</p>
+                    </div>
+                    <button class="apply-btn">Apply</button>
+                    <a href="{% url 'select_address' %}" class="btn continue-btn w-100 mt-3">Continue to Shipping</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    {% block scripts %}{% endblock %}
+</body>
+{% endblock %}

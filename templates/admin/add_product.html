@@ -116,9 +116,16 @@
                 </div>
 
                 <div class="col-12 mb-1">
-                    <label for="id_stock" class="form-label fw-bold" style="font-size: 0.9rem;">Stock</label>
-                    <input type="number" name="stock" class="form-control" id="id_stock" value="{% if product.variants.exists %}{{ product.variants.first.stock|default:'' }}{% endif %}" required style="font-size: 0.9rem; padding: 0.3rem;">
-                </div>
+    <label for="id_stock" class="form-label fw-bold" style="font-size: 0.9rem;">Stock</label>
+    <input type="number" 
+           name="stock" 
+           class="form-control" 
+           id="id_stock" 
+           value="{{ product.stock|default:'' }}" 
+           required 
+           style="font-size: 0.9rem; padding: 0.3rem;">
+</div>
+
 
                 <div class="col-12 mb-1">
                     <div class="form-check">
@@ -126,6 +133,11 @@
                         <label class="form-check-label" for="id_is_available" style="font-size: 0.9rem;">Available</label>
                     </div>
                 </div>
+                <div class="col-12 mb-1">
+                    <div class="form-check">
+                        <input type="checkbox" name="is_featured" class="form-check-input" id="id_is_featured" {% if product.is_active %}checked{% endif %} style="font-size: 0.9rem;">
+                        <label class="form-check-label" for="id_is_featured" style="font-size: 0.9rem;">Active</label>
+                    </div>
             </div>
         </div>
 

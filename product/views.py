@@ -1,5 +1,6 @@
 from django.shortcuts import render,redirect
 from .models import *
+from wishlist.models import *
 from .forms import *
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
@@ -105,6 +106,7 @@ def add_color(request):
     
 # Product Management
 @staff_member_required
+@staff_member_required
 def add_product(request):
     if request.method == "POST":
         name = request.POST.get("name")
@@ -112,9 +114,13 @@ def add_product(request):
         category_id = request.POST.get("category")
         brand_id = request.POST.get("brand")
         gender_id = request.POST.get("gender")
+        price = request.POST.get("price")
+        stock = int(request.POST.get("stock", 0))   # ✅ stock comes before product create
         is_available = True if request.POST.get("is_available") == "on" else False
+        is_active = True if request.POST.get("is_active") == "on" else False
 
         # Primary Image (Cloudinary with cropping)
+        primary_image_url = None
         primary_image = request.FILES.get("primary_image")
         if primary_image:
             upload_result = cloudinary.uploader.upload(primary_image, transformation=[
@@ -122,20 +128,22 @@ def add_product(request):
             ])
             primary_image_url = upload_result['secure_url']
 
-        # Create Product
+        # ✅ Create Product with stock at product-level
         product = Product.objects.create(
             name=name,
             description=description,
             category_id=category_id,
             brand_id=brand_id,
             gender_id=gender_id,
+            stock=stock,
             is_available=is_available,
+            is_active=is_active,
             added_by=request.user,
             primary_image=primary_image_url,
             slug=slugify(name)
         )
 
-        # Additional Images (Cloudinary with cropping)
+        # Additional Images
         additional_images = request.FILES.getlist("additional_images")
         for img in additional_images:
             if img:
@@ -147,17 +155,14 @@ def add_product(request):
         # Sizes & Colors (checkboxes)
         size_ids = request.POST.getlist("sizes")
         color_ids = request.POST.getlist("colors")
-        price = request.POST.get("price")
-        stock = request.POST.get("stock")
 
-        # Create variants for each size-color combo
+        # Create variants (no stock, only price + attributes)
         for size_id in size_ids:
             for color_id in color_ids:
                 variant = ProductVariant.objects.create(
                     product=product,
                     size_id=size_id,
                     color_id=color_id,
-                    stock=stock,
                     price=price
                 )
 
@@ -170,7 +175,7 @@ def add_product(request):
                         ])
                         Image.objects.create(product=product, variant=variant, image=upload_result['secure_url'])
 
-        return redirect("products")  # Change to your product list page
+        return redirect("products")
 
     context = {
         "categories": Category.objects.all(),
@@ -213,12 +218,10 @@ def product_view(request, slug):
 
 @staff_member_required
 def edit_product(request, slug=None):
-    if slug:
-        product = get_object_or_404(Product, slug=slug)
-    else:
-        product = None  # For adding a new product
+    # Get product if editing
+    product = get_object_or_404(Product, slug=slug) if slug else None
 
-    # Get existing selected sizes and colors for pre-selection
+    # Preselect existing sizes/colors
     selected_sizes = set(product.variants.values_list('size_id', flat=True)) if product else set()
     selected_colors = set(product.variants.values_list('color_id', flat=True)) if product else set()
 
@@ -230,17 +233,21 @@ def edit_product(request, slug=None):
         gender_id = request.POST.get("gender")
         is_available = True if request.POST.get("is_available") == "on" else False
 
-        # Handle product creation or update
+        price = request.POST.get("price")
+        stock = request.POST.get("stock")
+
+        # --- Create or update product ---
         if product:
-            primary_image = request.FILES.get("primary_image")
-            if primary_image:
-                product.primary_image = primary_image
+            if request.FILES.get("primary_image"):
+                product.primary_image = request.FILES.get("primary_image")
+
             product.name = name
             product.description = description
             product.category_id = category_id
             product.brand_id = brand_id
             product.gender_id = gender_id
             product.is_available = is_available
+            product.stock = int(stock) if stock else product.stock
             product.slug = slugify(name)
             product.save()
         else:
@@ -251,13 +258,14 @@ def edit_product(request, slug=None):
                 brand_id=brand_id,
                 gender_id=gender_id,
                 is_available=is_available,
-                slug=slugify(name)
+                stock=int(stock) if stock else 0,
+                slug=slugify(name),
             )
             if request.FILES.get("primary_image"):
                 product.primary_image = request.FILES.get("primary_image")
                 product.save()
 
-        # Handle additional images
+        # --- Handle additional images ---
         existing_images = product.images.all()
         for image in existing_images:
             index = list(existing_images).index(image)
@@ -265,23 +273,19 @@ def edit_product(request, slug=None):
                 image.delete()
 
         new_images = request.FILES.getlist("additional_images")
-        print(f"New images received: {len(new_images)} files - {[img.name for img in new_images]}")
         for img in new_images:
             if img:
                 Image.objects.create(product=product, image=img)
 
-        # Handle variants with single price and stock
+        # --- Handle variants (only price, no stock here) ---
         size_ids = request.POST.getlist("sizes")
         color_ids = request.POST.getlist("colors")
-        price = request.POST.get("price")
-        stock = request.POST.get("stock")
 
-        print(f"Received Size IDs: {size_ids}, Received Color IDs: {color_ids}, Price: {price}, Stock: {stock}")
-        if size_ids and color_ids and (price or stock):
-            # Delete existing variants not in the new selection
+        if size_ids and color_ids and price:
+            # Delete old variants not in the new selection
             new_combinations = {(size_id, color_id) for size_id in size_ids for color_id in color_ids}
             for variant in product.variants.all():
-                if (variant.size_id, variant.color_id) not in new_combinations:
+                if (str(variant.size_id), str(variant.color_id)) not in new_combinations:
                     variant.delete()
 
             # Create or update variants
@@ -291,18 +295,16 @@ def edit_product(request, slug=None):
                         product=product,
                         size_id=size_id,
                         color_id=color_id,
-                        defaults={'price': price, 'stock': stock}
+                        defaults={'price': float(price)},
                     )
                     if not created:
-                        if price:
-                            variant.price = float(price)
-                        if stock:
-                            variant.stock = int(stock)
+                        variant.price = float(price)
                         variant.save()
 
-        messages.success(request, f"{'Product, variants, and images updated' if slug else 'New product, variants, and images added'} successfully!")
+        messages.success(request, f"{'Product updated' if slug else 'New product added'} successfully!")
         return redirect('admin_product_details', slug=product.slug)
 
+    # --- Render form context ---
     context = {
         'product': product,
         'categories': Category.objects.all(),
@@ -313,7 +315,8 @@ def edit_product(request, slug=None):
         'selected_sizes': selected_sizes,
         'selected_colors': selected_colors,
     }
-    return render(request, 'admin/add_product.html', context)#delete product 
+    return render(request, 'admin/add_product.html', context)
+
 @login_required
 def delete_product(request, slug):
     if request.method == "POST" and request.headers.get("x-requested-with") == "XMLHttpRequest": # means it's an AJAX request for a specific product
@@ -330,7 +333,7 @@ def delete_product(request, slug):
                              ####   User views  ####
 
 def user_product_list(request):
-    products = Product.objects.all()
+    products = Product.objects.all().distinct()
     filter_form = ProductFilterForm(request.GET or None)
     genders = Gender.objects.all()
 
@@ -342,7 +345,6 @@ def user_product_list(request):
         max_price = filter_form.cleaned_data.get("max_price")
         sort_by = filter_form.cleaned_data.get("sort_by")
 
-        # Apply filters
         if category:
             products = products.filter(category=category)
         if brand:
@@ -354,7 +356,6 @@ def user_product_list(request):
         if max_price:
             products = products.filter(variants__price__lte=max_price)
 
-        # Sorting
         if sort_by == "price_low":
             products = products.order_by("variants__price")
         elif sort_by == "price_high":
@@ -366,8 +367,14 @@ def user_product_list(request):
 
     products = products.distinct()
 
-    # Pagination
-    paginator = Paginator(products, 3)  # 3 products per page if needed
+    # wishlist
+    wishlist_ids = []
+    if request.user.is_authenticated:
+        wishlist_ids = WishlistItem.objects.filter(
+            wishlist__user=request.user
+        ).values_list("product_variant__product_id", flat=True)
+
+    paginator = Paginator(products, 3)
     page_number = request.GET.get("page")
     products = paginator.get_page(page_number)
 
@@ -375,10 +382,11 @@ def user_product_list(request):
         "products": products,
         "filter_form": filter_form,
         "genders": genders,
+        "wishlist_ids": list(wishlist_ids),
     })
-#product details view
 
-def product_details(request, slug):
+
+def product_detail(request, slug):
     product = get_object_or_404(Product, slug=slug)
 
     # All variants of the product with related color and size
@@ -389,6 +397,10 @@ def product_details(request, slug):
 
     # Unique sizes for this product
     sizes = Size.objects.filter(variants__product=product).distinct()
+
+    # total stock
+    
+
 
     if request.method == 'POST':
         # Handle any form submissions (e.g., adding to cart, selecting variant)

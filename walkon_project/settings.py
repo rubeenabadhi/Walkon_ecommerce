@@ -54,17 +54,19 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'django_filters', # Required by django-filter
     'admin_dashboard',
-    'cart',
     'checkout',
     'product',
+    'cart',
     'order',
     'review',  
     'offers',
     'address',
     'wallet',
+    'wishlist',
     'django_bootstrap_breadcrumbs',
     "widget_tweaks",
     "grappelli",
+    "django_extensions",
     
 ]
 
@@ -92,6 +94,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'product.context_processors.user_product_list',
+                'wishlist.context_processors.wishlist_context',
+                'cart.context_processor.cart_context',
             ],
         },
     },

@@ -1,0 +1,82 @@
+{% extends 'user/base.html' %}
+{% load static %}
+{% block title %}Select Payment Method - Walkon{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/cart.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <form method="post" action="{% url 'place_order' %}">
+        {% csrf_token %}
+        <div class="row">
+
+            <!-- Payment Options (Left side) -->
+            <div class="col-lg-8">
+                <h1 class="mb-4 fw-bold">Select Payment Method</h1>
+
+                <!-- Razorpay Option -->
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body d-flex align-items-center p-3">
+                        <div class="form-check me-3">
+                            <input class="form-check-input" type="radio" 
+                                name="payment_method" value="razorpay" id="razorpay"
+                                {% if request.session.payment_method == "razorpay" %}checked{% endif %} required>
+                        </div>
+                        <label class="form-check-label w-100 d-flex align-items-center" for="razorpay">
+                            <i class="fa-brands fa-cc-visa fa-lg text-primary me-2"></i>
+                            <div>
+                                <h5 class="card-title mb-1">Razorpay</h5>
+                                <p class="card-text mb-0">Pay securely online using Razorpay.</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Cash on Delivery Option -->
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body d-flex align-items-center p-3">
+                        <div class="form-check me-3">
+                            <input class="form-check-input" type="radio" 
+                                name="payment_method" value="cod" id="cod"
+                                {% if request.session.payment_method == "cod" %}checked{% endif %} required>
+                        </div>
+                        <label class="form-check-label w-100 d-flex align-items-center" for="cod">
+                            <i class="fa-solid fa-money-bill-wave fa-lg text-success me-2"></i>
+                            <div>
+                                <h5 class="card-title mb-1">Cash on Delivery</h5>
+                                <p class="card-text mb-0">Pay with cash when your order is delivered.</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary (Right side) -->
+            <div class="col-lg-4">
+                <div class="order-summary p-3 shadow-sm rounded">
+                    <h3>Order Summary</h3>
+                    <p>In Rupees</p>
+                    {% for product in cart_items %}
+                    <p class="qty">
+                        <span id="control-quantity-{{ product.id }}">{{ product.quantity }}</span> x :
+                        ₹{{ product.variant.price }}
+                    </p>
+                    {% endfor %}
+                    <p class="text-success">Delivery Charges: ₹ Free</p>
+                    <p>Platform fee: ₹ 0</p>
+                    <p class="fw-bold">Total: ₹<span id="grand-total">{{ total_price }}</span></p>
+                    <div class="discount-code my-3"> <p>Discount code</p> </div> <button class="apply-btn">Apply</button>
+
+                    <!-- Final Place Order Button -->
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-dark w-100">Place Order</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>
+{% endblock %}

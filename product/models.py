@@ -82,11 +82,12 @@ class Product(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     primary_image = CloudinaryField(blank=True, null=True)  # Primary image for the product
-    is_available = models.BooleanField(default=True)
-    is_listed = models.BooleanField(default=True)  # Add is_listed field for product listing status 
+    is_available = models.BooleanField(default=True)  # To indicate if the product is available for purchase
+    is_active = models.BooleanField(default=True)  # To indicate if the product is active
     slug = models.SlugField(max_length=250, unique=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='products')
     brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, related_name='products')
+    stock = models.PositiveIntegerField(default=0)
     added_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='added_products')
     gender = models.ForeignKey(Gender, on_delete=models.SET_NULL, null=True, related_name='products')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -109,7 +110,6 @@ class ProductVariant(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
     size = models.ForeignKey(Size, on_delete=models.SET_NULL, null=True, related_name='variants')
     color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, related_name='variants')
-    stock = models.PositiveIntegerField(default=0)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

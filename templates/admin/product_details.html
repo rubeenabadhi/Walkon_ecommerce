@@ -12,7 +12,7 @@
         <p><strong>Brand:</strong> {{ product.brand.name }}</p>
         <p><strong>Gender:</strong> {{ product.gender.label }}</p>
         <p><strong>Price:</strong> {{ product.variants.first.price|default:"N/A" }}</p>
-        <p><strong>Stock:</strong> {{ product.variants.first.stock|default:"N/A" }}</p>
+        <p><strong>Stock:</strong> {{ product.stock|default:"N/A" }}</p>
         <p><strong>Available:</strong> {% if product.is_available %}Yes{% else %}No{% endif %}
 
         <!-- Primary Image -->

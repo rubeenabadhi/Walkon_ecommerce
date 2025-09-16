@@ -105,10 +105,11 @@
                 
                 <!-- Wishlist Icon -->
                 <button class="btn btn-light btn-lg rounded-circle shadow-sm position-absolute top-0 end-0 m-3 wishlist-btn"
-                        data-product-id="{{ product.id }}"
+                        data-url="{% url 'toggle_wishlist' product.id %}"
+                        data-variant-id="{{ product.variants.first.id }}"
                         title="Add to Wishlist"
                         style="z-index: 10;">
-                    <i class="bi bi-heart-fill text-danger fs-4"></i>
+                    <i class="{% if product.id in wishlist_ids %}bi bi-heart-fill text-danger{% else %}bi bi-heart text-dark{% endif %}"></i>
                 </button>
 
                 <!-- Product Image -->

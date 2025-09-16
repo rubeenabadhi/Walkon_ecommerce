@@ -27,12 +27,17 @@ from django.conf.urls.static import static
 
 
 urlpatterns = [
-    path("grappelli/", include("grappelli.urls")),
+    path("grappelli/", include("grappelli.urls")), # grappelli means admin panel it use for django
     path('admin/', admin.site.urls),
     path('', include('authentication.urls')),
     path('accounts/', include('allauth.urls')),
     path('', include('admin_dashboard.urls')),
     path('', include('product.urls')),
+    path('cart/', include('cart.urls', namespace='cart')),
+    path('address/', include("address.urls")),
+    path('wishlist/',include("wishlist.urls")),
+    path('checkout/',include("checkout.urls")),
+    path('order/',include("order.urls")),
 ]
 def custom_404_view(request, exception):
     return render(request, "404.html", status=404)

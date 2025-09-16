@@ -13,9 +13,9 @@
       <h6 class="mb-4 fw-bold">👋 Hello, {{ user.username }}</h6>
       <div class="list-group list-group-flush">
         <a href="{% url 'user_profile' user.id %}" class="list-group-item list-group-item-action py-2 rounded">👤 Profile</a>
-        <a href="#" class="list-group-item list-group-item-action py-2 rounded">📦 My Orders</a>
+        <a href="{% url 'orders' %}" class="list-group-item list-group-item-action py-2 rounded">📦 My Orders</a>
         <a href="#" class="list-group-item list-group-item-action py-2 rounded">💰 Wallet</a>
-        <a href="#" class="list-group-item list-group-item-action py-2 rounded">🏠 Address</a>
+        <a href="{% url 'address' %}" class="list-group-item list-group-item-action py-2 rounded">🏠 Address</a>
         <a href="#" class="list-group-item list-group-item-action py-2 rounded">🎁 Refer & Earn</a>
         <a href="#" class="list-group-item list-group-item-action text-danger py-2 rounded">🗑️ Delete Account</a>
         <a href="{% url 'logout' %}" class="list-group-item list-group-item-action text-danger py-2 rounded">🚪 Logout</a>

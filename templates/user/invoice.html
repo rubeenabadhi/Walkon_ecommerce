@@ -1,0 +1,166 @@
+{% load math_filters %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice - {{ order.order_id }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .invoice-container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #eee;
+        }
+
+        .invoice-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .invoice-header h1 {
+            margin: 0;
+            font-size: 28px;
+            color: #1a73e8;
+        }
+
+        .invoice-header p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .customer-info, .order-info {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .customer-info td, .order-info td {
+            padding: 5px 0;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+
+        .items-table th, .items-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .items-table th {
+            background-color: #f2f2f2;
+        }
+
+        .total {
+            text-align: right;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #888;
+            margin-top: 30px;
+        }
+
+        /* Responsive for PDF & small screens */
+        @media only screen and (max-width: 768px) {
+            .invoice-container {
+                padding: 10px;
+            }
+            .items-table th, .items-table td {
+                font-size: 12px;
+                padding: 6px;
+            }
+            .invoice-header h1 {
+                font-size: 22px;
+            }
+            .total {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="invoice-container">
+    <!-- Header -->
+    <div class="invoice-header">
+        <h1>Invoice</h1>
+        <p>Order ID: {{ order.order_id }}</p>
+        <p>Date: {{ order.order_date|date:"d M Y" }}</p>
+    </div>
+
+    <!-- Customer Info -->
+    <table class="customer-info">
+        <tr>
+            <td><strong>Customer:</strong> {{ user.get_full_name|default:user.username }}</td>
+        </tr>
+        <tr>
+            <td><strong>Email:</strong> {{ user.email }}</td>
+        </tr>
+        <tr>
+            <td><strong>Address:</strong> 
+                {{ order.address.address }}, {{ order.address.city }}, 
+                {{ order.address.state }} - {{ order.address.pincode }},{{ order.address.district }} <br>
+
+                Country: {{ order.address.country }} <br>
+
+                Phone: {{ order.address.phone_number }}
+
+
+            </td>
+        </tr>
+    </table>
+
+    <!-- Items Table -->
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Variant</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in order.items.all %}
+            <tr>
+                <td>{{ item.product_variant.product.name }}</td>
+                <td>{{ item.product_variant.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.price|floatformat:2 }}</td>
+                <td>{{ item.price|mul:item.quantity|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Totals -->
+    <div class="total">
+        <strong>Subtotal:</strong> {{ order.subtotal|floatformat:2 }}<br>
+        <strong>Discount:</strong> -{{ order.discount|floatformat:2 }}<br>
+        <strong>Total:</strong> {{ order.total|floatformat:2 }}
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        Thank you for shopping with WalkOn!<br>
+        This is a computer-generated invoice and does not require a signature.
+    </div>
+</div>
+</body>
+</html>
