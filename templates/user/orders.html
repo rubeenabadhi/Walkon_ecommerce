@@ -81,27 +81,7 @@
                         {% endif %}
                     </div>
 
-                    <!-- Cancel Item Modal -->
-                    <div class="modal fade" id="cancelItemModal{{ order.id }}{{ forloop.counter }}" tabindex="-1" aria-labelledby="cancelItemLabel" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="cancelItemLabel">Cancel Item: {{ item.product_variant.product.name }}</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <form action="" method="POST">
-                                        {% csrf_token %}
-                                        <div class="mb-3">
-                                            <label for="reason" class="form-label">Reason (optional)</label>
-                                            <textarea class="form-control" id="reason" name="reason" rows="3"></textarea>
-                                        </div>
-                                        <button type="submit" class="btn btn-danger">Confirm Cancel</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    
                 {% endfor %}
             </div>
 
@@ -132,35 +112,34 @@
                 <a href="{% url 'order_details' order.order_id %}" class="btn btn-sm btn-outline-info me-2">View Details</a>
                 <a href="" class="btn btn-sm btn-outline-primary me-2" target="_blank">Download Invoice</a>
                 {% if order.status in 'pending confirmed' %}
-                    <button class="btn btn-sm btn-outline-danger me-2" data-bs-toggle="modal" data-bs-target="#cancelOrderModal{{ order.id }}">Cancel Order</button>
+                    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal{{ order.id }}">Cancel Order</button>
                 {% endif %}
                 {% if order.status == 'delivered' %}
                     <button class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#returnOrderModal{{ order.id }}">Return Order</button>
                 {% endif %}
             </div>
 
-            <!-- Cancel Order Modal -->
-            <div class="modal fade" id="cancelOrderModal{{ order.id }}" tabindex="-1" aria-labelledby="cancelOrderLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="cancelOrderLabel">Cancel Entire Order: {{ order.order_id }}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+   <!-- Cancel Order Modal -->
+    <div class="modal fade" id="cancelOrderModal{{ order.id }}" tabindex="-1" aria-labelledby="cancelOrderLabel{{ order.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cancelOrderLabel{{ order.id }}">Cancel Order: {{ order.order_id }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="{% url 'cancel_order' order.id %}" method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="reason" class="form-label">Reason (optional)</label>
+                            <textarea class="form-control" id="reason" name="reason" rows="3"></textarea>
                         </div>
-                        <div class="modal-body">
-                            <form action="" method="POST">
-                                {% csrf_token %}
-                                <div class="mb-3">
-                                    <label for="reason" class="form-label">Reason (optional)</label>
-                                    <textarea class="form-control" id="reason" name="reason" rows="3"></textarea>
-                                </div>
-                                <button type="submit" class="btn btn-danger">Confirm Cancel</button>
-                            </form>
-                        </div>
-                    </div>
+                        <button type="submit" class="btn btn-danger">Confirm Cancel</button>
+                    </form>
                 </div>
             </div>
-
+        </div>
+    </div>
             <!-- Return Order Modal -->
             <div class="modal fade" id="returnOrderModal{{ order.id }}" tabindex="-1" aria-labelledby="returnOrderLabel" aria-hidden="true">
                 <div class="modal-dialog">

@@ -69,17 +69,20 @@ def order_detail(request, order_number):
 
 @login_required(login_url="login")
 def cancel_order(request, order_id):
-    order = get_object_or_404(Order, order_id=order_id, user=request.user)
+    print("Canceling order:", order_id)
+    order = get_object_or_404(Order,id=order_id, user=request.user)
     if request.method == 'POST':
         reason = request.POST.get('reason', '').strip()
         # allow cancelling only when not already cancelled/delivered/returned depending on policy
         if order.status in ['cancelled', 'returned']:
+            print("Order already cancelled:", order.order_id)
             messages.warning(request, 'Order cannot be cancelled.')
-            return redirect('orders:list')
+            return redirect('order_details', order_number=order.order_id)
         order.cancel_order(reason=reason)
+        print("Order cancelled:", order.order_id)
         messages.success(request, 'Order cancelled successfully.')
-        return redirect('orders:list')
-    return redirect('orders:detail', pk=order_id)
+        return redirect('order_details', order_number=order.order_id)
+    return redirect('order_details', pk=order_id)
 
 
 
