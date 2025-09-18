@@ -130,7 +130,9 @@
         <thead>
             <tr>
                 <th>Item</th>
-                <th>Variant</th>
+                <th>Size</th>
+                <th>Color</th>
+                <th>Category</th>
                 <th>Quantity</th>
                 <th>Unit Price</th>
                 <th>Total</th>
@@ -139,8 +141,10 @@
         <tbody>
             {% for item in order.items.all %}
             <tr>
-                <td>{{ item.product_variant.product.name }}</td>
-                <td>{{ item.product_variant.name }}</td>
+                <td>{{ item.product_variant.product.brand.name }} <br>{{ item.product_variant.product.name }}</td>
+                <td>{{ item.product_variant.size }}</td>
+                <td>{{ item.product_variant.color.name }}</td>
+                <td>{{ item.product_variant.product.gender.label}},{{ item.product_variant.product.category.name }}</td>
                 <td>{{ item.quantity }}</td>
                 <td>{{ item.price|floatformat:2 }}</td>
                 <td>{{ item.price|mul:item.quantity|floatformat:2 }}</td>

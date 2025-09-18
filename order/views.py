@@ -13,6 +13,7 @@ from django.template.loader import render_to_string
 from django.http import HttpResponse
 from django.core.mail import send_mail
 
+
 @login_required(login_url="login")
 def orders(request):
     # --- GET search / filters from query params ---
@@ -27,7 +28,8 @@ def orders(request):
         orders_qs = orders_qs.filter(
             Q(order_id__icontains=q) |
             Q(items__product_variant__product__name__icontains=q) |
-            Q(status__icontains=q)
+            Q(status__icontains=q) |
+            Q(order_date__icontains=q)
         ).distinct()
 
     # --- apply status filter if provided (exact match, case-insensitive) ---
@@ -144,3 +146,73 @@ def order_invoice_pdf(request, order_id):
     except Exception:
         messages.error(request, "PDF library not installed. Install xhtml2pdf or use WeasyPrint.")
         return redirect("orders:detail", pk=order.id)
+    
+#======================================================================ADMIN VIEWS=========================================================
+
+#===================== ADMIN ORDER LIST VIEW =====================
+from django.contrib.admin.views.decorators import staff_member_required
+@staff_member_required(login_url="admin_login")
+def admin_orders(request):
+    # --- GET search / filters from query params ---
+    q = request.GET.get('q', '').strip()            # search box
+    status_filter = request.GET.get('status', '').strip()  # optional: filter by status 
+    # --- base queryset: all orders ---
+    orders_qs = Order.objects.all()
+    # --- apply search if provided (order_id, product name, status) ---
+    if q:
+        orders_qs = orders_qs.filter(
+            Q(order_id__icontains=q) |
+            Q(items__product_variant__product__name__icontains=q) |
+            Q(status__icontains=q) |
+            Q(order_date__icontains=q)
+        ).distinct()
+    # --- apply status filter if provided --- (exact match, case-insensitive) ---
+    if status_filter:
+        orders_qs = orders_qs.filter(status__iexact=status_filter)
+    # --- prefetch related to avoid extra queries and order by date ---
+    orders = orders_qs.prefetch_related('items__product_variant__product').order_by('-order_date')
+    # --- pagination ---
+    paginator = Paginator(orders, 5)   # 5 per page (change as needed)
+    page_number = request.GET.get('page', 1)
+    orders_page = paginator.get_page(page_number)
+    # --- context ---
+    context = {
+        'orders': orders_page,
+        'q': q,
+        'status_filter': status_filter,
+    }
+    return render(request, 'admin/admin_orders.html', context)    
+    
+#===================== ADMIN ORDER DETAIL VIEW =====================
+@staff_member_required(login_url="admin_login")
+def admin_order_detail(request, order_number):
+    order = get_object_or_404(Order, order_id=order_number)
+    order_items = order.items.select_related('product_variant__product')
+    context = {
+        'order': order,
+        'order_items': order_items,
+    }
+    return render(request, 'admin/admin_order_details.html', context)
+
+#===================== ORDER STATUS UPDATE =====================
+@staff_member_required(login_url="admin_login")
+def admin_order_status(request, order_number):
+    order = get_object_or_404(Order, order_id=order_number)
+
+    if request.method == "POST":
+        new_status = request.POST.get("status")
+
+        # Restrict updates if already cancelled
+        if order.status == "cancelled":
+            print("Cancelled orders cannot be updated.")
+            messages.error(request, "Cancelled orders cannot be updated.")
+            return redirect("admin_order_detail", order_number=order.order_id)
+
+        # Otherwise allow update
+        order.status = new_status
+        order.save()
+        print(f"Order status updated to {new_status}.")
+        messages.success(request, f"Order status updated to {new_status}.")
+        return redirect("admin_order_detail", order_number=order.order_id)
+
+    return redirect("admin_order_detail", order_number=order.order_id)
