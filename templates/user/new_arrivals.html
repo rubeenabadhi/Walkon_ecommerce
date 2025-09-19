@@ -3,11 +3,11 @@
 {% load widget_tweaks %}
 {% block title %}All Products - Walkon{% endblock %}
 {% block content %}
-<div class="container-fluid py-5">
+<div class="container-fluid py-4">
     <!-- Header Section -->
-    <div class="text-center mb-5">
+    <div class="text-center mb-4">
         <h2 class="fw-bold text-uppercase" style="font-family: var(--font-family-inter); font-size: 36px;">
-            MEN SHOES
+            ALL PRODUCTS
         </h2>
         <p class="text-muted mb-2" style="font-family: var(--font-family-inter); font-weight: 300; font-size: 16px;">
             👟 Step up your shoe game or try a fresh pair. Explore all styles here.
@@ -15,13 +15,21 @@
         
         <!-- Gender Filter Buttons -->
 <div class="d-flex justify-content-center gap-3 mt-3">
-  {% for categ in categories %}
-    <a href="?category={{ categ.name }}"
-       class="btn px-4 {% if request.GET.category == categ.name %}btn-dark{% else %}btn-outline-dark{% endif %}">
-       {{ categ.name }}
+  <!-- All Button -->
+  <a href="{% url 'all_products' %}"
+     class="btn px-4 {% if not request.GET.gender %}btn-dark{% else %}btn-outline-dark{% endif %}">
+     All
+  </a>
+
+  <!-- Gender Buttons -->
+  {% for g in genders %}
+    <a href="?gender={{ g.id }}"
+       class="btn px-4 {% if request.GET.gender == g.id|stringformat:'s' %}btn-dark{% else %}btn-outline-dark{% endif %}">
+       {{ g.label }}
     </a>
   {% endfor %}
 </div>
+
 
 
 
@@ -55,7 +63,11 @@
     {{ filter_form.brand|add_class:"form-select" }}
   </div>
 
-  
+  <!-- Gender -->
+  <div class="mb-3">
+    <label for="id_gender" class="form-label fw-semibold">Gender</label>
+    {{ filter_form.gender|add_class:"form-select" }}
+  </div>
 
   <!-- Price Range -->
   <div class="mb-3">
@@ -91,7 +103,7 @@
         <div class="col-md-4 mb-4">
             <div class="card h-100 shadow-sm border-0 rounded-3 position-relative product-card">
                 
-               <!-- Wishlist Icon -->
+                <!-- Wishlist Icon -->
                 <button class="btn btn-light btn-lg rounded-circle shadow-sm position-absolute top-0 end-0 m-3 wishlist-btn"
                         data-url="{% url 'toggle_wishlist' product.id %}"
                         data-variant-id="{{ product.variants.first.id }}"
@@ -104,10 +116,10 @@
                 {% if product.primary_image %}
                 <a href="{% url 'product_details' product.slug %}" class="text-dark text-decoration-none">
                     <img src="{{ product.primary_image.url }}"
-                         class="card-img-top p-3 rounded-3"
-                         alt="{{ product.name }}"
-                         style="height: 230px; object-fit: contain;"
-                         onerror="this.src='#'">
+     class="card-img-top p-3 rounded-3"
+     alt="{{ product.name }}"
+     style="height: 180px; object-fit: contain;">
+
                 </a>
                 {% else %}
                     <div class="d-flex align-items-center justify-content-center bg-light rounded-3"
@@ -117,28 +129,55 @@
                 {% endif %}
 
                 <!-- Product Details -->
-                <div class="card-body text-center">
-                    <h6 class="card-title fw-bold text-truncate">{{ product.name|default:"No Name" }}</h6>
-                    <p class="card-text text-success fw-bold fs-5 mb-2">
-                        ₹{{ product.variants.first.price|default:"N/A" }}
-                    </p>
-                    
-                    <!-- Rating -->
-                    <div class="mb-2">
-                        {% for i in "12345" %}
-                            <i class="bi {% if i|add:0 <= rating|floatformat:0 %}bi-star-fill text-warning{% else %}bi-star{% endif %}"></i>
-                        {% endfor %}
-                        <span class="text-muted small">({{ rating|floatformat:1 }})</span>
-                    </div>
+              <div class="card-body text-center p-2">
+    <!-- Product Name -->
+    <h6 class="fw-bold text-uppercase text-truncate mb-1" 
+        style="letter-spacing: .5px; color:#222;">
+        {{ product.name|default:"No Name" }}
+    </h6>
 
-                    <!-- Add to Cart Button -->
-                    <form action="" method="post" class="mt-2">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-dark w-100 rounded-pill fw-semibold py-2 shadow-sm">
-                            <i class="bi bi-cart-plus fs-5 me-1"></i> Add to Cart
-                        </button>
-                    </form>
-                </div>
+    <!-- Category -->
+    <p class="text-primary fw-semibold small mb-1" 
+       style="font-size: 13px; letter-spacing:.3px;">
+       {{ product.category|default:"No Category" }}
+    </p>
+
+    <!-- Brand -->
+    <p class="text-muted small mb-1">
+        <i class="bi bi-tags-fill me-1 text-secondary"></i> 
+        {{ product.brand|default:"No Brand" }}
+    </p>
+
+    <!-- Gender -->
+    <p class="badge bg-light text-dark rounded-pill px-2 py-1 mb-2" 
+       style="font-size: 11px;">
+        {{ product.gender|default:"No Gender" }}
+    </p>
+
+    <!-- Price -->
+    <p class="text-success fw-bold fs-5 mb-1">
+        ₹{{ product.variants.first.price|default:"N/A" }}
+    </p>
+
+
+
+    <div class="mb-1">
+        {% for i in "12345" %}
+            <i class="bi {% if i|add:0 <= rating|floatformat:0 %}bi-star-fill text-warning{% else %}bi-star{% endif %}"
+               style="font-size: 12px;"></i>
+        {% endfor %}
+        <span class="text-muted small">({{ rating|floatformat:1 }})</span>
+    </div>
+
+    <form action="" method="post" class="mt-1">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-dark w-100 rounded-pill fw-semibold py-1 shadow-sm">
+    <i class="bi bi-cart-plus me-1"></i> Add to Cart
+</button>
+
+    </form>
+</div>
+
             </div>
         </div>
         {% empty %}

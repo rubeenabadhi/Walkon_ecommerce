@@ -14,10 +14,10 @@ from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from product.models import Product  # 
 from django.views.decorators.cache import never_cache
 from .forms import EditProfileForm
-
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 
 
 
@@ -26,44 +26,54 @@ def home(request):
     return render(request, 'user/index.html')
 def signup(request):
     if request.method == 'POST':
-        username=request.POST.get('username')
+        username = request.POST.get('username')
         email = request.POST.get('email')
         password = request.POST.get('password')
         confirm_password = request.POST.get('password2')
 
+        # ✅ Check passwords match
         if password != confirm_password:
-            messages.error(request, 'Passwords do not match.')
+            messages.error(request, '⚠️ Passwords do not match.')
             return redirect('signup')
+
+        # ✅ Validate password with Django + custom validators
+        try:
+            validate_password(password)
+        except ValidationError as e:
+            for error in e.messages:
+                messages.error(request, error)
+            return redirect('signup')
+
+        # ✅ Check duplicates
         if CustomUser.objects.filter(email=email).exists():
-            messages.error(request, 'Email already exists.')
+            messages.error(request, '⚠️ Email already exists.')
             return redirect('signup')
         if CustomUser.objects.filter(username=username).exists():
-            messages.error(request, 'Username already exists.')
+            messages.error(request, '⚠️ Username already exists.')
             return redirect('signup')
 
-        # Generate 6-digit OTP
+        # 🔢 Generate 6-digit OTP
         otp = random.randint(100000, 999999)
 
-        # Store in session temporarily
-        request.session['signup_email'] = email #email for OTP verification
+        # 🗂️ Store temporarily in session
+        request.session['signup_email'] = email
         request.session['signup_username'] = username
         request.session['signup_password'] = password
-        request.session['signup_otp'] = str(otp) # convert to string for easy comparison
+        request.session['signup_otp'] = str(otp)  # convert to string
 
-        # Send OTP via email
+        # 📧 Send OTP email
         send_mail(
             "Your OTP Code",
             f"Your OTP is {otp}. It is valid for 5 minutes.",
             settings.DEFAULT_FROM_EMAIL,
             [email],
-            fail_silently=False, # Fail silently if email sending fails
+            fail_silently=False,
         )
 
-        messages.success(request, f'OTP sent to {email}.')
+        messages.success(request, f'✅ OTP sent to {email}.')
         return redirect('verify_otp')
 
     return render(request, 'signup.html')
-
 
 
 def verify_otp_view(request):
@@ -178,20 +188,34 @@ def reset_password(request):
     if request.method == 'POST':
         new_password = request.POST.get('new_password')
         confirm_password = request.POST.get('confirm_password')
+
+        # ✅ Check password match
         if new_password != confirm_password:
-            messages.error(request, 'Passwords do not match')
+            messages.error(request, '⚠️ Passwords do not match.')
             return redirect('reset_password')
 
+        # ✅ Validate password (with custom + Django validators)
+        try:
+            validate_password(new_password)
+        except ValidationError as e:
+            for error in e.messages:
+                messages.error(request, error)
+            return redirect('reset_password')
+
+        # ✅ Get user from session
         email = request.session.get('reset_email')
         try:
             user = CustomUser.objects.get(email=email)
             user.set_password(new_password)
             user.save()
-            print("Password reset successfully")
-            messages.success(request, 'Password reset successfully')
+            print("✅ Password reset successfully")
+
+            messages.success(request, '✅ Password reset successfully. Please login with your new password.')
             return redirect('login')
+
         except CustomUser.DoesNotExist:
-            messages.error(request, 'User not found')
+            messages.error(request, '❌ User not found. Please try again.')
+
     return render(request, 'user/reset_password.html')
 
 
@@ -305,6 +329,7 @@ def resend_email_change_otp(request):
     return redirect("verify_email_change_otp")
 
 #change password view
+
 @login_required(login_url='login')
 def change_password(request):
     if request.method == 'POST':
@@ -314,21 +339,30 @@ def change_password(request):
 
         user = request.user  # logged-in user
 
-        # Check old password
+        # 🔑 Check old password
         if not user.check_password(old_password):
             messages.error(request, '❌ Old password is incorrect')
             return redirect('change_password')
 
-        # Check new password match
+        # ⚠️ Check new passwords match
         if new_password != confirm_password:
             messages.error(request, '⚠️ New passwords do not match')
             return redirect('change_password')
 
-        # Update password
+        # ✅ Run Django + custom password validators
+        try:
+            validate_password(new_password, user)
+        except ValidationError as e:
+            for error in e.messages:
+                messages.error(request, error)
+            return redirect('change_password')
+
+        # 🔄 Update password
         user.set_password(new_password)
         user.save()
+        print("Password changed successfully")
 
-        # Keep user logged in after password change
+        # ✅ Keep user logged in
         update_session_auth_hash(request, user)
 
         messages.success(request, '✅ Password changed successfully!')
@@ -336,7 +370,7 @@ def change_password(request):
 
     return render(request, 'user/change_password.html')
 
-
+#================================================================================Admin views=================================================================================
 #admin login view
 def admin_login(request):
     if request.method == "POST":

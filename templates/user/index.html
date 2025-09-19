@@ -116,7 +116,7 @@
       {% empty %}
       <p class="text-center">No new arrivals available.</p>
       {% endfor %}
-      <button class="btn btn-yellow">View All</button>
+      <a href="{% url 'new_arrivals' %}" class="btn btn-yellow">
     </div>
   </div>
 </section>

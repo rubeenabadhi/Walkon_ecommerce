@@ -106,13 +106,14 @@ def add_to_cart_from_wishlist(request, variant_id):
         if not created:
             cart_item.quantity += 1
             cart_item.save()
+        print("✅ Added to cart:", cart_item)  # Debug log
 
-        # 3. Wishlist-ൽ നിന്നും remove ചെയ്യുക
+        # 3. Wishlist remove
         wishlist_item.delete()
 
         return JsonResponse({
             "status": "success",
             "message": f"{product.name} added to cart and removed from wishlist"
         })
-
+    print("❌ Invalid request method for adding to cart from wishlist")
     return JsonResponse({"status": "error", "message": "Invalid request method."})

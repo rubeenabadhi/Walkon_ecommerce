@@ -13,17 +13,15 @@
             👟 Step up your shoe game or try a fresh pair. Explore all styles here.
         </p>
         
-        <!-- Gender Filter Buttons -->
+        <!-- category Filter Buttons -->
 <div class="d-flex justify-content-center gap-3 mt-3">
   {% for categ in categories %}
-    <a href="?type={{ categ.name }}"
+    <a href="?category={{ categ.name }}"
        class="btn px-4 {% if request.GET.category == categ.name %}btn-dark{% else %}btn-outline-dark{% endif %}">
        {{ categ.name }}
     </a>
   {% endfor %}
 </div>
-
-
 
     </div>
 
@@ -54,11 +52,7 @@
     {{ filter_form.brand|add_class:"form-select" }}
   </div>
 
-  <!-- Gender -->
-  <div class="mb-3">
-    <label for="id_gender" class="form-label fw-semibold">Gender</label>
-    {{ filter_form.gender|add_class:"form-select" }}
-  </div>
+  
 
   <!-- Price Range -->
   <div class="mb-3">
@@ -78,7 +72,7 @@
   <!-- Buttons -->
   <div class="d-flex justify-content-between">
     <button type="submit" class="btn btn-dark w-50 me-2">Apply</button>
-    <a href="{% url 'all_products' %}" class="btn btn-outline-secondary w-50">Clear</a>
+    <a href="{% url 'kids_products' %}" class="btn btn-outline-secondary w-50">Clear</a>
   </div>
 </form>
 
@@ -94,13 +88,16 @@
         <div class="col-md-4 mb-4">
             <div class="card h-100 shadow-sm border-0 rounded-3 position-relative product-card">
                 
-                <!-- Wishlist Icon -->
+               <!-- Wishlist Icon -->
                 <button class="btn btn-light btn-lg rounded-circle shadow-sm position-absolute top-0 end-0 m-3 wishlist-btn"
-                        data-product-id="{{ product.id }}"
+                        data-url="{% url 'toggle_wishlist' product.id %}"
+                        data-variant-id="{{ product.variants.first.id }}"
                         title="Add to Wishlist"
                         style="z-index: 10;">
-                    <i class="bi bi-heart-fill text-danger fs-4"></i>
+                    <i class="{% if product.id in wishlist_ids %}bi bi-heart-fill text-danger{% else %}bi bi-heart text-dark{% endif %}"></i>
                 </button>
+
+
 
                 <!-- Product Image -->
                 {% if product.primary_image %}
@@ -134,7 +131,7 @@
                     </div>
 
                     <!-- Add to Cart Button -->
-                    <form action="" method="post" class="mt-2">
+                    <form action="{}" method="post" class="mt-2">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-dark w-100 rounded-pill fw-semibold py-2 shadow-sm">
                             <i class="bi bi-cart-plus fs-5 me-1"></i> Add to Cart

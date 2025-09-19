@@ -106,7 +106,6 @@ def add_color(request):
     
 # Product Management
 @staff_member_required
-@staff_member_required
 def add_product(request):
     if request.method == "POST":
         name = request.POST.get("name")
@@ -330,8 +329,9 @@ def delete_product(request, slug):
     return JsonResponse({"success": False, "message": "Invalid request!"}, status=400)
 
 
-                             ####   User views  ####
+#======================================================== User Views ========================================================
 
+# Product Listing with Filters, Sorting, Pagination, Wishlist Integration
 def user_product_list(request):
     products = Product.objects.all().distinct()
     filter_form = ProductFilterForm(request.GET or None)
@@ -421,3 +421,22 @@ def kids_products(request):
     if Category_params:
         products = products.filter(category__name__iexact=Category_params)
     return render(request, 'user/kids.html', {'products': products, 'categories': categories})
+
+#new arrivals
+def new_arrivals(request):
+    products = Product.objects.all().order_by('-created_at')[:8]  # Fetch latest 8 products
+    return render(request, 'user/new_arrivals.html', {'products': products})
+
+# men shoes
+def men_products(request):
+    products = Product.objects.filter(gender__label='Men')
+    categories = Category.objects.all()
+
+    category_param = request.GET.get("category")  
+    if category_param:
+        products = products.filter(category__name__iexact=category_param)
+
+    return render(request, 'user/men.html', {
+        'products': products,
+        'categories': categories
+    })
