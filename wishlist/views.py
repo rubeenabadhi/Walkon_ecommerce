@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from .models import Wishlist, WishlistItem
-from product.models import ProductVariant
+from product.models import Product, ProductVariant
 from cart.models import CartItems
 
 # -------------------
@@ -83,37 +83,34 @@ def remove_from_wishlist(request, item_id):
 # Move from wishlist → cart
 # -------------------
 @login_required
+@require_POST
 def add_to_cart_from_wishlist(request, variant_id):
-    if request.method == "POST":
-        # 1. Wishlist item get use variant_id
-        wishlist_item = get_object_or_404(
-            WishlistItem,
-            wishlist__user=request.user,
-            product_variant_id=variant_id
-        )
+    # ✅ Get selected variant directly
+    variant = get_object_or_404(ProductVariant, id=variant_id)
+    product = variant.product
 
-        variant = wishlist_item.product_variant
-        product = variant.product
+    # ✅ Remove any wishlist item that matches this product for the user
+    WishlistItem.objects.filter(
+        wishlist__user=request.user,
+        product_variant__product=product
+    ).delete()
 
-        # 2. Add or update cart
-        cart_item, created = CartItems.objects.get_or_create(
-            user=request.user,
-            product=product,
-            variant=variant,
-            defaults={"quantity": 1}
-        )
+    # ✅ Add to cart
+    cart_item, created = CartItems.objects.get_or_create(
+        user=request.user,
+        product=product,
+        variant=variant,
+        defaults={"quantity": 1}
+    )
 
-        if not created:
-            cart_item.quantity += 1
-            cart_item.save()
-        print("✅ Added to cart:", cart_item)  # Debug log
+    if not created:
+        cart_item.quantity += 1
+        cart_item.save()
 
-        # 3. Wishlist remove
-        wishlist_item.delete()
-
-        return JsonResponse({
-            "status": "success",
-            "message": f"{product.name} added to cart and removed from wishlist"
-        })
-    print("❌ Invalid request method for adding to cart from wishlist")
-    return JsonResponse({"status": "error", "message": "Invalid request method."})
+    cart_count = CartItems.objects.filter(user=request.user).count()
+    print(f"✅ Moved {product.name} (Size {variant.size.label}) to cart.")
+    return JsonResponse({
+        "status": "success",
+        "message": f"✅ {product.name} (Size {variant.size.label}) added to cart successfully!",
+        "cart_count": cart_count
+    })

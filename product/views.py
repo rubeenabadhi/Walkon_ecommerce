@@ -412,6 +412,20 @@ def product_detail(request, slug):
         'colors': colors,
         'sizes': sizes,
     })
+
+# -------------------
+# Fetch available sizes for a product (Ajax)
+@login_required(login_url="login")
+def product_sizes(request, product_id):
+    try:
+        product = Product.objects.get(id=product_id)
+        sizes = [
+            {"id": v.id, "label": v.size.label if v.size else "N/A"}
+            for v in product.variants.all()
+        ]
+        return JsonResponse({"sizes": sizes})
+    except Product.DoesNotExist:
+        return JsonResponse({"sizes": []})
 #kids products
 def kids_products(request):
     products = Product.objects.filter(gender__label='Kids')
@@ -424,7 +438,8 @@ def kids_products(request):
 
 #new arrivals
 def new_arrivals(request):
-    products = Product.objects.all().order_by('-created_at')[:8]  # Fetch latest 8 products
+    products = Product.objects.all().order_by('-created_at')  # Fetch latest 8 products
+    
     return render(request, 'user/new_arrivals.html', {'products': products})
 
 # men shoes
@@ -437,6 +452,20 @@ def men_products(request):
         products = products.filter(category__name__iexact=category_param)
 
     return render(request, 'user/men.html', {
+        'products': products,
+        'categories': categories
+    })
+
+# -------------------wemen shoes
+def women_products(request):
+    products = Product.objects.filter(gender__label='Women')
+    categories = Category.objects.all()
+
+    category_param = request.GET.get("category")    
+    if category_param:
+        products = products.filter(category__name__iexact=category_param)    
+
+    return render(request, 'user/women.html', {
         'products': products,
         'categories': categories
     })

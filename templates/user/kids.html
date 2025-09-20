@@ -1,7 +1,7 @@
 {% extends "user/base.html" %}
 {% load static %}
 {% load widget_tweaks %}
-{% block title %}All Products - Walkon{% endblock %}
+{% block title %}KIDS SHOES - Walkon{% endblock %}
 {% block content %}
 <div class="container-fluid py-5">
     <!-- Header Section -->
@@ -130,13 +130,14 @@
                         <span class="text-muted small">({{ rating|floatformat:1 }})</span>
                     </div>
 
-                    <!-- Add to Cart Button -->
-                    <form action="{}" method="post" class="mt-2">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-dark w-100 rounded-pill fw-semibold py-2 shadow-sm">
-                            <i class="bi bi-cart-plus fs-5 me-1"></i> Add to Cart
-                        </button>
-                    </form>
+                    
+                   <!-- Add to Cart Button -->
+<button class="btn btn-warning btn-sm px-3 py-1 add-to-cart-btn" type="button"
+        data-product-id="{{ product.id }}"
+        data-variant-id="{{ product.variants.first.id }}"
+        style="position: relative; z-index: 20;">
+    <i class="bi bi-cart-plus"></i> Add to Cart
+</button>
                 </div>
             </div>
         </div>
@@ -181,7 +182,32 @@
         </div>
     </div>
 </div>
-{% endblock %}
+<div class="modal fade" id="sizeModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Select Size</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <select class="form-select" id="modalSizeSelect">
+          <option value="">-- Select Size --</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-warning" id="confirmAddToCart">Add to Cart</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-    crossorigin="anonymous"></script>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  const addToCartBaseUrl = "{% url 'add_to_cart_from_wishlist' 9999 %}".replace("9999/", ""); 
+  const csrfToken = "{{ csrf_token }}";
+</script>
+<script src="{% static 'js/addToCart.js' %}"></script>
+{% endblock %}

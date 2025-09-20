@@ -20,6 +20,9 @@ urlpatterns = [
     path('product/<slug:slug>/', views.product_detail, name='product_details'),
     path('products/kids/', views.kids_products, name='kids_products'),
     path('products/men/', views.men_products, name='men_products'),
+    path('products/women/', views.women_products, name='women_products'),
     path('products/new_arrivals/', views.new_arrivals, name='new_arrivals'),
+    path('product/<int:product_id>/sizes/', views.product_sizes, name='product_sizes'),
+
 
 ]

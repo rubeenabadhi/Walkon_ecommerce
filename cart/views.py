@@ -26,7 +26,6 @@ def cart(request):
 
 
 @login_required(login_url="login")
-@login_required(login_url="login")
 def add_to_cart(request, slug):
     print("Hit add_to_cart view with:", slug, request.POST.dict())
 

@@ -1,0 +1,213 @@
+{% extends "user/base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+{% block title %}All Products - Walkon{% endblock %}
+{% block content %}
+<div class="container-fluid py-5">
+    <!-- Header Section -->
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-uppercase" style="font-family: var(--font-family-inter); font-size: 36px;">
+            KIDS SHOES
+        </h2>
+        <p class="text-muted mb-2" style="font-family: var(--font-family-inter); font-weight: 300; font-size: 16px;">
+            👟 Step up your shoe game or try a fresh pair. Explore all styles here.
+        </p>
+        
+        <!-- category Filter Buttons -->
+<div class="d-flex justify-content-center gap-3 mt-3">
+  {% for categ in categories %}
+    <a href="?category={{ categ.name }}"
+       class="btn px-4 {% if request.GET.category == categ.name %}btn-dark{% else %}btn-outline-dark{% endif %}">
+       {{ categ.name }}
+    </a>
+  {% endfor %}
+</div>
+
+    </div>
+
+    <div class="row">
+        <!-- Mobile Filter Toggle Button -->
+<div class="d-block d-md-none mb-3 text-center">
+    <button class="btn btn-outline-dark w-100" type="button" data-bs-toggle="collapse"
+        data-bs-target="#filterSidebar" aria-expanded="false" aria-controls="filterSidebar">
+        Filters & Sort
+    </button>
+</div>
+
+<!-- Filters Section -->
+<div class="col-lg-3 col-md-4 collapse d-md-block mb-4" id="filterSidebar">
+    <div class="card p-3 shadow-sm border-0 rounded-3">
+        <form method="get" class="p-3 border rounded bg-light">
+  <h5 class="fw-bold mb-3">Filters</h5>
+
+  <!-- Category -->
+  <div class="mb-3">
+    <label for="id_category" class="form-label fw-semibold">Category</label>
+    {{ filter_form.category|add_class:"form-select" }}
+  </div>
+
+  <!-- Brand -->
+  <div class="mb-3">
+    <label for="id_brand" class="form-label fw-semibold">Brand</label>
+    {{ filter_form.brand|add_class:"form-select" }}
+  </div>
+
+  
+
+  <!-- Price Range -->
+  <div class="mb-3">
+    <label class="form-label fw-semibold">Price Range</label>
+    <div class="d-flex gap-2">
+      {{ filter_form.min_price|add_class:"form-control" }}
+      {{ filter_form.max_price|add_class:"form-control" }}
+    </div>
+  </div>
+
+  <!-- Sort By -->
+  <div class="mb-3">
+    <label for="id_sort_by" class="form-label fw-semibold">Sort By</label>
+    {{ filter_form.sort_by|add_class:"form-select" }}
+  </div>
+
+  <!-- Buttons -->
+  <div class="d-flex justify-content-between">
+    <button type="submit" class="btn btn-dark w-50 me-2">Apply</button>
+    <a href="{% url 'kids_products' %}" class="btn btn-outline-secondary w-50">Clear</a>
+  </div>
+</form>
+
+
+    </div>
+</div>
+
+
+        <!-- Products Section -->
+        <div class="col-lg-9 col-md-8">
+    <div class="row">
+        {% for product in products %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm border-0 rounded-3 position-relative product-card">
+                
+               <!-- Wishlist Icon -->
+                <button class="btn btn-light btn-lg rounded-circle shadow-sm position-absolute top-0 end-0 m-3 wishlist-btn"
+                        data-url="{% url 'toggle_wishlist' product.id %}"
+                        data-variant-id="{{ product.variants.first.id }}"
+                        title="Add to Wishlist"
+                        style="z-index: 10;">
+                    <i class="{% if product.id in wishlist_ids %}bi bi-heart-fill text-danger{% else %}bi bi-heart text-dark{% endif %}"></i>
+                </button>
+
+
+
+                <!-- Product Image -->
+                {% if product.primary_image %}
+                <a href="{% url 'product_details' product.slug %}" class="text-dark text-decoration-none">
+                    <img src="{{ product.primary_image.url }}"
+                         class="card-img-top p-3 rounded-3"
+                         alt="{{ product.name }}"
+                         style="height: 230px; object-fit: contain;"
+                         onerror="this.src='#'">
+                </a>
+                {% else %}
+                    <div class="d-flex align-items-center justify-content-center bg-light rounded-3"
+                         style="height: 230px;">
+                        <span class="text-muted small">No Image</span>
+                    </div>
+                {% endif %}
+
+                <!-- Product Details -->
+                <div class="card-body text-center">
+                    <h6 class="card-title fw-bold text-truncate">{{ product.name|default:"No Name" }}</h6>
+                    <p class="card-text text-success fw-bold fs-5 mb-2">
+                        ₹{{ product.variants.first.price|default:"N/A" }}
+                    </p>
+                    
+                    <!-- Rating -->
+                    <div class="mb-2">
+                        {% for i in "12345" %}
+                            <i class="bi {% if i|add:0 <= rating|floatformat:0 %}bi-star-fill text-warning{% else %}bi-star{% endif %}"></i>
+                        {% endfor %}
+                        <span class="text-muted small">({{ rating|floatformat:1 }})</span>
+                    </div>
+
+                    
+                   <!-- Add to Cart Button -->
+<button class="btn btn-warning btn-sm px-3 py-1 add-to-cart-btn" type="button"
+        data-product-id="{{ product.id }}"
+        data-variant-id="{{ product.variants.first.id }}"
+        style="position: relative; z-index: 20;">
+    <i class="bi bi-cart-plus"></i> Add to Cart
+</button>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p>No products available. Check database or Cloudinary setup.</p>
+        {% endfor %}
+    </div> 
+
+<!-- Pagination -->    
+<div class="d-flex justify-content-center mt-4">
+  {% if products.has_other_pages %}
+    <ul class="pagination">
+      {% if products.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ products.previous_page_number }}">&laquo;</a>
+        </li>
+      {% endif %}
+
+      {% for page_num in products.paginator.page_range %}
+        {% if products.number == page_num %}
+          <li class="page-item active">
+            <a class="page-link">{{ page_num }}</a>
+          </li>
+        {% else %}
+          <li class="page-item">
+            <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ page_num }}">{{ page_num }}</a>
+          </li>
+        {% endif %}
+      {% endfor %}
+
+      {% if products.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ products.next_page_number }}">&raquo;</a>
+        </li>
+      {% endif %}
+    </ul>
+  {% endif %}
+</div>
+</div>
+
+
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="sizeModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Select Size</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <select class="form-select" id="modalSizeSelect">
+          <option value="">-- Select Size --</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-warning" id="confirmAddToCart">Add to Cart</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  const addToCartBaseUrl = "{% url 'add_to_cart_from_wishlist' 9999 %}".replace("9999/", ""); 
+  const csrfToken = "{{ csrf_token }}";
+</script>
+<script src="{% static 'js/addToCart.js' %}"></script>
+{% endblock %}
