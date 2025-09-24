@@ -412,28 +412,29 @@ def admin_user_management(request):
         messages.error(request, "You do not have permission to access this page.")
         return redirect('dashboard')
 
-    # ---- SEARCH ----
-    query = request.GET.get('q')# Get search query from GET request
-    if query:
-        users = CustomUser.objects.filter(
-            Q(username__icontains=query) |
-            Q(email__icontains=query) | 
-            Q(is_active__in=[True if query.lower() == "active" else False if query.lower() == "blocked" else None])
-        , is_staff=False, is_superuser=False).order_by('-date_joined')    
-    else:
-        users = CustomUser.objects.filter(is_staff=False,is_superuser=False).order_by('-date_joined')  # Latest first
+    query = request.GET.get('q')
+    users = CustomUser.objects.filter(is_staff=False, is_superuser=False)
 
-    # ---- PAGINATION ----
-    paginator = Paginator(users, 3)  # 2 users per page
-    page_number = request.GET.get('page') # Get page number from GET request
-    users = paginator.get_page(page_number)# Get page object from paginator
+    if query:
+        q_lower = query.lower()
+        search_filter = Q(username__icontains=query) | Q(email__icontains=query) | Q(id__icontains=query)
+        if q_lower == "active":
+            search_filter |= Q(is_active=True)
+        elif q_lower == "blocked":
+            search_filter |= Q(is_active=False)
+        users = users.filter(search_filter)
+
+    users = users.order_by('-date_joined')
+
+    paginator = Paginator(users, 3)  # 3 users per page
+    page_number = request.GET.get('page')
+    users = paginator.get_page(page_number)
 
     context = {
         "users": users,
         "query": query,
     }
     return render(request, "admin/user_management.html", context)
-
 # active or inactive user 
 @staff_member_required
 @require_POST

@@ -4,14 +4,25 @@ from address.models import Address
 from django.shortcuts import get_object_or_404
 from django.contrib import messages
 from django.shortcuts import redirect
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse
 from cart.models import CartItems
 from order.models import Order, OrderItem
 from django.db import transaction
+import razorpay
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
+from .models import Payment
+from decimal import Decimal
+
+
+razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+
 
 # Create your views here.
- #select address view
+ #===========================================select address view =================================
 @login_required(login_url="login")
 def select_address(request):
     addresses = Address.objects.filter(user=request.user)
@@ -30,7 +41,7 @@ def select_address(request):
             return redirect("select_address")
     return render(request, "user/select_address.html", {"addresses": addresses})
 
-# add address view checkout page
+# =======================================add address view checkout page=========================
 @login_required(login_url="login")
 def add_address_checkout(request):
     if request.method == "POST":
@@ -50,7 +61,7 @@ def add_address_checkout(request):
         messages.success(request, "Address added successfully.")
         return HttpResponseRedirect(reverse("select_address"))
     
-#edit address view checkout page
+#=======================================edit address view checkout page ==========================
 @login_required(login_url="login")
 def edit_address_checkout(request, address_id):
     print("Editing Address ID:", address_id, request.user) # Debugging line
@@ -72,7 +83,16 @@ def edit_address_checkout(request, address_id):
         address.pincode = request.POST.get("pincode")
         address.country = request.POST.get("country")
 
-        if not address.full_name or not address.phone_number or not address.address or not address.city or not address.district or not address.state or not address.country or not address.pincode:
+        if (
+            not address.full_name or
+            not address.phone_number or
+            not address.address or
+            not address.city or
+            not address.district or
+            not address.state or
+            not address.country or
+            not address.pincode
+        ):
             messages.error(request, "Please fill all the fields.")
             return redirect("edit_address", address_id=address_id)
 
@@ -83,31 +103,132 @@ def edit_address_checkout(request, address_id):
     
     return redirect("select_address")  # Always redirect to checkout
 
-#selecr payment method view
+#======================================selecr payment method view =========================
 @login_required(login_url="login")
 def select_payment(request):
-    if request.method == "POST":
-        payment_method = request.POST.get("payment_method")
+    cart_items = CartItems.objects.filter(user=request.user)
+    if not cart_items.exists():
+        messages.error(request, "Your cart is empty!")
+        return redirect("cart:cart")
 
-        if not payment_method:
-            messages.error(request, "Please select a payment method.")
-            return redirect("select_payment")
+    address_id = request.session.get("selected_address_id")
+    if not address_id:
+        messages.error(request, "Please select an address.")
+        return redirect("select_address")
+    address = Address.objects.get(id=address_id, user=request.user)
 
-        # Save selected payment method to session
-        request.session["payment_method"] = payment_method
+    total_price = sum(item.variant.price * item.quantity for item in cart_items)
 
-        if payment_method == "cod":
-            print("Cash on Delivery selected.")
-            messages.success(request, "Cash on Delivery selected.")
-        elif payment_method == "razorpay":
-            print("Razorpay selected.")
-            messages.success(request, "Razorpay selected.")
-        # Redirect to confirmation 
-        return redirect("checkout_summary")  # 
-        
+    # Check if there is already a pending order
+    order = Order.objects.filter(user=request.user, status="pending").last()
+    
+    # If no pending order, create one
+    if not order:
+        with transaction.atomic():
+            order = Order.objects.create(
+                user=request.user,
+                address=address,
+                payment_method="razorpay",  # default, can update later
+                total_amount=total_price,
+                status="pending",
+            )
+            for item in cart_items:
+                OrderItem.objects.create(
+                    order=order,
+                    product_variant=item.variant,
+                    quantity=item.quantity,
+                    price=item.variant.price,
+                )
 
-    return render(request, "user/select_payment.html")
+    # Render template and pass order
+    return render(request, "user/select_payment.html", {
+        "cart_items": cart_items,
+        "total_price": total_price,
+        "order": order,  # ✅ ensures order.id exists
+    })
+#==================== RAZORPAY INTEGRATION ===============================
 
+
+@csrf_exempt
+@login_required(login_url="login")
+def create_razorpay_order(request, order_id):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST request required"}, status=400)
+
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+
+    # Calculate cart total (same logic as cart_context)
+    cart_items = CartItems.objects.filter(user=request.user).select_related('variant')
+    total_amount = Decimal("0.00")
+    for item in cart_items:
+        total_amount += Decimal(item.variant.price) * item.quantity
+
+    client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+    razorpay_order = client.order.create({
+        "amount": int(total_amount * 100),  # in paise
+        "currency": "INR",
+        "receipt": str(order.id),
+        "payment_capture": 1
+    })
+
+    payment, created = Payment.objects.get_or_create(
+        order=order,
+        defaults={
+            "payment_method": "razorpay",
+            "payment_status": "pending",
+            "paid_amount": total_amount,
+            "payment_gateway": "Razorpay",
+            "gateway_order_id": razorpay_order["id"]
+        }
+    )
+
+    return JsonResponse({
+        "razorpay_order_id": razorpay_order["id"],
+        "razorpay_key": settings.RAZORPAY_KEY_ID,
+        "amount": float(total_amount),  # for JS display
+        "currency": "INR",
+    })
+# Verify Razorpay payment
+@csrf_exempt
+@login_required(login_url="login")
+def verify_razorpay_payment(request):
+    print(request.method)
+    if request.method != "POST":
+        return JsonResponse({"error": "POST request required"}, status=400)
+
+    payment_id = request.POST.get("razorpay_payment_id")
+    order_id = request.POST.get("razorpay_order_id")
+    signature = request.POST.get("razorpay_signature")
+
+    client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+    try:
+        # Verify signature
+        client.utility.verify_payment_signature({
+            "razorpay_order_id": order_id,
+            "razorpay_payment_id": payment_id,
+            "razorpay_signature": signature
+        })
+
+        # Update Payment
+        payment = get_object_or_404(Payment, gateway_order_id=order_id)
+        payment.payment_status = "success"
+        payment.gateway_payment_id = payment_id
+        payment.gateway_signature = signature
+        payment.paid_at = timezone.now()
+        payment.save()
+
+        # Update Order
+        order = payment.order
+        order.status = "confirmed"
+        order.save()
+
+        return JsonResponse({"status": "success", "order_id": str(order.id)})
+
+    except razorpay.errors.SignatureVerificationError:
+        return JsonResponse({"status": "failed", "message": "Payment verification failed"}, status=400)
+#==================== PLACE ORDER VIEW ===============================
 @login_required(login_url="login")
 def place_order(request):
     cart_items = CartItems.objects.filter(user=request.user)
@@ -178,8 +299,10 @@ def place_order(request):
         messages.error(request, f"Order failed: {e}")
         print("Order placement error:", e)
         return redirect("select_payment")
-    
 
-login_required(login_url="login")
+#==================== ORDER SUCCESS VIEW ===============================
+
+
+@login_required(login_url="login")
 def checkout_summary(request):
     return render(request, "user/order_success.html")
