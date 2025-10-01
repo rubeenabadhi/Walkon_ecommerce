@@ -4,7 +4,7 @@ from wishlist.models import WishlistItem
 from .forms import ProductFilterForm
 
 def user_product_list(request):
-    products = Product.objects.all().distinct()
+    products = Product.objects.all()
     filter_form = ProductFilterForm(request.GET or None)
     genders = Gender.objects.all()
 
@@ -35,6 +35,10 @@ def user_product_list(request):
             products = products.order_by("-created_at")
         elif sort_by == "popular":
             products = products.order_by("-views")
+
+    # ✅ Ensure default ordering if none applied
+    if not products.query.order_by:
+        products = products.order_by("-created_at")  # newest first by default
 
     products = products.distinct()
 

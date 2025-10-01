@@ -1,0 +1,354 @@
+    :root {
+        --font-family-inter: 'Inter', sans-serif;
+        --font-family-volkhov: 'Volkhov', sans-serif;
+        --font-family-poppins: 'Poppins', sans-serif;
+        --font-family-outfit: 'Outfit', sans-serif;
+        --primary-gradient: linear-gradient(135deg, #6dd5ed, #2193b0);
+        --secondary-color: #555;
+        --danger-color: #dc3545;
+        --accent-color: #ffeb3b;
+        --muted-color: #6c757d;
+    }
+
+    .wishlist-container {
+        padding: 2rem 0;
+    }
+
+    .wishlist-header h2 {
+        font-size: clamp(1.8rem, 5vw, 2.2rem);
+        text-transform: uppercase;
+        color: #0170bc;
+        font-family: var(--font-family-inter);
+    }
+
+    .wishlist-header p {
+        font-family: var(--font-family-inter);
+        font-weight: 300;
+        font-size: clamp(0.9rem, 3vw, 1rem);
+        color: var(--secondary-color);
+    }
+  .header-section h2 {
+    font-size: clamp(1.8rem, 5vw, 2.2rem);
+    text-transform: uppercase;
+    color: #0170bc;
+    font-family: var(--font-family-inter);
+  }
+  .header-section p {
+    font-family: var(--font-family-inter);
+    font-weight: 300;
+    font-size: clamp(0.9rem, 3vw, 1rem);
+    color: #555;
+  }
+  .filter-sidebar .card {
+    background: linear-gradient(135deg, #ffffff, #e3f2fd);
+    border: none;
+  }
+  .filter-sidebar .btn-dark {
+    background: linear-gradient(135deg, #6dd5ed, #2193b0);
+    border: none;
+    transition: all 0.3s;
+  }
+  .filter-sidebar .btn-dark:hover {
+    background: linear-gradient(135deg, #2193b0, #6dd5ed);
+  }
+  .filter-sidebar .btn-outline-secondary {
+    border-color: #2193b0;
+    color: #2193b0;
+    transition: all 0.3s;
+  }
+  .filter-sidebar .btn-outline-secondary:hover {
+    background: #2193b0;
+    color: white;
+  }
+  .category-btn {
+    background: #f8f9fa;
+    color: #2193b0;
+    border: 1px solid #2193b0;
+    transition: all 0.3s;
+    font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+  }
+  .category-btn:hover, .category-btn.active {
+    background: linear-gradient(135deg, #6dd5ed, #2193b0);
+    color: white;
+  }
+  .product-card {
+    background: linear-gradient(135deg, #6dd5ed, #2193b0);
+    color: white;
+    transition: all 0.3s ease-in-out;
+  }
+  .product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3) !important;
+  }
+  .add-to-cart-btn {
+    background: #ffeb3b;
+    color: #333;
+    border: none;
+    transition: all 0.3s;
+    font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+  }
+  .add-to-cart-btn:hover {
+    background: #ffd700 !important;
+    transform: scale(1.05);
+  }
+  .wishlist-btn {
+    background: rgba(255, 255, 255, 0.9);
+    transition: all 0.3s;
+  }
+  .wishlist-btn:hover {
+    background: #ffffff !important;
+    transform: scale(1.1);
+  }
+  .pagination .page-link {
+    color: #2193b0;
+    border-radius: 5px;
+    transition: all 0.3s;
+    font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+  }
+  .pagination .page-item.active .page-link {
+    background: linear-gradient(135deg, #6dd5ed, #2193b0);
+    border-color: #2193b0;
+    color: white;
+  }
+  .pagination .page-link:hover {
+    background: #6dd5ed;
+    color: white;
+  }
+  .modal-content {
+    background: linear-gradient(135deg, #ffffff, #e3f2fd);
+    border: none;
+    border-radius: 15px;
+  }
+  .modal-header, .modal-footer {
+    border: none;
+  }
+  .modal .btn-warning {
+    background: #ffeb3b;
+    color: #333;
+    border: none;
+    transition: all 0.3s;
+  }
+  .modal .btn-warning:hover {
+    background: #ffd700;
+  }
+  .modal .btn-secondary {
+    border-color: #2193b0;
+    color: #2193b0;
+    transition: all 0.3s;
+  }
+  .modal .btn-secondary:hover {
+    background: #2193b0;
+    color: white;
+  }
+  .form-select, .form-control {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #2193b0;
+    color: #333;
+    transition: all 0.3s;
+    font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+  }
+  .form-select:focus, .form-control:focus {
+    border-color: #ffeb3b;
+    box-shadow: 0 0 5px rgba(255, 235, 59, 0.5);
+  }
+  .card-img-top {
+    height: 180px !important; /* Reduced card image height */
+  }
+  .card-body {
+    padding: 1rem !important; /* Reduced padding for smaller card */
+  }
+  .card-title {
+    font-size: clamp(0.9rem, 2.5vw, 1rem) !important;
+  }
+  .card-text.fs-5 {
+    font-size: clamp(1rem, 3vw, 1.2rem) !important;
+  }
+  @media (max-width: 768px) {
+    .product-card {
+      margin-bottom: 1.5rem;
+    }
+    .col-md-4 {
+      flex: 0 0 50%;
+      max-width: 50%;
+    }
+  }
+  @media (max-width: 576px) {
+    .col-md-4 {
+      flex: 0 0 100%;
+      max-width: 100%;
+    }
+  }
+.gender-btn {
+    background: #f8f9fa;
+    color: #2193b0;
+    border: 1px solid #2193b0;
+    border-radius: 50px;
+    font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+    padding: 0.5rem 1.5rem;
+    transition: all 0.3s ease;
+  }
+  .gender-btn:hover, .gender-btn.active {
+    background: var(--primary-gradient);
+    color: white;
+    border-color: transparent;
+  }
+  
+    .card {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        transition: all 0.3s ease-in-out;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-img-top {
+        height: 180px;
+        object-fit: contain;
+        padding: 1rem;
+    }
+
+    .badge {
+        background-color: var(--accent-color);
+        color: #333;
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .card-title {
+        font-size: clamp(0.9rem, 2.5vw, 1rem);
+        font-family: var(--font-family-inter);
+        color: white;
+        margin-bottom: 0.5rem;
+    }
+
+    .card-text {
+        font-size: clamp(0.9rem, 2.5vw, 1rem);
+        font-family: var(--font-family-inter);
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: 0.25rem;
+    }
+
+    .size-select {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid #2193b0;
+        color: #333;
+        font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+        margin-bottom: 0.5rem;
+        transition: all 0.3s;
+    }
+
+    .size-select:focus {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 5px rgba(255, 235, 59, 0.5);
+    }
+
+    .button-group {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .add-to-cart {
+        background: var(--accent-color);
+        color: #333;
+        border: none;
+        font-family: var(--font-family-poppins);
+        font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+        border-radius: 5px;
+        padding: 0.25rem 0.75rem;
+        transition: all 0.3s;
+        flex: 1;
+    }
+
+    .add-to-cart:hover {
+        background: #ffd700;
+        transform: scale(1.05);
+    }
+
+    .remove-wishlist {
+        background: var(--danger-color);
+        color: white;
+        border: none;
+        font-family: var(--font-family-poppins);
+        font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+        border-radius: 5px;
+        padding: 0.25rem 0.75rem;
+        transition: all 0.3s;
+        flex: 1;
+    }
+
+    .remove-wishlist:hover {
+        background: darken(var(--danger-color), 10%);
+        transform: scale(1.05);
+    }
+
+    .empty-wishlist {
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .empty-wishlist img {
+        max-width: 200px;
+        margin-bottom: 1rem;
+    }
+
+    .empty-wishlist h5 {
+        font-family: var(--font-family-outfit);
+        font-weight: 700;
+        font-size: 1.5rem;
+        color: var(--secondary-color);
+    }
+
+    .empty-wishlist p {
+        font-family: var(--font-family-outfit);
+        font-size: 1rem;
+        color: var(--secondary-color);
+    }
+
+    .empty-wishlist .btn {
+        font-family: var(--font-family-outfit);
+        font-size: 1.1rem;
+        font-weight: 600;
+        background: var(--primary-gradient);
+        color: white;
+        border-radius: 25px;
+        padding: 0.5rem 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .empty-wishlist .btn:hover {
+        background: linear-gradient(135deg, #2193b0, #6dd5ed);
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+        .card-img-top {
+            height: 150px;
+        }
+        .add-to-cart, .remove-wishlist {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.5rem;
+        }
+        .button-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .empty-wishlist img {
+            max-width: 150px;
+        }
+    }

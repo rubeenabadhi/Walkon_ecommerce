@@ -365,7 +365,6 @@ def user_product_list(request):
         elif sort_by == "popular":
             products = products.order_by("-views")
 
-    products = products.distinct()
 
     # wishlist
     wishlist_ids = []
@@ -374,6 +373,7 @@ def user_product_list(request):
             wishlist__user=request.user
         ).values_list("product_variant__product_id", flat=True)
 
+    products = products.order_by("id").distinct() 
     paginator = Paginator(products, 3)
     page_number = request.GET.get("page")
     products = paginator.get_page(page_number)

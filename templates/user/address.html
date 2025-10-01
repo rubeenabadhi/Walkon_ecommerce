@@ -4,18 +4,7 @@
 {% block title %}Manage Address - WalkOn{% endblock %}
 
 {% block content %}
-<style>
-    .manage-address h2 {
-        font-size: 1.8rem;
-    }
-    .address-card {
-        background: #fff;
-        transition: 0.2s ease-in-out;
-    }
-    .address-card:hover {
-        box-shadow: 0px 4px 10px rgba(0,0,0,0.15);
-    }
-</style>
+
 
 <div class="container mt-5">
   <div class="row">
@@ -37,21 +26,21 @@
       <!-- Main Section -->
       <section class="manage-address py-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
-          <h2 class="fw-bold">Manage Addresses</h2>
-          <a href="{% url 'add_address' %}" class="btn btn-dark">+ Add New Address</a>
+          <h2 class="fw-bold text-center w-100">Manage Addresses</h2>
+          <a href="{% url 'add_address' %}" class="btn btn-dark rounded-pill shadow-sm" style="background: linear-gradient(135deg, #6dd5ed, #2193b0); border: none;">+ Add New Address</a>
         </div>
 
         <div class="address-list row g-3">
           {% for addr in addresses %}
           <div class="col-md-6">
-            <div class="address-card p-3 border rounded shadow-sm h-100">
+            <div class="address-card p-4 rounded-3 shadow-sm h-100">
               <h5 class="fw-bold">{{ addr.user }}</h5>
               <p class="mb-1">Name: {{ addr.full_name }}</p>
               <p class="mb-1">{{ addr.address }}, {{ addr.state }}</p>
               <p class="mb-1">{{ addr.district }}, {{ addr.street }}</p>
               <p class="mb-1">Pin: {{ addr.pincode }}</p>
               <p class="mb-1">Phone: {{ addr.phone_number }}</p>
-              <p class="mb-1">Email: {{ addr.state }}</p>
+              <p class="mb-1">Email: {{ addr.email }}</p>
               <p class="mb-1">Country: {{ addr.country }}</p>
               <p class="mb-1">City: {{ addr.city }}</p>
 
@@ -60,14 +49,14 @@
               {% endif %}
 
               <div class="d-flex gap-2 mt-2">
-                <a href="{% url 'edit_address' addr.id %}" class="btn btn-sm btn-primary">Edit</a>
-                <a href="{% url 'delete_address' addr.id %}" class="btn btn-sm btn-danger"
+                <a href="{% url 'edit_address' addr.id %}" class="btn btn-sm btn-primary rounded-pill">Edit</a>
+                <a href="{% url 'delete_address' addr.id %}" class="btn btn-sm btn-danger rounded-pill"
                    onclick="return confirmDelete();">Delete</a>
               </div>
             </div>
           </div>
           {% empty %}
-          <p>No addresses found. Please add one.</p>
+          <p class="text-center text-muted">No addresses found. Please add one.</p>
           {% endfor %}
         </div>
       </section>
@@ -77,26 +66,26 @@
         <ul class="pagination justify-content-center mt-4">
           {% if page_obj.has_previous %}
             <li class="page-item">
-              <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+              <a class="page-link rounded" href="?page={{ page_obj.previous_page_number }}">Previous</a>
             </li>
           {% else %}
-            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+            <li class="page-item disabled"><span class="page-link rounded">Previous</span></li>
           {% endif %}
 
           {% for num in page_obj.paginator.page_range %}
             {% if page_obj.number == num %}
-              <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+              <li class="page-item active"><span class="page-link rounded">{{ num }}</span></li>
             {% else %}
-              <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+              <li class="page-item"><a class="page-link rounded" href="?page={{ num }}">{{ num }}</a></li>
             {% endif %}
           {% endfor %}
 
           {% if page_obj.has_next %}
             <li class="page-item">
-              <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+              <a class="page-link rounded" href="?page={{ page_obj.next_page_number }}">Next</a>
             </li>
           {% else %}
-            <li class="page-item disabled"><span class="page-link">Next</span></li>
+            <li class="page-item disabled"><span class="page-link rounded">Next</span></li>
           {% endif %}
         </ul>
       </nav>
@@ -104,7 +93,60 @@
     </div>
   </div>
 </div>
-
+<style>
+    .manage-address h2 {
+        font-size: 1.8rem;
+        text-transform: uppercase;
+    }
+    .address-card {
+        background: linear-gradient(135deg, #6dd5ed, #2193b0);
+        color: white;
+        transition: all 0.3s ease-in-out;
+        border: none;
+    }
+    .address-card:hover {
+        box-shadow: 0px 6px 15px rgba(0,0,0,0.2);
+        transform: translateY(-5px);
+    }
+    .address-card .badge {
+        background-color: #ffeb3b;
+        color: #333;
+    }
+    .address-card .btn-primary {
+        background: #ffeb3b;
+        border: none;
+        color: #333;
+        transition: all 0.3s;
+    }
+    .address-card .btn-primary:hover {
+        background: #ffd700;
+    }
+    .address-card .btn-danger {
+        background: #e63946;
+        border: none;
+        transition: all 0.3s;
+    }
+    .address-card .btn-danger:hover {
+        background: #d00000;
+    }
+    .alert {
+        background: linear-gradient(135deg, #6dd5ed, #2193b0);
+        color: white;
+        border: none;
+    }
+    .pagination .page-link {
+        color: #2193b0;
+    }
+    .pagination .page-item.active .page-link {
+        background: #2193b0;
+        border-color: #2193b0;
+        color: white;
+    }
+    .pagination .page-link:hover {
+        background: #6dd5ed;
+        color: white;
+    }
+</style>
 <script>
   function confirmDelete() {
     return confirm("Are you sure you want to delete this address?");

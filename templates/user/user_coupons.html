@@ -1,0 +1,40 @@
+{% extends 'user/base.html' %}
+{% block title %}Available Coupons - Walkon{% endblock %}
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        {% include 'user/user_sidebar.html' %}
+        <div class="col-md-8">
+            <h2 class="mb-4 text-center"style="text-transform: uppercase; color: #1a73e8; font-weight: bold;">Available Coupons</h2>
+            {% if coupons %}
+                <div class="row g-3">
+                    {% for coupon in coupons %}
+                    <div class="col-md-4">
+                        <div class="card shadow-sm border-0" style="background: linear-gradient(135deg, #6dd5ed, #2193b0); color: white;">
+                            <div class="card-body text-center">
+                                <h5 class="card-title fw-bold">{{ coupon.code }}</h5>
+                                <p class="card-text fs-5">
+                                    {% if coupon.discount_type == 'percentage' %}
+                                        {{ coupon.discount_value }}% Off
+                                    {% else %}
+                                        ₹{{ coupon.discount_value }} Off
+                                    {% endif %}
+                                </p>
+                                <p class="card-text" style="opacity: 0.9;">
+                                    Valid: {{ coupon.valid_from|date:"d M Y" }} - {{ coupon.valid_to|date:"d M Y" }}
+                                </p>
+                                <p class="card-text" style="color: #ffeb3b;">
+                                    Min Order: ₹{{ coupon.min_order_amount }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-center text-muted">No coupons available at the moment.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

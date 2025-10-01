@@ -1,12 +1,14 @@
 {% extends 'user/base.html' %}
 {% load static %}
-
 {% block title %}Wishlist - WalkOn{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/productlist.css' %}">
+{% endblock %}
 
 {% block content %}
-<div class="container my-5">
+<div class="container my-5 wishlist-container">
   <!-- Page Header -->
-  <div class="text-center mb-4">
+  <div class="text-center mb-4 wishlist-header">
     <h2 class="fw-bold">My Wishlist ❤️</h2>
     <p class="text-muted">Save the products you love and buy them later.</p>
   </div>
@@ -15,15 +17,13 @@
   <div class="row g-3">
     {% for item in wishlist_items %}
     <div class="col-6 col-md-4 col-lg-3">
-      <div class="card shadow-sm border-0 h-100" style="font-size: 0.9rem;">
-        
+      <div class="card shadow-sm border-0 h-100">
         <!-- Product Image -->
         <div class="position-relative">
           <img src="{{ item.product_variant.product.primary_image.url }}"
                class="card-img-top rounded-top"
-               alt="{{ item.product_variant.product.name }}"
-               style="height: 180px; object-fit: contain;">
-          <span class="badge bg-dark position-absolute top-0 end-0 m-2 px-2 py-1" style="font-size:0.8rem;">
+               alt="{{ item.product_variant.product.name }}">
+          <span class="badge position-absolute top-0 end-0 m-2 px-2 py-1">
             ₹{{ item.product_variant.price }}
           </span>
         </div>
@@ -36,39 +36,37 @@
           <p class="card-text text-muted small mb-2">{{ item.product_variant.color.name }}</p>
           
           <!-- Size Selection -->
+          <select class="form-select form-select-sm mb-2 size-select"
+                  data-product-id="{{ item.product_variant.product.id }}" required>
+            <option value="">-- Select Size --</option>
+            {% for variant in item.unique_sizes %}
+              <option value="{{ variant.id }}">
+                Size: {{ variant.size.label }}
+              </option>
+            {% endfor %}
+          </select>
 
-<select class="form-select form-select-sm mb-2 size-select"
-        data-product-id="{{ item.product_variant.product.id }}" required>
-  <option value="">-- Select Size --</option>
-  {% for variant in item.unique_sizes %}
-    <option value="{{ variant.id }}">
-      Size: {{ variant.size.label }}
-    </option>
-  {% endfor %}
-</select>
-
-
-<!-- Add to Cart -->
-<button class="btn btn-primary add-to-cart"
-        data-variant-id="{{ item.product_variant.id }}">
-  Add to Cart
-</button>
-
-<!-- Remove from Wishlist -->
-<button class="btn btn-danger remove-wishlist"
-        data-id="{{ item.id }}">
-  Remove
-</button>
-
+          <!-- Button Group -->
+          <div class="button-group">
+            <button class="btn btn-primary add-to-cart"
+                    data-variant-id="{{ item.product_variant.id }}">
+              Add to Cart
+            </button>
+            <button class="btn btn-danger remove-wishlist"
+                    data-id="{{ item.id }}">
+              Remove
+            </button>
+          </div>
+        </div>
       </div>
     </div>
     {% endfor %}
   </div>
   {% else %}
   <!-- Empty Wishlist -->
-  <div class="text-center py-5">
+  <div class="text-center py-5 empty-wishlist">
     <img src="{% static 'images/empty-wishlist.png' %}" alt="Empty Wishlist"
-         class="img-fluid mb-4" style="max-width: 200px;">
+         class="img-fluid mb-4">
     <h5 class="fw-bold">Your wishlist is empty</h5>
     <p class="text-muted">Browse our products and save your favorites for later!</p>
     <a href="{% url 'all_products' %}" class="btn btn-dark px-3 mt-2">Continue Shopping</a>
@@ -83,6 +81,5 @@
   const removeFromWishlistBaseUrl = "{% url 'remove_from_wishlist' 9999 %}".replace("9999/", "");  
   const csrfToken = "{{ csrf_token }}";
 </script>
-
 <script src="{% static 'js/addToCart.js' %}"></script>
 {% endblock %}

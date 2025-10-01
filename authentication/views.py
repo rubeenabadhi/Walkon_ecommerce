@@ -18,12 +18,19 @@ from django.views.decorators.cache import never_cache
 from .forms import EditProfileForm
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from product.models import Product
 
 
 
 #user-defined views for signup and OTP verification,home view
 def home(request):
-    return render(request, 'user/index.html')
+    products = Product.objects.all()
+    new_products = Product.objects.all().order_by('-created_at')  
+    context = {
+        'products': products,
+        'new_products': new_products
+    }  
+    return render(request, 'user/index.html', context)
 def signup(request):
     if request.method == 'POST':
         username = request.POST.get('username')

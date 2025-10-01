@@ -2,13 +2,18 @@
 {% load static %}
 {% block title %}Thank You - WalkOn{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/order.css' %}">
+
+{% endblock %}
+
 {% block content %}
-<div class="container my-5 py-5 text-center">
-    <!-- message -->
+<div class="container my-5 py-5 text-center thank-you-container">
+    <!-- Message -->
     <div class="mb-4">
         {% if messages %}
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3 shadow-sm d-inline-block" role="alert">
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
@@ -17,22 +22,18 @@
     </div>
     <!-- Success Icon -->
     <div class="mb-4">
-        <i class="bi bi-check-circle-fill text-success" style="font-size: 6rem;"></i>
+        <i class="bi bi-check-circle-fill thank-you-icon"></i>
     </div>
         
     <!-- Thank You Message -->
-    <h2 class="fw-bold mb-3">THANK YOU FOR ORDERING</h2>
-    <p class="text-muted mb-4">Your order has been placed successfully. We’ll notify you once it’s on the way!</p>
-
+    <h2 class="fw-bold mb-3 thank-you-title">THANK YOU FOR ORDERING ,{{ request.user.username }}</h2>
+    <p class="text-muted mb-4 thank-you-text">Your order has been placed successfully. We’ll notify you once it’s on the way!</p>
+    <p class="thank-you-text">Order ID: {{ order.order_id }}</p>
+    <p class="thank-you-text">Total Amount: ₹{{ order.total_amount }}</p>
     <!-- Buttons -->
     <div class="d-flex justify-content-center gap-3">
-        <a href="{% url 'orders' %}" class="btn btn-dark px-4">View Orders</a>
-        <a href="{% url 'all_products' %}" class="btn btn-outline-dark px-4">Continue Shopping</a>
+        <a href="{% url 'orders' %}" class="btn btn-dark px-4 thank-you-btn">View Orders</a>
+        <a href="{% url 'all_products' %}" class="btn btn-outline-dark px-4 thank-you-btn">Continue Shopping</a>
     </div>
 </div>
-
-<!-- Extra Styling -->
-<style>
-    
-</style>
 {% endblock %}

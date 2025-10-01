@@ -12,18 +12,17 @@ from django.utils import timezone
 from django.template.loader import render_to_string
 from django.http import HttpResponse
 from django.core.mail import send_mail
+from django.db.models import F, Sum
 
 
+#========================================================================USER ORDER VIEW===============================================
 @login_required(login_url="login")
 def orders(request):
-    # --- GET search / filters from query params ---
-    q = request.GET.get('q', '').strip()            # search box
-    status_filter = request.GET.get('status', '').strip()  # optional: filter by status
+    q = request.GET.get('q', '').strip()
+    status_filter = request.GET.get('status', '').strip()
 
-    # --- base queryset: only user's orders ---
     orders_qs = Order.objects.filter(user=request.user)
 
-    # --- apply search if provided (order_id, product name, status) ---
     if q:
         orders_qs = orders_qs.filter(
             Q(order_id__icontains=q) |
@@ -32,26 +31,36 @@ def orders(request):
             Q(order_date__icontains=q)
         ).distinct()
 
-    # --- apply status filter if provided (exact match, case-insensitive) ---
     if status_filter:
         orders_qs = orders_qs.filter(status__iexact=status_filter)
 
-    # --- prefetch related to avoid extra queries and order by date ---
-    orders_qs = orders_qs.prefetch_related('items__product_variant__product').order_by('-order_date')
+    orders_qs = (
+        orders_qs
+        .prefetch_related('items__product_variant__product', 'payment')
+        .order_by('-order_date')
+    )
 
-    # --- pagination ---
-    paginator = Paginator(orders_qs, 4)   # 5 per page (change as needed)
+    paginator = Paginator(orders_qs, 4)
     page_number = request.GET.get('page', 1)
     orders_page = paginator.get_page(page_number)
 
-    # --- addresses for checkout/selection in template ---
-    addresses = Address.objects.filter(user=request.user)
+    # Add calculated total per order
+    for order in orders_page:
+        order.calculated_total = sum(item.quantity * item.price for item in order.items.all())
+
+    # Totals across all orders (for summary at top/bottom of page)
+    totals = orders_qs.aggregate(
+        total_spent=Sum(F('items__price') * F('items__quantity')),
+        total_products=Sum('items__quantity')
+    )
 
     context = {
         'orders': orders_page,
-        'addresses': addresses,
+        'addresses': Address.objects.filter(user=request.user),
         'q': q,
         'status_filter': status_filter,
+        'total_spent': totals['total_spent'] or 0,
+        'total_products': totals['total_products'] or 0,
     }
     return render(request, 'user/orders.html', context)
 
@@ -86,7 +95,7 @@ def cancel_order(request, order_id):
         return redirect('order_details', order_number=order.order_id)
     return redirect('order_details', pk=order_id)
 
-
+#------------------------------------------------------------------------------cancel item view------------------------------
 
 @login_required(login_url="login")
 def cancel_item(request, item_id):
@@ -128,6 +137,39 @@ def cancel_item(request, item_id):
     # Redirect to order detail page for GET requests
     return redirect("order_details", order_number=item.order.order_id)
 
+#-----------------------------------------------------------------------------return item view------------------------------
+
+@login_required(login_url="login")    
+def return_item(request, item_id):
+    item = get_object_or_404(OrderItem, id=item_id, order__user=request.user)
+    if request.method == "POST":
+        reason = request.POST.get("reason", "").strip() or None
+        item.return_item(reason=reason)
+        item.order.recalc_totals()
+        item.order.status = "returned"
+        item.order.returned_at = timezone.now()
+        item.order.save()
+        print("Item returned:", item.order.order_id)
+        messages.success(request, "Item returned and stock updated.")
+        return redirect("order_details", order_number=item.order.order_id)
+    return redirect("order_details", order_number=item.order.order_id)
+
+#------------------------------------------------------------------------------return order view------------------------------
+
+@login_required(login_url="login")    
+def return_order(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    if request.method == "POST":
+        reason = request.POST.get("reason", "").strip() or None
+        order.return_order(reason=reason)
+        order.status = "returned"
+        order.returned_at = timezone.now()
+        order.save()
+        print("Order returned:", order.order_id)
+        messages.success(request, "Order returned and stock updated.")
+        return redirect("order_details", order_number=order.order_id)
+    return redirect("order_details", order_number=order.order_id)
+#------------------------------------------------------------------------------invoice view------------------------------
 
 @login_required(login_url="login")
 def order_invoice_pdf(request, order_id):

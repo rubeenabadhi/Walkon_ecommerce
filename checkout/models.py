@@ -29,3 +29,11 @@ class Payment(models.Model):
     payment_gateway = models.CharField(max_length=50, null=True, blank=True)  # e.g. Razorpay
     refund_status = models.CharField(max_length=30, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Payment for {self.order.order_id} - {self.payment_status}"
+    class Meta:
+        ordering = ["-created_at"]  
+    indexes = [
+        models.Index(fields=["payment_status"]),
+    ]

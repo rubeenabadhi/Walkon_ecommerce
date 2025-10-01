@@ -157,7 +157,7 @@ def create_razorpay_order(request, order_id):
 
     order = get_object_or_404(Order, id=order_id, user=request.user)
 
-    # Calculate cart total (same logic as cart_context)
+    # Calculate cart total
     cart_items = CartItems.objects.filter(user=request.user).select_related('variant')
     total_amount = Decimal("0.00")
     for item in cart_items:
@@ -172,6 +172,7 @@ def create_razorpay_order(request, order_id):
         "payment_capture": 1
     })
 
+    # Check if Payment already exists, create if not
     payment, created = Payment.objects.get_or_create(
         order=order,
         defaults={
@@ -183,51 +184,93 @@ def create_razorpay_order(request, order_id):
         }
     )
 
+    if not created:
+        payment.payment_status = "pending"
+        payment.paid_amount = total_amount
+        payment.payment_gateway = "Razorpay"
+        payment.gateway_order_id = razorpay_order["id"]
+        payment.save()
+
+    print(f"Payment created/updated: ID={payment.id}, gateway_order_id={payment.gateway_order_id},total_amount={total_amount}")
+
     return JsonResponse({
         "razorpay_order_id": razorpay_order["id"],
         "razorpay_key": settings.RAZORPAY_KEY_ID,
-        "amount": float(total_amount),  # for JS display
+        "amount": float(total_amount),
         "currency": "INR",
-    })
-# Verify Razorpay payment
+    })# Verify Razorpay payment
 @csrf_exempt
 @login_required(login_url="login")
 def verify_razorpay_payment(request):
-    print(request.method)
+    print("Payment verification started...")
     if request.method != "POST":
         return JsonResponse({"error": "POST request required"}, status=400)
 
     payment_id = request.POST.get("razorpay_payment_id")
-    order_id = request.POST.get("razorpay_order_id")
+    razorpay_order_id = request.POST.get("razorpay_order_id")
     signature = request.POST.get("razorpay_signature")
 
     client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
     try:
-        # Verify signature
         client.utility.verify_payment_signature({
-            "razorpay_order_id": order_id,
+            "razorpay_order_id": razorpay_order_id,
             "razorpay_payment_id": payment_id,
             "razorpay_signature": signature
         })
+        print("Payment verified successfully.")
 
-        # Update Payment
-        payment = get_object_or_404(Payment, gateway_order_id=order_id)
-        payment.payment_status = "success"
-        payment.gateway_payment_id = payment_id
-        payment.gateway_signature = signature
-        payment.paid_at = timezone.now()
-        payment.save()
+        # Query Payment using gateway_order_id
+        payment = get_object_or_404(Payment, gateway_order_id=razorpay_order_id)
+        print("Payment record found:", payment.id,"paymnent_gateway_order_id:",payment.gateway_order_id)
+        
+        # Start transaction to ensure atomicity
+        with transaction.atomic():
+            # Update Payment
+            payment.payment_status = "success"
+            payment.gateway_payment_id = payment_id
+            payment.gateway_signature = signature
+            payment.paid_at = timezone.now()
+            payment.save()
+            print("Payment record updated:", payment.id)
 
-        # Update Order
-        order = payment.order
-        order.status = "confirmed"
-        order.save()
+            # Update related Order
+            order = payment.order
+            order.status = "confirmed"
+            order.payment_method = "razorpay"
+            order.save()
+            print("Order status updated:", order.id, "User:", order.user.id)
+
+            # Get cart items for the user
+            cart_items = CartItems.objects.filter(user=request.user)
+            if not cart_items.exists():
+                print("No cart items found for user during payment verification.")
+            else:
+                # Move cart items to Order Items and decrease stock
+                for item in cart_items:
+                    OrderItem.objects.create(
+                        order=order,
+                        product_variant=item.variant,
+                        quantity=item.quantity,
+                        price=item.variant.price,
+                    )
+                    print(f"Before stock: {item.variant.product.stock}, Ordered: {item.quantity}")
+                    item.variant.product.stock -= item.quantity
+                    item.variant.product.save()
+                    print(f"After stock: {item.variant.product.stock}")
+
+                # Clear cart items
+                cart_items.delete()
+                print("Cart items cleared for user:", request.user.id)
 
         return JsonResponse({"status": "success", "order_id": str(order.id)})
 
-    except razorpay.errors.SignatureVerificationError:
+    except razorpay.errors.SignatureVerificationError as e:
+        print("Payment verification failed:", str(e))
         return JsonResponse({"status": "failed", "message": "Payment verification failed"}, status=400)
+    except Exception as e:
+        print("Verification error:", str(e))
+        return JsonResponse({"status": "failed", "message": str(e)}, status=400)    
 #==================== PLACE ORDER VIEW ===============================
 @login_required(login_url="login")
 def place_order(request):
@@ -293,7 +336,7 @@ def place_order(request):
             request.session.pop("selected_address_id", None)
             request.session.pop("payment_method", None)
 
-        return redirect("checkout_summary")  # Thank you page
+        return redirect("order_success", order_id=order.order_id)  # Thank you page
 
     except Exception as e:
         messages.error(request, f"Order failed: {e}")
@@ -304,5 +347,7 @@ def place_order(request):
 
 
 @login_required(login_url="login")
-def checkout_summary(request):
-    return render(request, "user/order_success.html")
+def order_success(request, order_id):
+    print(f"Order success for order_id: {order_id}")
+    order = get_object_or_404(Order, order_id=order_id, user=request.user)
+    return render(request, 'user/order_success.html', {'order': order})

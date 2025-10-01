@@ -4,30 +4,85 @@
 {% block title %}Add Address - Walkon{% endblock %}
 {% block content %}
 
-<div class="container my-5">
+<style>
+  .add-address h2 {
+    font-size: 1.8rem;
+    text-transform: uppercase;
+  }
+  .card {
+    background: linear-gradient(135deg, #6dd5ed, #2193b0);
+    color: white;
+    border: none;
+    transition: all 0.3s ease-in-out;
+  }
+  .card:hover {
+    box-shadow: 0px 6px 15px rgba(0,0,0,0.2);
+    transform: translateY(-5px);
+  }
+  .form-label {
+    color: #ffeb3b;
+  }
+  .form-control {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid #ffffff;
+    color: white;
+    transition: all 0.3s;
+  }
+  .form-control:focus {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: #ffeb3b;
+    box-shadow: 0 0 5px rgba(255, 235, 59, 0.5);
+  }
+  .alert {
+    background: linear-gradient(135deg, #6dd5ed, #2193b0);
+    color: white;
+    border: none;
+  }
+  .btn-dark {
+    background: #ffeb3b;
+    color: #333;
+    border: none;
+    transition: all 0.3s;
+  }
+  .btn-dark:hover {
+    background: #ffd700;
+  }
+  .btn-outline-secondary {
+    border-color: #ffffff;
+    color: #ffffff;
+    transition: all 0.3s;
+  }
+  .btn-outline-secondary:hover {
+    background: #ffffff;
+    color: #2193b0;
+  }
+</style>
+
+<div class="container mt-5">
+  <div class="row">
+    {% include 'user/user_sidebar.html' %}
+
+    <!-- Right Side: Messages + Profile Info -->
+    <div class="col-md-8">
+
   
   {% if messages %}
     {% for message in messages %}
-      <div class="alert alert-success alert-dismissible fade show" role="alert">
+      <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm" role="alert">
         {{ message }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
     {% endfor %}
   {% endif %}
 
-  <div class="row">
-    
-    <!-- Sidebar -->
-    <div class="col-lg-3 mb-4">
-      {% include "user/user_sidebar.html" %}
-    </div>
+ 
 
     <!-- Form Section -->
-    <div class="col-lg-9">
+    <div class="col-md-8 col-lg-9">
       <!-- Page Title -->
-      <h2 class="fw-bold mb-4 border-bottom pb-2">🏠 Add New Address</h2>
+      <h2 class="fw-bold mb-4 border-bottom pb-2 text-center add-address">🏠 Add New Address</h2>
       
-      <div class="card shadow-lg border-0 rounded-4">
+      <div class="card shadow-lg rounded-4">
         <div class="card-body p-4">
           
           <!-- Username -->
@@ -52,14 +107,14 @@
 
             <!-- Action Buttons -->
             <div class="d-flex justify-content-end mt-4">
-              <a href="{% url 'address' %}" class="btn btn-outline-secondary me-2">Cancel</a>
-              <button type="submit" class="btn btn-dark px-4">Save Address</button>
+              <a href="{% url 'address' %}" class="btn btn-outline-secondary rounded-pill me-2 px-4">Cancel</a>
+              <button type="submit" class="btn btn-dark rounded-pill px-4">Save Address</button>
             </div>
           </form>
         </div>
       </div>
     </div>
-
+    
   </div>
 </div>
 

@@ -36,8 +36,9 @@ urlpatterns = [
     path('cart/', include('cart.urls', namespace='cart')),
     path('address/', include("address.urls")),
     path('wishlist/',include("wishlist.urls")),
-    path('checkout/',include("checkout.urls")),
+    path('checkout/', include('checkout.urls')),
     path('order/',include("order.urls")),
+    path('offers/', include('offers.urls')),
 ]
 def custom_404_view(request, exception):
     return render(request, "404.html", status=404)

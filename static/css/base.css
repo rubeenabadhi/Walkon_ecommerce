@@ -1,0 +1,167 @@
+
+    :root {
+      --primary-gradient: linear-gradient(135deg, #6dd5ed, #2193b0);
+      --primary-gradient-hover: linear-gradient(135deg, #2193b0, #6dd5ed);
+      --accent-color: #ffeb3b;
+      --accent-hover: #ffd700;
+    }
+
+    /* Navbar Animation */
+    .navbar {
+      transition: all 0.3s ease;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: transparent;
+      font-family: 'Inter', sans-serif;
+    }
+    .navbar.scrolled {
+      background: var(--primary-gradient) !important;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      padding: 0.5rem 1rem !important;
+    }
+    .navbar .nav-link {
+      color: #333 !important;
+      font-size: clamp(0.9rem, 2.5vw, 1rem);
+      transition: all 0.3s ease;
+    }
+    .navbar .nav-link:hover {
+      color: var(--accent-color) !important;
+      transform: scale(1.05);
+    }
+    .navbar .dropdown-menu {
+      background: linear-gradient(135deg, #ffffff, #e3f2fd);
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    .navbar .dropdown-item {
+      color: #333;
+      font-size: clamp(0.85rem, 2vw, 0.9rem);
+      transition: all 0.3s ease;
+    }
+    .navbar .dropdown-item:hover {
+      background: var(--primary-gradient);
+      color: white !important;
+    }
+
+    /* Sign-in/Sign-out Buttons */
+    .navbar .btn-signin, .navbar .btn-signout {
+      background: var(--primary-gradient);
+      border: none;
+      color: white;
+      font-size: clamp(0.85rem, 2vw, 0.9rem);
+      padding: 0.5rem 1.5rem;
+      border-radius: 50px;
+      transition: all 0.3s ease;
+    }
+    .navbar .btn-signin:hover, .navbar .btn-signout:hover {
+      background: var(--primary-gradient-hover);
+      transform: scale(1.05);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Search Bar */
+    .navbar .search-form {
+      max-width: 300px;
+    }
+    .navbar .search-form input {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #2193b0;
+      border-radius: 50px 0 0 50px;
+      font-size: clamp(0.85rem, 2vw, 0.9rem);
+      padding: 0.5rem 1rem;
+      transition: all 0.3s ease;
+    }
+    .navbar .search-form input:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 5px rgba(255, 235, 59, 0.5);
+      outline: none;
+    }
+    .navbar .search-form button {
+      background: var(--primary-gradient);
+      border: none;
+      border-radius: 0 50px 50px 0;
+      font-size: clamp(0.85rem, 2vw, 0.9rem);
+      padding: 0.5rem 1rem;
+      color: white;
+      transition: all 0.3s ease;
+    }
+    .navbar .search-form button:hover {
+      background: var(--primary-gradient-hover);
+      transform: scale(1.05);
+    }
+
+    /* Cart and Icons */
+    .navbar .icon-link {
+      color: #333 !important;
+      transition: all 0.3s ease;
+    }
+    .navbar .icon-link:hover {
+      color: var(--accent-color) !important;
+      transform: scale(1.1);
+    }
+    .navbar .cart-badge {
+      background: var(--primary-gradient);
+      color: white;
+      font-size: clamp(0.7rem, 1.8vw, 0.8rem);
+      padding: 0.2rem 0.5rem;
+      border-radius: 50px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+    }
+    .navbar .cart-badge:hover {
+      background: var(--primary-gradient-hover);
+      transform: scale(1.1);
+    }
+
+    /* Footer */
+    footer {
+      background: linear-gradient(135deg, #ffffff, #e3f2fd);
+      font-size: clamp(0.85rem, 2vw, 0.9rem);
+      border-top: 1px solid #2193b0;
+    }
+    footer a {
+      text-decoration: none;
+      color: #333;
+      transition: all 0.3s ease;
+    }
+    footer a:hover {
+      color: var(--accent-color);
+      transform: scale(1.05);
+    }
+    footer .footer-col h6 {
+      font-weight: 600;
+      color: #2193b0;
+      margin-bottom: 0.8rem;
+      font-size: clamp(1rem, 2.5vw, 1.1rem);
+    }
+    footer .newsletter input {
+      height: 38px;
+      border: 1px solid #2193b0;
+      border-radius: 50px 0 0 50px;
+      font-size: clamp(0.85rem, 2vw, 0.9rem);
+      transition: all 0.3s ease;
+    }
+    footer .newsletter input:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 5px rgba(255, 235, 59, 0.5);
+      outline: none;
+    }
+    footer .newsletter button {
+      height: 38px;
+      background: var(--primary-gradient);
+      border: none;
+      border-radius: 0 50px 50px 0;
+      color: white;
+      font-size: clamp(0.85rem, 2vw, 0.9rem);
+      transition: all 0.3s ease;
+    }
+    footer .newsletter button:hover {
+      background: var(--primary-gradient-hover);
+      transform: scale(1.05);
+    }
+    footer .text-center p {
+      color: #333;
+      font-size: clamp(0.8rem, 2vw, 0.85rem);
+    }

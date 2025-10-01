@@ -1,198 +1,280 @@
 {% extends 'user/base.html' %}
-{% load static %}
+{% load static math_filters %}
 {% block title %}My Orders - WalkOn{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/order.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="container my-5">
-    <h2 class="mb-4 text-center fw-bold" style="color: #1a73e8;">MY ORDERS</h2>
+    <div class="row">
+        <!-- Sidebar -->
+        {% include 'user/user_sidebar.html' %}
 
-    <!-- Search and Filter Form -->
-    <form method="GET" class="mb-4">
-        <div class="row">
-            <div class="col-md-6">
-                <div class="input-group">
-                    <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search by Order ID, Product,Date or Status">
-                    <button type="submit" class="btn btn-primary">Search</button>
+        <!-- Main Content -->
+        <div class="col-md-8">
+            <h2 class="mb-4 text-center fw-bold header-title">MY ORDERS</h2>
+
+            <!-- Summary Section -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card shadow-sm text-center p-3 summary-card">
+                        <h5 class="fw-bold">Total Orders</h5>
+                        <p class="mb-0 text-primary">{{ orders.paginator.count }}</p>
+                    </div>
                 </div>
-            </div>
-            <div class="col-md-3">
-                <select name="status" class="form-select">
-                    <option value="" {% if not status_filter %}selected{% endif %}>All Statuses</option>
-                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
-                    <option value="confirmed" {% if status_filter == 'confirmed' %}selected{% endif %}>Confirmed</option>
-                    <option value="shipped" {% if status_filter == 'shipped' %}selected{% endif %}>Shipped</option>
-                    <option value="delivered" {% if status_filter == 'delivered' %}selected{% endif %}>Delivered</option>
-                    <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
-                    <option value="returned" {% if status_filter == 'returned' %}selected{% endif %}>Returned</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <button type="submit" class="btn btn-secondary w-100">Filter</button>
-            </div>
-        </div>
-    </form>
-
-    {% for order in orders %}
-        <div class="card shadow-lg mb-4 p-4" style="border: 2px solid #e8f0fe; border-radius: 15px; background: linear-gradient(to right, #f8f9fa, #e9ecef);">
-            <div class="row align-items-center">
-                <!-- Order Info -->
-                <div class="col-md-12">
-                    <h5 class="fw-bold" style="color: #d81b60;">Order ID: {{ order.order_id }}</h5>
-                    <p class="mb-1" style="color: #6c757d;">
-                        Status: <span class="fw-bold" 
-                                      style="color: 
-                                      {% if order.status == 'pending' %}#6c757d
-                                      {% elif order.status == 'confirmed' %}#1a73e8
-                                      {% elif order.status == 'shipped' %}#ffb300
-                                      {% elif order.status == 'delivered' %}#2e7d32
-                                      {% elif order.status == 'cancelled' %}#d32f2f
-                                      {% elif order.status == 'returned' %}#343a40
-                                      {% endif %};">
-                            {{ order.get_status_display }}
-                        </span><br>
-                        Ordered on: {{ order.order_date|date:"M d, Y" }} at {{ order.order_date|time:"h:i A" }} IST<br>
-                        Total: <span class="fw-bold" style="color: #2e7d32;">₹{{ order.total_amount }}</span>
-                    </p>
+                <div class="col-md-4">
+                    <div class="card shadow-sm text-center p-3 summary-card">
+                        <h5 class="fw-bold">Total Products Purchased</h5>
+                        <p class="mb-0 text-success">{{ total_products }}</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card shadow-sm text-center p-3 summary-card">
+                        <h5 class="fw-bold">Total Amount Spent</h5>
+                        <p class="mb-0 text-danger">₹{{ total_spent }}</p>
+                    </div>
                 </div>
             </div>
 
-            <!-- Order Items -->
-            <div class="mt-3">
-                <h6 class="fw-bold" style="color: #0288d1;">Order Items:</h6>
-                {% for item in order.items.all %}
-                    <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
-                        <div class="d-flex align-items-center">
-                            <img src="{{ item.product_variant.product.primary_image.url }}" 
-                                 alt="{{ item.product_variant.product.name }}" 
-                                 class="img-fluid rounded border me-3" 
-                                 style="border: 3px solid #4caf50; max-height: 80px; width: 80px;">
-                            <div>
-                                <p class="mb-0 fw-bold" style="color: #d81b60;">{{ item.product_variant.product.name }}</p>
-                                <small style="color: #6c757d;">
-                                    Color: {{ item.product_variant.color.name }} | Size: {{ item.product_variant.size }} | Qty: {{ item.quantity }} | Price: ₹{{ item.price }}
-                                </small>
-                                {% if item.is_cancelled %}
-                                    <p class="mb-0 text-danger fw-bold">Cancelled {% if item.cancel_reason %} (Reason: {{ item.cancel_reason }}) {% endif %}</p>
-                                {% endif %}
-                            </div>
+            <!-- Search and Filter Form -->
+            <form method="GET" class="mb-4 search-form">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search by Order ID, Product, Date or Status">
+                            <button type="submit" class="btn btn-primary">Search</button>
                         </div>
-                        {% if order.status in 'pending confirmed' and not item.is_cancelled %}
-                            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelItemModal{{ order.id }}{{ forloop.counter }}">Cancel Item</button>
-                        {% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <select name="status" class="form-select">
+                            <option value="" {% if not status_filter %}selected{% endif %}>All Statuses</option>
+                            <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="confirmed" {% if status_filter == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                            <option value="shipped" {% if status_filter == 'shipped' %}selected{% endif %}>Shipped</option>
+                            <option value="delivered" {% if status_filter == 'delivered' %}selected{% endif %}>Delivered</option>
+                            <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                            <option value="returned" {% if status_filter == 'returned' %}selected{% endif %}>Returned</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-secondary w-100">Filter</button>
+                    </div>
+                </div>
+            </form>
+
+            {% for order in orders %}
+                <!-- Order Card -->
+                <div class="card shadow-sm mb-3 p-3 order-card">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h6 class="fw-bold text-danger">Order ID: {{ order.order_id }}</h6>
+                            
+                            {% if order.razorpay_order_id %}
+                                <p class="mb-1 small"><strong>Razorpay Order:</strong> {{ order.razorpay_order_id }}</p>
+                            {% endif %}
+
+                            <p class="mb-1 text-muted small">
+                                Status: <span class="fw-bold">{{ order.get_status_display }}</span><br>
+                                Ordered on: {{ order.order_date|date:"M d, Y" }} at {{ order.order_date|time:"h:i A" }} IST<br>
+                                Total: <span class="fw-bold text-success">₹{{ order.calculated_total }}</span><br>
+                                Payment Method: <span class="fw-bold">{{ order.payment_method }}</span>
+                            </p>
+                        </div>
                     </div>
 
-                    
-                {% endfor %}
-            </div>
-
-            <!-- Tracking Progress Bar -->
-            <div class="progress mt-3" style="height: 12px; border-radius: 10px;">
-                <div class="progress-bar 
-                    {% if order.status == 'pending' %} bg-secondary
-                    {% elif order.status == 'confirmed' %} bg-primary
-                    {% elif order.status == 'shipped' %} bg-warning
-                    {% elif order.status == 'delivered' %} bg-success
-                    {% elif order.status == 'cancelled' %} bg-danger
-                    {% elif order.status == 'returned' %} bg-dark
-                    {% endif %}" 
-                    role="progressbar"
-                    style="width: 
-                        {% if order.status == 'pending' %}10%
-                        {% elif order.status == 'confirmed' %}30%
-                        {% elif order.status == 'shipped' %}60%
-                        {% elif order.status == 'delivered' %}100%
-                        {% elif order.status == 'cancelled' %}100%
-                        {% elif order.status == 'returned' %}100%
-                        {% endif %};">
-                </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="mt-3 d-flex justify-content-end">
-                <a href="{% url 'order_details' order.order_id %}" class="btn btn-sm btn-outline-info me-2">View Details</a>
-                <a href="" class="btn btn-sm btn-outline-primary me-2" target="_blank">Download Invoice</a>
-                {% if order.status in 'pending confirmed' %}
-                    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal{{ order.id }}">Cancel Order</button>
-                {% endif %}
-                {% if order.status == 'delivered' %}
-                    <button class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#returnOrderModal{{ order.id }}">Return Order</button>
-                {% endif %}
-            </div>
-
-   <!-- Cancel Order Modal -->
-    <div class="modal fade" id="cancelOrderModal{{ order.id }}" tabindex="-1" aria-labelledby="cancelOrderLabel{{ order.id }}" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="cancelOrderLabel{{ order.id }}">Cancel Order: {{ order.order_id }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form action="{% url 'cancel_order' order.id %}" method="POST">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="reason" class="form-label">Reason (optional)</label>
-                            <textarea class="form-control" id="reason" name="reason" rows="3"></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-danger">Confirm Cancel</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-            <!-- Return Order Modal -->
-            <div class="modal fade" id="returnOrderModal{{ order.id }}" tabindex="-1" aria-labelledby="returnOrderLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="returnOrderLabel">Return Order: {{ order.order_id }}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <form action="" method="POST">
-                                {% csrf_token %}
-                                <div class="mb-3">
-                                    <label for="reason" class="form-label">Reason (mandatory)</label>
-                                    <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
+                    <!-- Items -->
+                    <div class="mt-2">
+                        <h6 class="fw-bold text-primary small">Order Items:</h6>
+                        {% for item in order.items.all %}
+                            <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+                                <div class="d-flex align-items-center">
+                                    <img src="{{ item.product_variant.product.primary_image.url }}" 
+                                         alt="{{ item.product_variant.product.name }}" 
+                                         class="img-fluid rounded border me-2" 
+                                         style="max-height: 60px; width: 60px;">
+                                    <div>
+                                        <p class="mb-0 fw-bold small">{{ item.product_variant.product.name }}</p>
+                                        <small class="text-muted">
+                                            Color: {{ item.product_variant.color.name }} | 
+                                            Size: {{ item.product_variant.size }} | 
+                                            Qty: {{ item.quantity }} | 
+                                            Price: ₹{{ item.price|mul:item.quantity }}
+                                        </small>
+                                        {% if item.is_cancelled %}
+                                            <p class="mb-0 text-danger fw-bold small">Cancelled {% if item.cancel_reason %} (Reason: {{ item.cancel_reason }}) {% endif %}</p>
+                                        {% endif %}
+                                    </div>
                                 </div>
-                                <button type="submit" class="btn btn-dark">Confirm Return</button>
+                                {% if order.status in 'pending confirmed' and not item.is_cancelled %}
+                                    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelItemModal{{ order.id }}{{ forloop.counter }}">Cancel Item</button>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="mt-2 d-flex justify-content-end">
+                        <a href="{% url 'order_details' order.order_id %}" class="btn btn-sm btn-outline-info me-2">View Details</a>
+                        <a href="{% url 'invoice_pdf' order.id %}" class="btn btn-sm btn-outline-secondary me-2">Invoice</a>
+                        {% if order.status in 'pending confirmed' %}
+                            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal{{ order.id }}">Cancel Order</button>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Cancel Order Modal -->
+                <div class="modal fade" id="cancelOrderModal{{ order.id }}" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <form method="POST" action="{% url 'cancel_order' order.id %}">
+                                {% csrf_token %}
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Cancel Order</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Are you sure you want to cancel this order?</p>
+                                    <textarea class="form-control" name="reason" placeholder="Reason (optional)"></textarea>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                                    <button type="submit" class="btn btn-danger btn-sm">Confirm Cancel</button>
+                                </div>
                             </form>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    {% empty %}
-        <p class="text-center" style="color: #6c757d; font-size: 1.2rem;">You have no orders yet.</p>
-    {% endfor %}
 
-    <!-- Pagination -->
-    <nav aria-label="Order pagination">
-        <ul class="pagination justify-content-center mt-4">
-            {% if orders.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ orders.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" style="color: #1a73e8;">Previous</a>
-                </li>
-            {% endif %}
-
-            {% for num in orders.paginator.page_range %}
-                {% if orders.number == num %}
-                    <li class="page-item active">
-                        <a class="page-link" style="background-color: #1a73e8; border-color: #1a73e8;">{{ num }}</a>
-                    </li>
-                {% elif num > orders.number|add:'-3' and num < orders.number|add:'3' %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ num }}{% if q %}&q={{ q }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" style="color: #1a73e8;">{{ num }}</a>
-                    </li>
-                {% endif %}
+                <!-- Cancel Item Modals -->
+                {% for item in order.items.all %}
+                    <div class="modal fade" id="cancelItemModal{{ order.id }}{{ forloop.counter }}" tabindex="-1">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <form method="POST" action="{% url 'cancel_item' item.id %}">
+                                    {% csrf_token %}
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Cancel Item</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Cancel <strong>{{ item.product_variant.product.name }}</strong>?</p>
+                                        <textarea class="form-control" name="reason" placeholder="Reason (optional)"></textarea>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                                        <button type="submit" class="btn btn-danger btn-sm">Confirm Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% empty %}
+                <p class="text-center text-muted">You have no orders yet.</p>
             {% endfor %}
 
-            {% if orders.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ orders.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" style="color: #1a73e8;">Next</a>
-                </li>
-            {% endif %}
-        </ul>
-    </nav>
+            <!-- Pagination -->
+            <div class="d-flex justify-content-center mt-4">
+                <nav>
+                    <ul class="pagination">
+                        {% if orders.has_previous %}
+                            <li class="page-item"><a class="page-link" href="?page=1">&laquo; First</a></li>
+                            <li class="page-item"><a class="page-link" href="?page={{ orders.previous_page_number }}">Previous</a></li>
+                        {% endif %}
+
+                        <li class="page-item active"><span class="page-link">{{ orders.number }}</span></li>
+
+                        {% if orders.has_next %}
+                            <li class="page-item"><a class="page-link" href="?page={{ orders.next_page_number }}">Next</a></li>
+                            <li class="page-item"><a class="page-link" href="?page={{ orders.paginator.num_pages }}">Last &raquo;</a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  // Handle flash messages and cancellation confirmations with SweetAlert2
+  {% if messages %}
+    {% for message in messages %}
+      Swal.fire({
+        icon: '{{ message.tags }}' === 'success' ? 'success' : '{{ message.tags }}' === 'error' ? 'error' : 'info',
+        text: '{{ message }}',
+        background: '{{ message.tags }}' === 'success' ? '#e3f2fd' : '{{ message.tags }}' === 'error' ? '#f8d7da' : '#fff',
+        confirmButtonColor: '#2193b0',
+        confirmButtonText: 'OK',
+        customClass: {
+          popup: 'rounded-3',
+          confirmButton: 'btn btn-primary rounded-pill'
+        }
+      });
+    {% endfor %}
+  {% endif %}
+
+  // Handle modal form submissions with AJAX
+  $(document).ready(function() {
+    $('.modal form').on('submit', function(e) {
+      e.preventDefault();
+      const form = $(this);
+      const url = form.attr('action');
+      const data = form.serialize();
+
+      $.ajax({
+        url: url,
+        type: 'POST',
+        data: data,
+        success: function(response) {
+          if (response.status === 'success') {
+            Swal.fire({
+              icon: 'success',
+              text: response.message || 'Action completed successfully!',
+              background: '#e3f2fd',
+              confirmButtonColor: '#2193b0',
+              confirmButtonText: 'OK',
+              customClass: {
+                popup: 'rounded-3',
+                confirmButton: 'btn btn-primary rounded-pill'
+              }
+            }).then(() => {
+              location.reload(); // Refresh to update order status
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              text: response.message || 'Failed to complete action.',
+              background: '#f8d7da',
+              confirmButtonColor: '#2193b0',
+              confirmButtonText: 'OK',
+              customClass: {
+                popup: 'rounded-3',
+                confirmButton: 'btn btn-primary rounded-pill'
+              }
+            });
+          }
+        },
+        error: function() {
+          Swal.fire({
+            icon: 'error',
+            text: 'Something went wrong.',
+            background: '#f8d7da',
+            confirmButtonColor: '#2193b0',
+            confirmButtonText: 'OK',
+            customClass: {
+              popup: 'rounded-3',
+              confirmButton: 'btn btn-primary rounded-pill'
+            }
+          });
+        }
+      });
+    });
+  });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
 {% endblock %}
