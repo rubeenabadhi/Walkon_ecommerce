@@ -5,6 +5,8 @@ from django.conf import settings
 from django.db import models, transaction
 from django.utils import timezone
 
+from offers.models import Coupon
+
 
 # ===================== ORDER =====================
 def generate_order_id():
@@ -33,7 +35,7 @@ class Order(models.Model):
 
     order_date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
-
+    coupon = models.ForeignKey(Coupon, null=True, blank=True, on_delete=models.SET_NULL,default = None)
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     final_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
@@ -69,7 +71,15 @@ class Order(models.Model):
         self.save()
         OrderTracking.objects.create(order=self, status="cancelled", note=reason or "Cancelled")
         return True
-
+    @property
+    def calculated_total(self):
+        total = self.total_amount
+        if self.coupon:
+            if self.coupon.discount_type == 'amount':
+                total -= self.coupon.discount_value
+            elif self.coupon.discount_type == 'percentage':
+                total -= total * (self.coupon.discount_value / 100)
+        return total
 
 # ===================== ORDER ITEM =====================
 
@@ -82,6 +92,7 @@ class OrderItem(models.Model):
     quantity = models.PositiveIntegerField(default=1)
     price = models.DecimalField(max_digits=10, decimal_places=2)  # snapshot unit price
     total_price = models.DecimalField(max_digits=12, decimal_places=2)
+    
 
     is_cancelled = models.BooleanField(default=False)
     cancel_reason = models.TextField(null=True, blank=True)

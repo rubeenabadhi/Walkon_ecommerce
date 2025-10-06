@@ -19,6 +19,7 @@ class CustomUser(AbstractUser):
     is_superuser = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now=True)
+    referrel_code = models.CharField(max_length=10, unique=True, null=True, blank=True, default=None)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']  #it is not required for CustomUser,it is for superuser creation

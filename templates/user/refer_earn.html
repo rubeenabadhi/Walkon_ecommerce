@@ -1,0 +1,73 @@
+{% extends 'user/base.html' %}
+{% load static %}
+{% block title %}Refer - Walkon{% endblock %}
+
+{% block content %}
+<div class="container my-3">
+    <div class="row">
+        {% include 'user/user_sidebar.html' %}
+        <div class="col-md-8">
+            <div class="refer-card p-2 shadow-sm rounded bg-white" style="min-height: 350px; transition: transform 0.3s ease, box-shadow 0.3s ease;">
+                <h2 class="mb-2 text-center" style="text-transform: uppercase; color: #1a73e8; font-weight: 700; font-family: 'Inter', sans-serif; font-size: clamp(1.3rem, 3.5vw, 1.8rem);">Refer & Earn</h2>
+                <p class="text-center mb-2" style="color: #1a73e8; font-weight: 500; font-family: 'Inter', sans-serif; font-size: clamp(0.8rem, 2vw, 1rem);">Refer your friends and get exciting rewards!</p>
+                
+                <!-- Referral Image -->
+                <div class="text-center mb-2">
+                    <img src="{% static 'images/referral.jpeg' %}" alt="Referral Banner" class="img-fluid rounded" style="max-width: 100%; height: auto; max-height: 150px; object-fit: cover;">
+                </div>
+
+                <!-- Referral Code Section -->
+                <div class="text-center mb-2">
+                    {% if referral_code %} 
+                        <p class="mb-1" style="font-family: 'Inter', sans-serif; font-size: clamp(0.8rem, 2vw, 0.9rem); color: #555;">Your Referral Code:</p>
+                        <input type="text" class="form-control w-50 mx-auto" value="{{ referral_code }}" readonly style="font-family: 'Outfit', sans-serif; font-size: clamp(0.9rem, 2.5vw, 1rem); background-color: #f8f9fa; border-color: #2193b0; text-align: center; padding: 0.25rem;">
+                        <button class="btn btn-primary mt-1" onclick="copyCode()" style="font-family: 'Poppins', sans-serif; font-weight: 700; text-transform: uppercase; padding: 0.3rem 0.6rem; font-size: clamp(0.7rem, 2vw, 0.8rem);">Copy Code</button>
+
+                        <!-- Referral Link Section -->
+                        <hr class="my-1" style="border-color: #dee2e6;">
+                        <p class="mb-1" style="font-family: 'Inter', sans-serif; font-size: clamp(0.8rem, 2vw, 0.9rem); color: #555;">Your Referral Link:</p>
+                        <input type="text" id="referralLink" class="form-control w-75 mx-auto" 
+                               value="{{ request.build_absolute_uri }}?ref={{ referral_code }}" readonly 
+                               style="font-family: 'Outfit', sans-serif; font-size: clamp(0.85rem, 2vw, 0.95rem); background-color: #f8f9fa; border-color: #2193b0; text-align: center; padding: 0.25rem;">
+                        <button class="btn btn-outline-primary mt-1" onclick="copyLink()" style="font-family: 'Poppins', sans-serif; font-weight: 700; text-transform: uppercase; padding: 0.3rem 0.6rem; font-size: clamp(0.7rem, 2vw, 0.8rem);">Copy Link</button>
+                        <p class="mt-1" style="font-family: 'Inter', sans-serif; font-size: clamp(0.7rem, 2vw, 0.8rem); color: #555;">Share this link with friends to invite them easily!</p>
+
+                        <!-- Button to view referred users -->
+                        <div class="text-center mt-2">
+                            <a href="{% url 'my_referrals' %}" class="btn btn-success" style="font-family: 'Poppins', sans-serif; font-weight: 700; text-transform: uppercase; padding: 0.3rem 0.6rem; font-size: clamp(0.7rem, 2vw, 0.8rem);">
+                                View My Referrals
+                            </a>
+                        </div>
+                    {% else %}
+                        <p class="mb-1" style="font-family: 'Inter', sans-serif; font-size: clamp(0.8rem, 2vw, 0.9rem); color: #555;">You don't have a referral code yet.</p>
+                    {% endif %}
+                </div>
+
+                <!-- How It Works Section -->
+                <div class="text-center">
+                    <h4 style="font-family: 'Inter', sans-serif; color: #0170bc; font-weight: 600; font-size: clamp(1rem, 2.5vw, 1.2rem);">How It Works</h4>
+                    <ul class="list-unstyled text-start mx-auto" style="max-width: 350px; font-family: 'Inter', sans-serif; font-size: clamp(0.7rem, 2vw, 0.8rem); color: #666;">
+                        <li class="mb-1">1. Share your referral code or link with friends.</li>
+                        <li class="mb-1">2. They sign up using your code or link.</li>
+                        <li class="mb-1">3. Earn rewards when they make their first purchase!</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyCode() {
+    const code = "{{ referral_code }}";
+    navigator.clipboard.writeText(code);
+    alert("Referral code copied: " + code);
+}
+
+function copyLink() {
+    const link = document.getElementById("referralLink").value;
+    navigator.clipboard.writeText(link);
+    alert("Referral link copied: " + link);
+}
+</script>
+{% endblock %}

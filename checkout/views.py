@@ -9,12 +9,15 @@ from django.urls import reverse
 from cart.models import CartItems
 from order.models import Order, OrderItem
 from django.db import transaction
+from django.db.models import F
 import razorpay
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from .models import Payment
 from decimal import Decimal
+from offers.models import Coupon, UserCoupon
+
 
 
 razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
@@ -157,48 +160,56 @@ def create_razorpay_order(request, order_id):
 
     order = get_object_or_404(Order, id=order_id, user=request.user)
 
-    # Calculate cart total
-    cart_items = CartItems.objects.filter(user=request.user).select_related('variant')
-    total_amount = Decimal("0.00")
-    for item in cart_items:
-        total_amount += Decimal(item.variant.price) * item.quantity
+    # Get coupon-adjusted total from session
+    final_total = request.session.get("final_total")
+    if final_total is None:
+        cart_items = CartItems.objects.filter(user=request.user).select_related('variant')
+        final_total = sum(Decimal(item.variant.price) * item.quantity for item in cart_items)
+
+    final_total = Decimal(str(final_total)).quantize(Decimal('0.01'))
 
     client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
     razorpay_order = client.order.create({
-        "amount": int(total_amount * 100),  # in paise
+        "amount": int(final_total * 100),
         "currency": "INR",
         "receipt": str(order.id),
         "payment_capture": 1
     })
 
-    # Check if Payment already exists, create if not
+    print("Razorpay order created:", razorpay_order)
+    
+
     payment, created = Payment.objects.get_or_create(
         order=order,
         defaults={
             "payment_method": "razorpay",
             "payment_status": "pending",
-            "paid_amount": total_amount,
+            "paid_amount": final_total,
             "payment_gateway": "Razorpay",
             "gateway_order_id": razorpay_order["id"]
         }
     )
 
-    if not created:
-        payment.payment_status = "pending"
-        payment.paid_amount = total_amount
-        payment.payment_gateway = "Razorpay"
-        payment.gateway_order_id = razorpay_order["id"]
+    if created:
         payment.save()
+        print("Payment created successfully.")
 
-    print(f"Payment created/updated: ID={payment.id}, gateway_order_id={payment.gateway_order_id},total_amount={total_amount}")
+    if not created:
+        payment.paid_amount = final_total
+        payment.gateway_order_id = razorpay_order["id"]
+        payment.payment_status = "pending"
+        payment.save()
+        print("Payment updated successfully.")
 
     return JsonResponse({
         "razorpay_order_id": razorpay_order["id"],
         "razorpay_key": settings.RAZORPAY_KEY_ID,
-        "amount": float(total_amount),
+        "amount": float(final_total),
         "currency": "INR",
-    })# Verify Razorpay payment
+    })
+
+    # Verify Razorpay payment
 @csrf_exempt
 @login_required(login_url="login")
 def verify_razorpay_payment(request):
@@ -220,134 +231,207 @@ def verify_razorpay_payment(request):
         })
         print("Payment verified successfully.")
 
-        # Query Payment using gateway_order_id
         payment = get_object_or_404(Payment, gateway_order_id=razorpay_order_id)
-        print("Payment record found:", payment.id,"paymnent_gateway_order_id:",payment.gateway_order_id)
-        
-        # Start transaction to ensure atomicity
+
         with transaction.atomic():
-            # Update Payment
+            # Update payment record
             payment.payment_status = "success"
             payment.gateway_payment_id = payment_id
             payment.gateway_signature = signature
             payment.paid_at = timezone.now()
             payment.save()
-            print("Payment record updated:", payment.id)
 
             # Update related Order
             order = payment.order
             order.status = "confirmed"
             order.payment_method = "razorpay"
+
+            # Use session values (fallback to existing order values)
+            session_final = request.session.get("final_total")
+            session_discount = request.session.get("discount")
+            if session_final:
+                order.final_amount = Decimal(str(session_final)).quantize(Decimal('0.01'))
+            if session_discount:
+                order.discount_amount = Decimal(str(session_discount)).quantize(Decimal('0.01'))
+
             order.save()
-            print("Order status updated:", order.id, "User:", order.user.id)
 
-            # Get cart items for the user
-            cart_items = CartItems.objects.filter(user=request.user)
-            if not cart_items.exists():
-                print("No cart items found for user during payment verification.")
-            else:
-                # Move cart items to Order Items and decrease stock
-                for item in cart_items:
-                    OrderItem.objects.create(
-                        order=order,
-                        product_variant=item.variant,
-                        quantity=item.quantity,
-                        price=item.variant.price,
-                    )
-                    print(f"Before stock: {item.variant.product.stock}, Ordered: {item.quantity}")
-                    item.variant.product.stock -= item.quantity
-                    item.variant.product.save()
-                    print(f"After stock: {item.variant.product.stock}")
+            # Move cart items → OrderItems and decrease stock
+            cart_items = CartItems.objects.filter(user=request.user).select_related('variant')
+            for ci in cart_items:
+                OrderItem.objects.create(
+                    order=order,
+                    product_variant=ci.variant,
+                    quantity=ci.quantity,
+                    price=ci.variant.price,
+                )
+                # decrease stock safely
+                product = ci.variant.product
+                product.stock = F('stock') - ci.quantity
+                product.save(update_fields=['stock'])
 
-                # Clear cart items
-                cart_items.delete()
-                print("Cart items cleared for user:", request.user.id)
+            # Clear cart
+            cart_items.delete()
 
-        return JsonResponse({"status": "success", "order_id": str(order.id)})
+            # If coupon applied in session -> attach to order and mark used
+            coupon_id = request.session.get("coupon_id")
+            if coupon_id:
+                try:
+                    coupon = Coupon.objects.get(id=coupon_id)
+                    order.coupon = coupon
+                    order.save(update_fields=['coupon'])
+
+                    user_coupon, _ = UserCoupon.objects.get_or_create(user=request.user, coupon=coupon)
+                    user_coupon.used_count = F('used_count') + 1
+                    user_coupon.save()
+                except Coupon.DoesNotExist:
+                    pass
+
+            # Clear coupon-related session keys
+            request.session.pop("coupon_id", None)
+            request.session.pop("discount", None)
+            request.session.pop("final_total", None)
+
+        print("Order placed successfully.", order.order_id)
+        return JsonResponse({"status": "success", "order_id": str(order.order_id)})
+    
 
     except razorpay.errors.SignatureVerificationError as e:
         print("Payment verification failed:", str(e))
         return JsonResponse({"status": "failed", "message": "Payment verification failed"}, status=400)
     except Exception as e:
         print("Verification error:", str(e))
-        return JsonResponse({"status": "failed", "message": str(e)}, status=400)    
+        return JsonResponse({"status": "failed", "message": str(e)}, status=400)
+
+
+#====================SAVE PAYMENT FAILURE  ============================
+
+@login_required(login_url="login")
+def save_payment_failure(request, order_id):
+    print("Saving payment failure...", order_id)
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    request.session['failed_order_number'] = str(order.order_id)
+    request.session['payment_failure_reason'] = "Payment failed or cancelled."
+    return JsonResponse({'status': 'failure_saved'})
+
+#====================PAYMENT FAILURE VIEW ============================
+@login_required(login_url="login")
+def payment_failure(request):
+    print("Payment failed...")
+    order_number = request.session.get('failed_order_number')
+    failure_reason = request.session.get('payment_failure_reason', 'Payment failed. Please try again.')
+
+    # ✅ Safe session cleanup (avoid KeyError)
+    request.session.pop('failed_order_number', None)
+    request.session.pop('payment_failure_reason', None)
+
+    context = {
+        'failure_reason': failure_reason,
+        'order_number': order_number
+    }
+    return render(request, 'user/payment_failure.html', context)
+
 #==================== PLACE ORDER VIEW ===============================
 @login_required(login_url="login")
 def place_order(request):
-    cart_items = CartItems.objects.filter(user=request.user)
-
+    cart_items = CartItems.objects.filter(user=request.user).select_related('variant')
     if not cart_items.exists():
         messages.error(request, "Your cart is empty!")
-        print("Cart is empty during order placement.")
-        return redirect("cart:cart")  # Redirect to cart if empty
+        return redirect("cart:cart")
 
-    # Get selected address from session
     address_id = request.session.get("selected_address_id")
     if not address_id:
         messages.error(request, "Please select an address.")
         return redirect("select_address")
     address = Address.objects.get(id=address_id, user=request.user)
 
-    # Get payment method from POST (from merged form)
-    if request.method == "POST":
-        payment_method = request.POST.get("payment_method")
-        if not payment_method:
-            messages.error(request, "Please select a payment method.")
-            return redirect("select_payment")
-        request.session["payment_method"] = payment_method  # optional
-
-    else:
+    if request.method != "POST":
         messages.error(request, "Invalid request.")
         return redirect("select_payment")
 
-    total_price = sum(item.variant.price * item.quantity for item in cart_items)
+    payment_method = request.POST.get("payment_method")
+    if not payment_method:
+        messages.error(request, "Please select a payment method.")
+        return redirect("select_payment")
+
+    # Calculate subtotal and session final_total
+    subtotal = sum(Decimal(ci.variant.price) * ci.quantity for ci in cart_items)
+    session_final = request.session.get("final_total")
+    session_discount = request.session.get("discount")
+
+    if session_final:
+        final_amount = Decimal(str(session_final)).quantize(Decimal('0.01'))
+    else:
+        final_amount = Decimal(subtotal).quantize(Decimal('0.01'))
+
+    discount_amount = Decimal(str(session_discount)) if session_discount else (Decimal(subtotal) - final_amount)
 
     try:
-        with transaction.atomic():  # rollback if any error means order not created in DB
-
-            # Create Order
+        with transaction.atomic():
             order = Order.objects.create(
                 user=request.user,
                 address=address,
                 payment_method=payment_method,
-                total_amount=total_price,
+                total_amount=Decimal(subtotal).quantize(Decimal('0.01')),
+                discount_amount=discount_amount.quantize(Decimal('0.01')),
+                final_amount=final_amount,
                 status="pending",
             )
 
-            # Move cart items → Order Items
-            for item in cart_items:
+            for ci in cart_items:
                 OrderItem.objects.create(
                     order=order,
-                    product_variant=item.variant,
-                    quantity=item.quantity,
-                    price=item.variant.price,
+                    product_variant=ci.variant,
+                    quantity=ci.quantity,
+                    price=ci.variant.price,
                 )
+                # reduce stock
+                product = ci.variant.product 
+                product.stock = F('stock') - ci.quantity
+                product.save(update_fields=['stock'])
 
-                # Decrease stock
-                print(f"Before stock: {item.product.stock}, Ordered: {item.quantity}")
-                item.product.stock -= item.quantity
-                item.product.save()
-                print(f"After stock: {item.product.stock}")
-
-            # Clear Cart
+            # Clear cart
             cart_items.delete()
 
-            # Clear session
-            request.session.pop("selected_address_id", None)
-            request.session.pop("payment_method", None)
+            # If coupon applied -> attach and mark used (for COD we mark now)
+            coupon_id = request.session.get("coupon_id")
+            if coupon_id:
+                try:
+                    coupon = Coupon.objects.get(id=coupon_id)
+                    order.coupon = coupon
+                    order.save(update_fields=['coupon'])
 
-        return redirect("order_success", order_id=order.order_id)  # Thank you page
+                    user_coupon, _ = UserCoupon.objects.get_or_create(user=request.user, coupon=coupon)
+                    user_coupon.used_count = F('used_count') + 1
+                    user_coupon.save()
+                except Coupon.DoesNotExist:
+                    pass
+
+            # Clear coupon session keys
+            request.session.pop("coupon_id", None)
+            request.session.pop("discount", None)
+            request.session.pop("final_total", None)
+
+            # Create Payment record for COD
+            if payment_method == 'cod':
+                Payment.objects.create(
+                    order=order,
+                    payment_method='cod',
+                    payment_status='pending',
+                    paid_amount=Decimal('0.00'),
+                    payment_gateway='COD'
+                )
+
+        return redirect("order_success", order_id=order.order_id)
 
     except Exception as e:
-        messages.error(request, f"Order failed: {e}")
-        print("Order placement error:", e)
-        return redirect("select_payment")
-
-#==================== ORDER SUCCESS VIEW ===============================
-
+        print("Order creation error:", str(e))
+        messages.error(request, "Failed to place order. Please try again later.")
+        return redirect("cart:cart")
 
 @login_required(login_url="login")
 def order_success(request, order_id):
     print(f"Order success for order_id: {order_id}")
     order = get_object_or_404(Order, order_id=order_id, user=request.user)
     return render(request, 'user/order_success.html', {'order': order})
+

@@ -1,7 +1,6 @@
 
   :root {
     --primary-gradient: linear-gradient(135deg, #6dd5ed, #2193b0);
-    --primary-gradient-hover: linear-gradient(135deg, #2193b0, #6dd5ed);
     --accent-color: #ffeb3b;
     --accent-hover: #ffd700;
   }
@@ -85,7 +84,7 @@
   /* Order Card */
   .order-card {
     background: var(--primary-gradient);
-    color: white;
+    color: rgb(255, 255, 255);
     border-radius: 15px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     transition: transform 0.3s ease;
@@ -115,13 +114,7 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 5px;
   }
-  .order-card .btn-outline-danger, .order-card .btn-outline-info, .order-card .btn-outline-secondary {
-    border: 1px solid var(--accent-color);
-    color: var(--accent-color);
-    border-radius: 50px;
-    font-size: clamp(0.7rem, 1.8vw, 0.8rem);
-    transition: all 0.3s ease;
-  }
+ 
   .order-card .btn-outline-danger:hover {
     background: #dc3545;
     color: white;

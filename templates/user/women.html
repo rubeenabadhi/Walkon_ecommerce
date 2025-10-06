@@ -113,6 +113,9 @@
                             <p class="card-text fw-bold mb-2" style="color: #ffeb3b;">
                                 ₹{{ product.variants.first.price|default:"N/A" }}
                             </p>
+                            <p class="card-text small text-white">{{ product.category|default:"No Category" }}</p>
+                            <p class="card-text small text-white"><i class="bi bi-tags-fill me-1"></i>{{ product.brand|default:"No Brand" }}</p>
+                            <p class="card-text small text-white "><i class="bi bi-people-fill me-1"></i>{{ product.gender|default:"No Gender" }}</p>
                             
                             <!-- Rating -->
                             <div class="mb-2">

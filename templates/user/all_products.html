@@ -123,7 +123,7 @@
                             <h6 class="card-title fw-bold text-truncate">{{ product.name|default:"No Name" }}</h6>
                             <p class="card-text small text-white">{{ product.category|default:"No Category" }}</p>
                             <p class="card-text small text-white"><i class="bi bi-tags-fill me-1"></i>{{ product.brand|default:"No Brand" }}</p>
-                            <p class="badge bg-light text-dark rounded-pill px-2 py-1 mb-2">{{ product.gender|default:"No Gender" }}</p>
+                            <p class="card-text small text-white "><i class="bi bi-people-fill me-1"></i>{{ product.gender|default:"No Gender" }}</p>
                             <p class="card-text fw-bold mb-2">₹{{ product.variants.first.price|default:"N/A" }}</p>
                             
                             <!-- Rating -->

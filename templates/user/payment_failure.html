@@ -1,0 +1,15 @@
+{% extends 'user/base.html' %}
+{% load static %}
+{% block title %}Payment Failed - WalkOn{% endblock %}
+
+{% block content %}
+<div class="container text-center my-5">
+    <img src="{% static 'images/payment_failed.png' %}" alt="Payment Failed" width="150">
+    <h2 class="mt-4">Payment Failed</h2>
+    <p>{{ failure_reason }}</p>
+    <a href="{% url 'select_payment' %}" class="btn btn-primary mx-2">Retry Payment</a>
+   
+    <a href="{% url 'order_details' order_number %}" class="btn btn-secondary mx-2">View Order</a>
+   
+</div>
+{% endblock %}

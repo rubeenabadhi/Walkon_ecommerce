@@ -10,4 +10,6 @@ urlpatterns = [
     path('verify_razorpay_payment/', views.verify_razorpay_payment, name='verify_razorpay_payment'),
     path('place_order/', views.place_order, name='place_order'),    
     path('order-success/<str:order_id>/', views.order_success, name='order_success'),
+    path('payment-failure-save/<str:order_id>/', views.save_payment_failure, name='payment_failure_save'),
+    path('payment-failed/', views.payment_failure, name='payment_failure'),
 ]

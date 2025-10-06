@@ -1,0 +1,176 @@
+
+    @font-face {
+      font-family: 'Volkhov';
+      src: url("{% static 'fonts/volkhov.woff2' %}") format('woff2'),
+           url("{% static 'fonts/volkhov.woff' %}") format('woff');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    @font-face {
+      font-family: 'Outfit';
+      src: url("{% static 'fonts/outfit.woff2' %}") format('woff2'),
+           url("{% static 'fonts/outfit.woff' %}") format('woff');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    :root {
+      --font-family-inter: 'Inter', sans-serif;
+      --font-family-volkhov: 'Volkhov', sans-serif;
+      --font-family-poppins: 'Poppins', sans-serif;
+      --font-family-outfit: 'Outfit', sans-serif;
+      --primary-gradient: linear-gradient(135deg, #6dd5ed, #2193b0);
+      --secondary-color: #555;
+      --accent-color: #ffeb3b;
+      --danger-color: #dc3545;
+      --success-color: #2e7d32;
+      --muted-color: #6c757d;
+    }
+
+    body {
+      font-family: var(--font-family-inter);
+      background: linear-gradient(135deg, #e3f2fd, #ffffff);
+      min-height: 100vh;
+    }
+
+    .signup-card {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .signup-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    h2 {
+      font-family: var(--font-family-inter);
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      color: #0170bc;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .form-label {
+      font-family: var(--font-family-poppins);
+      font-size: clamp(0.7rem, 2vw, 0.8rem);
+      color: var(--secondary-color);
+    }
+
+    .form-control {
+      font-family: var(--font-family-inter);
+      font-size: clamp(0.7rem, 2vw, 0.8rem);
+      border: 1px solid #2193b0;
+      border-radius: 5px;
+      padding: 0.3rem 0.6rem;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .form-control:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 5px rgba(255, 235, 59, 0.5);
+    }
+
+    .form-check-label {
+      font-family: var(--font-family-inter);
+      font-size: clamp(0.7rem, 2vw, 0.8rem);
+      color: var(--muted-color);
+    }
+
+    .form-check-label a {
+      color: #0170bc;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    .form-check-label a:hover {
+      color: #2193b0;
+    }
+
+    .btn-primary {
+      font-family: var(--font-family-poppins);
+      font-weight: 700;
+      font-size: clamp(0.7rem, 2vw, 0.8rem);
+      text-transform: uppercase;
+      background: var(--primary-gradient);
+      border: none;
+      border-radius: 20px;
+      padding: 0.4rem;
+      transition: background 0.3s, transform 0.3s;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #2193b0, #6dd5ed);
+      transform: translateY(-2px);
+    }
+
+    .btn-outline-danger {
+      font-family: var(--font-family-poppins);
+      font-weight: 700;
+      font-size: clamp(0.7rem, 2vw, 0.8rem);
+      text-transform: uppercase;
+      color: var(--danger-color);
+      border-color: var(--danger-color);
+      border-radius: 20px;
+      padding: 0.4rem;
+      transition: all 0.3s;
+    }
+
+    .btn-outline-danger:hover {
+      background: var(--danger-color);
+      color: white;
+    }
+
+    .alert {
+      font-family: var(--font-family-inter);
+      font-size: clamp(0.7rem, 2vw, 0.8rem);
+      border-radius: 5px;
+      margin-bottom: 0.3rem;
+    }
+
+    .image-container {
+      height: 100%;
+      border-radius: 0 0 15px 15px;
+      overflow: hidden;
+    }
+
+    .image-container img {
+      object-fit: cover;
+      height: 100%;
+      width: 100%;
+    }
+
+    @media (min-width: 769px) {
+      .signup-card {
+        flex-direction: row;
+      }
+      .image-container {
+        border-radius: 15px 0 0 15px;
+        height: auto;
+      }
+      .col-lg-6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .signup-card {
+        padding: 1rem;
+      }
+      .image-container {
+        height: 150px;
+      }
+      .form-control, .btn-primary, .btn-outline-danger {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+      }
+    }
+  

@@ -1,182 +1,99 @@
 {% extends 'user/base.html' %}
 {% load static %}
 {% block title %}Order Details - WalkOn{% endblock %}
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/order.css' %}">
-<style>
-  /* Ensure progress-bar transition for compatibility */
-  .progress-bar { transition: width 0.6s ease; }
-</style>
-{% endblock %}
 
 {% block content %}
 <div class="container my-4">
     <div class="row">
-        <!-- Sidebar -->
         {% include 'user/user_sidebar.html' %}
-
-        <!-- Main Content -->
         <div class="col-md-8">
-            <!-- Page Title -->
-            <h2 class="mb-3 fw-bold text-center header-title">
-                Order Details: {{ order.order_id }}
-            </h2>
+    <!-- Page Title -->
+    <h2 class="mb-3 fw-bold text-center" style="color: #1a73e8;">
+        Order Details: {{ order.order_id }}
+    </h2>
 
-            <!-- Messages -->
-            <div class="mb-4 text-center">
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3 shadow-sm d-inline-block" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            </div>
+    <!-- Messages -->
+    <div class="mb-4 text-center">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3 shadow-sm d-inline-block" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
 
-            <!-- Order Summary -->
-            <div class="card shadow-sm mb-3 p-3 summary-card">
-                <p class="mb-1">
-                    <span class="fw-bold">Status:</span>
-                    <span class="{% if order.status == 'pending' %}text-secondary
-                                   {% elif order.status == 'confirmed' %}text-primary
-                                   {% elif order.status == 'shipped' %}text-warning
-                                   {% elif order.status == 'delivered' %}text-success
-                                   {% elif order.status == 'cancelled' %}text-danger
-                                   {% elif order.status == 'returned' %}text-dark{% endif %}">
-                        {{ order.get_status_display }}
-                    </span><br>
-                    <span class="fw-bold">Ordered:</span> {{ order.order_date|date:"M d, Y h:i A" }} IST<br>
-                    <span class="fw-bold">Total:</span> <span class="text-success">₹{{ order.total_amount }}</span><br>
-                    <span class="fw-bold">Payment Method:</span> {{ order.payment_method|default:"N/A" }}
-                </p>
-            </div>
+    <!-- Order Summary -->
+    <div class="card summary-card shadow-sm mb-3 p-3">
+        <p class="mb-1">
+            <span class="fw-bold">Status:</span>
+            <span class="{% if order.status == 'pending' %}text-secondary
+                           {% elif order.status == 'confirmed' %}text-primary
+                           {% elif order.status == 'shipped' %}text-warning
+                           {% elif order.status == 'delivered' %}text-success
+                           {% elif order.status == 'cancelled' %}text-danger
+                           {% elif order.status == 'returned' %}text-dark{% endif %}">
+                {{ order.get_status_display }}
+            </span><br>
+            <span class="fw-bold">Ordered:</span> {{ order.order_date|date:"M d, Y h:i A" }} IST<br>
+            <span class="fw-bold">Total:</span> <span class="text-success">₹{{ order.final_amount }}</span><br>
+            <span class="fw-bold">Payment Method:</span> {{ order.payment_method|default:"N/A" }}
+        </p>
+    </div>
 
-            <!-- Order Items -->
-            <div class="card shadow-sm mb-3 p-3 order-card">
-                <h5 class="fw-bold mb-2 text-primary">Order Items</h5>
-                {% for item in order.items.all %}
-                    <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
-                        <div class="d-flex align-items-center">
-                            <img src="{{ item.product_variant.product.primary_image.url }}"
-                                 alt="{{ item.product_variant.product.name }}"
-                                 class="img-fluid rounded border me-2"
-                                 style="max-height: 60px; width: 60px;">
-                            <div>
-                                <p class="mb-0 fw-bold">{{ item.product_variant.product.name }}</p>
-                                <small class="text-muted">
-                                    Color: {{ item.product_variant.color.name }} |
-                                    Size: {{ item.product_variant.size }}<br>
-                                    Qty: {{ item.quantity }} |
-                                    Price: ₹{{ item.price }} |
-                                    Total: ₹{{ item.total_price }}
-                                </small>
-                                {% if item.is_cancelled %}
-                                    <p class="mb-0 text-danger fw-bold">Cancelled {% if item.cancel_reason %}({{ item.cancel_reason }}){% endif %}</p>
-                                {% elif item.is_returned %}
-                                    <p class="mb-0 text-dark fw-bold">Returned {% if item.return_reason %}({{ item.return_reason }}){% endif %}</p>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        {% if order.status in 'pending confirmed' and not item.is_cancelled %}
-                            <button class="btn btn-sm btn-outline-danger"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#cancelItemModal{{ item.id }}">Cancel</button>
-                        {% elif order.status == 'delivered' and not item.is_returned %}
-                            <button class="btn btn-sm btn-outline-dark"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#returnItemModal{{ item.id }}">Return</button>
+    <!-- Order Items -->
+    <div class="card order-card shadow-sm mb-3 p-3">
+        <h5 class="fw-bold mb-2 text-primary">Order Items</h5>
+        {% for item in order.items.all %}
+            <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+                <div class="d-flex align-items-center">
+                    <img src="{{ item.product_variant.product.primary_image.url }}"
+                         alt="{{ item.product_variant.product.name }}"
+                         class="img-fluid rounded border me-2"
+                         style="max-height: 60px; width: 60px;">
+                    <div>
+                        <p class="mb-0 fw-bold">{{ item.product_variant.product.name }}</p>
+                        <small class="text-muted">
+                            Color: {{ item.product_variant.color.name }} |
+                            Size: {{ item.product_variant.size }}<br>
+                            Qty: {{ item.quantity }} |
+                            Price: ₹{{ item.price }} |
+                            Total: ₹{{ item.total_price }}
+                        </small>
+                        {% if item.is_cancelled %}
+                            <p class="mb-0 text-danger fw-bold">Cancelled {% if item.cancel_reason %}({{ item.cancel_reason }}){% endif %}</p>
+                        {% elif item.is_returned %}
+                            <p class="mb-0 text-dark fw-bold">Returned {% if item.return_reason %}({{ item.return_reason }}){% endif %}</p>
                         {% endif %}
                     </div>
+                </div>
 
-                    <!-- Cancel Item Modal -->
-                    <div class="modal fade" id="cancelItemModal{{ item.id }}" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Cancel Item: {{ item.product_variant.product.name }}</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <form action="{% url 'cancel_item' item.id %}" method="POST" class="cancel-form">
-                                        {% csrf_token %}
-                                        <div class="mb-3">
-                                            <label for="reason{{ item.id }}" class="form-label">Reason (optional)</label>
-                                            <textarea class="form-control" id="reason{{ item.id }}" name="reason" rows="3"></textarea>
-                                        </div>
-                                        <button type="submit" class="btn btn-danger">Confirm Cancel</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Return Item Modal -->
-                    <div class="modal fade" id="returnItemModal{{ item.id }}" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Return Item: {{ item.product_variant.product.name }}</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <form action="{% url 'return_item' item.id %}" method="POST" class="return-form">
-                                        {% csrf_token %}
-                                        <div class="mb-3">
-                                            <label for="reasonReturn{{ item.id }}" class="form-label">Reason (mandatory)</label>
-                                            <textarea class="form-control" id="reasonReturn{{ item.id }}" name="reason" rows="3" required></textarea>
-                                        </div>
-                                        <button type="submit" class="btn btn-dark">Confirm Return</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-
-            <!-- Transaction Details -->
-            <div class="card shadow-sm mb-3 p-3 transaction-card">
-                <h5 class="fw-bold mb-2 text-primary">Transaction Details</h5>
-                {% if order.payment %}
-                    <p class="mb-0 small text-muted">
-                        <span class="fw-bold">Method:</span> {{ order.payment.payment_method }}<br>
-                        <span class="fw-bold">Status:</span> {{ order.payment.payment_status|capfirst }}<br>
-                        <span class="fw-bold">Amount:</span> <span class="text-success">₹{{ order.payment.paid_amount }}</span><br>
-                        <span class="fw-bold">Gateway Order:</span> {{ order.payment.gateway_order_id }}<br>
-                        <span class="fw-bold">Gateway Payment:</span> {{ order.payment.gateway_payment_id|default:"N/A" }}<br>
-                        <span class="fw-bold">Processed:</span> {{ order.payment.paid_at|date:"M d, Y h:i A"|default:"N/A" }}
-                    </p>
-                {% else %}
-                    <p class="mb-0 text-muted">No payment details available.</p>
-                {% endif %}
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="d-flex justify-content-end gap-2">
-                <a href="{% url 'invoice_pdf' order.id %}" class="btn btn-sm btn-outline-primary" target="_blank">Download Invoice</a>
-                {% if order.status in 'pending confirmed' %}
+                {% if order.status in 'pending confirmed' and not item.is_cancelled %}
                     <button class="btn btn-sm btn-outline-danger"
                             data-bs-toggle="modal"
-                            data-bs-target="#cancelOrderModal{{ order.id }}">Cancel Order</button>
+                            data-bs-target="#cancelItemModal{{ item.id }}">Cancel</button>
+                {% elif order.status == 'delivered' and not item.is_returned %}
+                    <button class="btn btn-sm btn-outline-dark"
+                            data-bs-toggle="modal"
+                            data-bs-target="#returnItemModal{{ item.id }}">Return</button>
                 {% endif %}
             </div>
 
-            <!-- Cancel Order Modal -->
-            <div class="modal fade" id="cancelOrderModal{{ order.id }}" tabindex="-1" aria-hidden="true">
+            <!-- Cancel Item Modal -->
+            <div class="modal fade" id="cancelItemModal{{ item.id }}" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title">Cancel Order: {{ order.order_id }}</h5>
+                            <h5 class="modal-title">Cancel Item: {{ item.product_variant.product.name }}</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">
-                            <form action="{% url 'cancel_order' order.id %}" method="POST" class="cancel-form">
+                            <form action="{% url 'cancel_item' item.id %}" method="POST">
                                 {% csrf_token %}
                                 <div class="mb-3">
-                                    <label for="reasonOrder" class="form-label">Reason </label>
-                                    <textarea class="form-control" id="reasonOrder" name="reason" rows="3"></textarea>
+                                    <label for="reason{{ item.id }}" class="form-label">Reason (optional)</label>
+                                    <textarea class="form-control" id="reason{{ item.id }}" name="reason" rows="3"></textarea>
                                 </div>
                                 <button type="submit" class="btn btn-danger">Confirm Cancel</button>
                             </form>
@@ -184,89 +101,130 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Return Item Modal -->
+            <div class="modal fade" id="returnItemModal{{ item.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Return Item: {{ item.product_variant.product.name }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form action="" method="POST">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="reasonReturn{{ item.id }}" class="form-label">Reason (mandatory)</label>
+                                    <textarea class="form-control" id="reasonReturn{{ item.id }}" name="reason" rows="3" required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-dark">Confirm Return</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Transaction Details -->
+    <div class="card shadow-sm mb-3 p-3">
+        <div class="row">
+            <div class="col-md-6">
+        <h5 class="fw-bold mb-2 text-info">Transaction Details</h5>
+        {% if order.payment %}
+            <p class="mb-0 small text-muted">
+                <span class="fw-bold">Method:</span> {{ order.payment.payment_method }}<br>
+                <span class="fw-bold">Status:</span> {{ order.payment.payment_status|capfirst }}<br>
+                <span class="fw-bold">Amount:</span> <span class="text-success">₹{{ order.payment.paid_amount }}</span><br>
+                <span class="fw-bold">Gateway Order:</span> {{ order.payment.gateway_order_id }}<br>
+                <span class="fw-bold">Gateway Payment:</span> {{ order.payment.gateway_payment_id|default:"N/A" }}<br>
+                <span class="fw-bold">Processed:</span> {{ order.payment.paid_at|date:"M d, Y h:i A"|default:"N/A" }}
+            </p>
+        {% else %}
+            <p class="mb-0 text-muted">No payment details available.</p>
+        {% endif %}
+        </div>
+            <div class="col-md-6">
+        <h5 class="fw-bold mb-2 text-info">Shipping Details</h5>
+        <p class="mb-0 small text-muted">
+            <span class="fw-bold">Name:</span> {{order.address.full_name }}<br><span class="fw-bold">Phone:</span> {{ order.address.phone_number }}<br>
+        </p>
+        <p class="mb-0 small text-muted">
+            <span class="fw-bold">Address:</span> {{ order.address.address }}<br>
+            <span class="fw-bold">City:</span> {{ order.address.city }}<br>
+            <span class="fw-bold">Country:</span> {{ order.address.country }}<br>
+            <span class="fw-bold">District:</span> {{ order.address.district }}<br>
+            <span class="fw-bold">State:</span> {{ order.address.state }}<br>
+            <span class="fw-bold">Pincode:</span> {{ order.address.pincode }}
+        </p>
+        
+        </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="d-flex justify-content-end gap-2">
+        <a href="{% url 'invoice_pdf' order.id %}" class="btn btn-sm btn-outline-primary" target="_blank">Download Invoice</a>
+        {% if order.status in 'pending confirmed' %}
+            <button class="btn btn-sm btn-outline-danger"
+                    data-bs-toggle="modal"
+                    data-bs-target="#cancelOrderModal{{ order.id }}">Cancel Order</button>
+        {% endif %}
+    </div>
+
+    <!-- Cancel Order Modal -->
+    <div class="modal fade" id="cancelOrderModal{{ order.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cancel Order: {{ order.order_id }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="{% url 'cancel_order' order.id %}" method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="reasonOrder" class="form-label">Reason (optional)</label>
+                            <textarea class="form-control" id="reasonOrder" name="reason" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-danger">Confirm Cancel</button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- SweetAlert2 -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-  // Handle flash messages and form submissions with SweetAlert2
-  {% if messages %}
-    {% for message in messages %}
-      Swal.fire({
-        icon: '{{ message.tags }}' === 'success' ? 'success' : '{{ message.tags }}' === 'error' ? 'error' : 'info',
-        text: '{{ message }}',
-        background: '{{ message.tags }}' === 'success' ? '#e3f2fd' : '{{ message.tags }}' === 'error' ? '#f8d7da' : '#fff',
-        confirmButtonColor: '#2193b0',
-        confirmButtonText: 'OK',
-        customClass: {
-          popup: 'rounded-3',
-          confirmButton: 'btn btn-primary rounded-pill'
-        }
-      });
-    {% endfor %}
-  {% endif %}
-
-  // Handle modal form submissions with AJAX
-  $(document).ready(function() {
-    $('.cancel-form, .return-form').on('submit', function(e) {
-      e.preventDefault();
-      const form = $(this);
-      const url = form.attr('action');
-      const data = form.serialize();
-
-      $.ajax({
-        url: url,
-        type: 'POST',
-        data: data,
-        success: function(response) {
-          if (response.status === 'success') {
-            Swal.fire({
-              icon: 'success',
-              text: response.message || 'Action completed successfully!',
-              background: '#e3f2fd',
-              confirmButtonColor: '#2193b0',
-              confirmButtonText: 'OK',
-              customClass: {
-                popup: 'rounded-3',
-                confirmButton: 'btn btn-primary rounded-pill'
-              }
-            }).then(() => {
-              location.reload(); // Refresh to update order status
-            });
-          } else {
-            Swal.fire({
-              icon: 'error',
-              text: response.message || 'Failed to complete action.',
-              background: '#f8d7da',
-              confirmButtonColor: '#2193b0',
-              confirmButtonText: 'OK',
-              customClass: {
-                popup: 'rounded-3',
-                confirmButton: 'btn btn-primary rounded-pill'
-              }
-            });
-          }
-        },
-        error: function() {
-          Swal.fire({
-            icon: 'error',
-            text: 'Something went wrong.',
-            background: '#f8d7da',
-            confirmButtonColor: '#2193b0',
-            confirmButtonText: 'OK',
-            customClass: {
-              popup: 'rounded-3',
-              confirmButton: 'btn btn-primary rounded-pill'
-            }
-          });
-        }
-      });
-    });
-  });
-</script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+{% block extra_css %}
+<style>
+        .order-summary, .search-button ,.filter-button{
+        background: #2193b0
+    }
+    /* Card style like your screenshot */
+    .order-card {
+        background: linear-gradient(135deg, #94dfefff, #2193b0);
+        color: white;
+        border: none;
+        border-radius: 8px; /* small rounded corner */
+        padding: 15px;
+    }
+    
+    .order-item {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 6px;
+        padding: 8px;
+        margin-bottom: 10px;
+    }
+    .order-item img {
+        border-radius: 4px;
+    }
+    .summary-card {
+        background: #b6d5dcff;
+        border-radius: 10px;
+        border: 1px solid #e0e0e0;
+    }
+    .progress-bar { transition: width 0.6s ease; }
+   
+</style>
+{% endblock %}
 {% endblock %}

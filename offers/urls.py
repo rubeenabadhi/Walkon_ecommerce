@@ -14,4 +14,6 @@ urlpatterns = [
     path('my-coupons/', views.available_coupons, name='user_coupons'),
     path('apply-coupon/', views.apply_coupon, name='apply_coupon'),
     path('remove-coupon/', views.remove_coupon, name='remove_coupon'),
+    path('refer-earn/', views.refer_earn, name='refer_earn'),
+    path('my-referrals/', views.my_referrals, name='my_referrals'),
 ]

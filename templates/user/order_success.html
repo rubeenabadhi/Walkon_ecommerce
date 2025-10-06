@@ -28,8 +28,14 @@
     <!-- Thank You Message -->
     <h2 class="fw-bold mb-3 thank-you-title">THANK YOU FOR ORDERING ,{{ request.user.username }}</h2>
     <p class="text-muted mb-4 thank-you-text">Your order has been placed successfully. We’ll notify you once it’s on the way!</p>
-    <p class="thank-you-text">Order ID: {{ order.order_id }}</p>
-    <p class="thank-you-text">Total Amount: ₹{{ order.total_amount }}</p>
+<p class="thank-you-text">Order ID: {{ order.order_id }}</p>
+<p class="thank-you-text">Subtotal: ₹{{ order.total_amount }}</p>
+{% if order.coupon %}
+  <p class="thank-you-text">Coupon Applied: <strong>{{ order.coupon.code }}</strong></p>
+  <p class="thank-you-text text-success">You saved ₹{{ order.discount_amount }}</p>
+{% endif %}
+<p class="thank-you-text fw-bold text-success">Final Amount Paid: ₹{{ order.final_amount }}</p>
+
     <!-- Buttons -->
     <div class="d-flex justify-content-center gap-3">
         <a href="{% url 'orders' %}" class="btn btn-dark px-4 thank-you-btn">View Orders</a>

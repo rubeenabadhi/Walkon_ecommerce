@@ -19,28 +19,34 @@ from .forms import EditProfileForm
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from product.models import Product
-
+from offers.models import Referral
+from wallet.models import Wallet
 
 
 #user-defined views for signup and OTP verification,home view
+#=====================HOME VIEW===============================================
 def home(request):
     products = Product.objects.all()
     new_products = Product.objects.all().order_by('-created_at')  
+    
     context = {
         'products': products,
         'new_products': new_products
     }  
     return render(request, 'user/index.html', context)
+
+#=====================SIGNUP VIEW===============================================
 def signup(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         email = request.POST.get('email')
         password = request.POST.get('password')
         confirm_password = request.POST.get('password2')
+        referrel_code = request.POST.get('referrel_code')
 
         # ✅ Check passwords match
         if password != confirm_password:
-            messages.error(request, '⚠️ Passwords do not match.')
+            messages.error(request, ' Passwords do not match.')
             return redirect('signup')
 
         # ✅ Validate password with Django + custom validators
@@ -58,7 +64,7 @@ def signup(request):
         if CustomUser.objects.filter(username=username).exists():
             messages.error(request, '⚠️ Username already exists.')
             return redirect('signup')
-
+        
         # 🔢 Generate 6-digit OTP
         otp = random.randint(100000, 999999)
 
@@ -67,6 +73,8 @@ def signup(request):
         request.session['signup_username'] = username
         request.session['signup_password'] = password
         request.session['signup_otp'] = str(otp)  # convert to string
+        request.session['signup_referrel_code'] = referrel_code
+        request.session['otp_expiry'] = time.time() + 300  # 5 minutes expiry
 
         # 📧 Send OTP email
         send_mail(
@@ -78,11 +86,17 @@ def signup(request):
         )
 
         messages.success(request, f'✅ OTP sent to {email}.')
+
         return redirect('verify_otp')
+    # If GET request, just render signup page
+    else:
+        referral_code = request.GET.get('ref') or request.session.get('referral_code')
 
-    return render(request, 'signup.html')
 
+        context = {'referral_code': referral_code}
+    return render(request, 'signup.html', context)
 
+#=====================VERIFY OTP VIEW===============================================
 def verify_otp_view(request):
     if request.method == 'POST':
         entered_otp = request.POST.get('otp')
@@ -102,13 +116,31 @@ def verify_otp_view(request):
             username = request.session.get('signup_username')
             email = request.session.get('signup_email')
             password = request.session.get('signup_password')
+            referrel_code = request.session.get('signup_referrel_code')
 
             user = CustomUser.objects.create_user(
                 username=username, email=email, password=password
             )
-            user.is_active = True
-            user.save()
 
+            user.is_active = True
+            print("user created")
+            user.save()
+            # Create referral code
+            if referrel_code:
+                try:
+                    ref=Referral.objects.get(referral_code=referrel_code)
+                    ref.referred_users.add(user)
+                    print(f"Added {user.username} as referred user")
+                    ref.save()
+
+                # Add referral amount to referrer's wallet
+                    wallet = Wallet.objects.get(user=ref.referrer)
+                    wallet.amount += settings.REFERRAL_AMOUNT
+                    print("wallet updated",wallet.amount)
+                    wallet.save()
+
+                except Referral.DoesNotExist:
+                    pass
             messages.success(request, 'Account created successfully! You can now log in.')
             request.session.flush()
             return redirect('login')
@@ -119,9 +151,7 @@ def verify_otp_view(request):
 
     return render(request, 'otp_signup.html')
 
-
-
-
+#=====================RESEND OTP VIEW===============================================
 def resend_otp(request):
     email = request.session.get('signup_email')
     if email:
@@ -142,6 +172,8 @@ def resend_otp(request):
         return redirect('signup')
 
     return redirect('verify_otp')
+
+#=====================LOGIN VIEW===============================================
 def user_login(request):
     if request.method == 'POST':
         email = request.POST['email']
@@ -162,6 +194,8 @@ def user_login(request):
             return redirect('login')
 
     return render(request, 'user/user_login.html')
+#=====================FORGOT PASSWORD VIEW===============================================
+@never_cache
 def forgot_password_request(request):
     if request.method == 'POST':
         email = request.POST.get('email')
@@ -182,7 +216,7 @@ def forgot_password_request(request):
         except CustomUser.DoesNotExist:
             messages.error(request, 'Email not found')
     return render(request, 'user/forgot_password.html')
-# Step 2: Verify OTP
+#=====================RESET PASSWORD VIEW===============================================
 def verify_reset_otp(request):
     if request.method == 'POST':
         entered_otp = request.POST.get('otp')
@@ -191,6 +225,7 @@ def verify_reset_otp(request):
         else:
             messages.error(request, 'Invalid OTP')
     return render(request, 'user/otp_forgotpassword.html')
+#=====================RESET PASSWORD VIEW===============================================
 def reset_password(request):
     if request.method == 'POST':
         new_password = request.POST.get('new_password')
@@ -226,13 +261,19 @@ def reset_password(request):
     return render(request, 'user/reset_password.html')
 
 
-#user profile view
+#=====================USER PROFILE VIEW===============================================
 @login_required(login_url='login')
 def user_profile(request, user_id):
     user = get_object_or_404(CustomUser, id=user_id)
-    return render(request, 'user/profile.html', {'user': user})
+    # referral code
+    referral = None
+    try:
+        referral = Referral.objects.get(referrer=user)
+    except Referral.DoesNotExist:
+        referral=None
+    return render(request, 'user/profile.html', {'user': user, 'referral': referral})
 
-#edit profile view
+#=====================EDIT PROFILE VIEW===============================================
 
 @login_required(login_url="login")
 def edit_profile(request):
@@ -247,6 +288,8 @@ def edit_profile(request):
         form = EditProfileForm(instance=user)
 
     return render(request, "user/edit_profile.html", {"form": form, "user": user})
+
+#=====================REQUEST EMAIL CHANGE VIEW===============================================
 @login_required(login_url="login")
 def request_email_change(request):
     if request.method == "POST":
@@ -278,7 +321,7 @@ def request_email_change(request):
 
     return render(request, "user/request_email_change.html")
 
-
+#=====================VERIFY EMAIL CHANGE OTP VIEW===============================================
 @login_required(login_url="login")
 def verify_email_otp(request):
     user = request.user
@@ -314,6 +357,8 @@ def verify_email_otp(request):
 
     return render(request, "user/verify_email_otp.html")
 
+#=====================RESEND EMAIL CHANGE OTP VIEW===============================================
+
 @login_required(login_url="login")
 def resend_email_change_otp(request):
     new_email = request.session.get("pending_email")
@@ -335,7 +380,7 @@ def resend_email_change_otp(request):
     messages.success(request, f"New OTP has been sent to {new_email}.")
     return redirect("verify_email_change_otp")
 
-#change password view
+#=====================CHANGE PASSWORD VIEW===============================================
 
 @login_required(login_url='login')
 def change_password(request):

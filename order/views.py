@@ -28,7 +28,8 @@ def orders(request):
             Q(order_id__icontains=q) |
             Q(items__product_variant__product__name__icontains=q) |
             Q(status__icontains=q) |
-            Q(order_date__icontains=q)
+            Q(order_date__icontains=q) |
+            Q(payment_method__icontains=q)
         ).distinct()
 
     if status_filter:
@@ -44,10 +45,7 @@ def orders(request):
     page_number = request.GET.get('page', 1)
     orders_page = paginator.get_page(page_number)
 
-    # Add calculated total per order
-    for order in orders_page:
-        order.calculated_total = sum(item.quantity * item.price for item in order.items.all())
-
+    
     # Totals across all orders (for summary at top/bottom of page)
     totals = orders_qs.aggregate(
         total_spent=Sum(F('items__price') * F('items__quantity')),

@@ -1,0 +1,63 @@
+{% extends 'user/base.html' %}
+{% load static %}
+{% block title %}Wallet - Walkon{% endblock %}
+
+{% block content %}
+<div class="container my-3">
+    <div class="row">
+        {% include 'user/user_sidebar.html' %}
+        <div class="col-md-8">
+            <div class="wallet-card p-2 shadow-sm rounded bg-white" style="min-height: 400px; transition: transform 0.3s ease, box-shadow 0.3s ease;">
+                <!-- Wallet Header -->
+                <h2 class="mb-2 text-center" style="text-transform: uppercase; color: #1a73e8; font-weight: 700; font-family: 'Inter', sans-serif; font-size: clamp(1.3rem, 3.5vw, 1.8rem);">My Wallet</h2>
+                <p class="text-center mb-2" style="color: #1a73e8; font-weight: 500; font-family: 'Inter', sans-serif; font-size: clamp(0.8rem, 2vw, 1rem);">Manage your wallet balance and transactions</p>
+
+                <!-- Wallet Balance Section -->
+                <div class="text-center mb-3" style="background-color: #f8f9fa; padding: 1rem; border-radius: 10px; border: 1px solid #2193b0;">
+                    <h4 style="font-family: 'Inter', sans-serif; color: #0170bc; font-weight: 600; font-size: clamp(1rem, 2.5vw, 1.2rem);">Available Balance</h4>
+                    <p style="font-family: 'Outfit', sans-serif; font-size: clamp(1.2rem, 3vw, 1.5rem); color: #555; font-weight: 700;">₹500.00</p>
+                    <button class="btn btn-success mt-1" style="font-family: 'Poppins', sans-serif; font-weight: 700; text-transform: uppercase; padding: 0.3rem 0.6rem; font-size: clamp(0.7rem, 2vw, 0.8rem);">Add Funds</button>
+                    <button class="btn btn-outline-danger mt-1 ms-2" style="font-family: 'Poppins', sans-serif; font-weight: 700; text-transform: uppercase; padding: 0.3rem 0.6rem; font-size: clamp(0.7rem, 2vw, 0.8rem);">Withdraw</button>
+                </div>
+
+                <!-- Transaction History -->
+                <div class="mb-2">
+                    <h4 style="font-family: 'Inter', sans-serif; color: #0170bc; font-weight: 600; font-size: clamp(1rem, 2.5vw, 1.2rem);">Transaction History</h4>
+                    <div class="table-responsive">
+                        <table class="table table-hover" style="font-family: 'Inter', sans-serif; font-size: clamp(0.8rem, 2vw, 0.9rem); color: #555;">
+                            <thead>
+                                <tr>
+                                    <th style="font-family: 'Poppins', sans-serif; font-weight: 600; background-color: #f8f9fa; border-bottom: 2px solid #2193b0;">Date</th>
+                                    <th style="font-family: 'Poppins', sans-serif; font-weight: 600; background-color: #f8f9fa; border-bottom: 2px solid #2193b0;">Type</th>
+                                    <th style="font-family: 'Poppins', sans-serif; font-weight: 600; background-color: #f8f9fa; border-bottom: 2px solid #2193b0;">Amount</th>
+                                    <th style="font-family: 'Poppins', sans-serif; font-weight: 600; background-color: #f8f9fa; border-bottom: 2px solid #2193b0;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="vertical-align: middle; border-bottom: 1px solid #dee2e6;">Oct 05, 2025</td>
+                                    <td style="vertical-align: middle; border-bottom: 1px solid #dee2e6;">Deposit</td>
+                                    <td style="vertical-align: middle; border-bottom: 1px solid #dee2e6;">₹200.00</td>
+                                    <td style="vertical-align: middle; border-bottom: 1px solid #dee2e6;"><span style="color: #2e7d32;">Completed</span></td>
+                                </tr>
+                                <tr>
+                                    <td style="vertical-align: middle; border-bottom: 1px solid #dee2e6;">Oct 03, 2025</td>
+                                    <td style="vertical-align: middle; border-bottom: 1px solid #dee2e6;">Referral Reward</td>
+                                    <td style="vertical-align: middle; border-bottom: 1px solid #dee2e6;">₹50.00</td>
+                                    <td style="vertical-align: middle; border-bottom: 1px solid #dee2e6;"><span style="color: #2e7d32;">Completed</span></td>
+                                </tr>
+                                <tr>
+                                    <td style="vertical-align: middle; border-bottom: 1px solid #dee2e6;">Oct 01, 2025</td>
+                                    <td style="vertical-align: middle; border-bottom: 1px solid #dee2e6;">Withdrawal</td>
+                                    <td style="vertical-align: middle; border-bottom: 1px solid #dee2e6;">₹100.00</td>
+                                    <td style="vertical-align: middle; border-bottom: 1px solid #dee2e6;"><span style="color: #dc3545;">Pending</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

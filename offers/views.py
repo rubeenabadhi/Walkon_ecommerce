@@ -11,6 +11,7 @@ from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.core.paginator import Paginator
 from decimal import Decimal
+from django.views.decorators.http import require_POST
 
 # Create your views here.
 
@@ -140,47 +141,117 @@ def available_coupons(request):
 
 #=-----------to apply coupon in user------
 @login_required(login_url='login')
+@require_POST
 def apply_coupon(request):
-    print("Apply coupon view accessed.")
-    if request.method == "POST" and request.user.is_authenticated:
-        code = request.POST.get("coupon_code").strip()
-        try:
-            coupon = Coupon.objects.get(code__iexact=code, active=True)
-        except Coupon.DoesNotExist:
-            messages.error(request, "Invalid coupon code")
-            return redirect("select_payment")
+    print("Applying coupon...")
+    code = request.POST.get("coupon_code", "").strip()
+    if not code:
+        return JsonResponse({"status": "error", "message": "Please enter a coupon code."})
 
-        now = timezone.now()
-        if not (coupon.valid_from <= now <= coupon.valid_to):
-            messages.error(request, "This coupon is not valid now")
-            return redirect("select_payment")
+    try:
+        coupon = Coupon.objects.get(code__iexact=code, active=True)
+    except Coupon.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "Invalid coupon code"})
 
-        # Check usage limit
-        user_coupon, created = UserCoupon.objects.get_or_create(user=request.user, coupon=coupon)
-        if user_coupon.used_count >= coupon.usage_limit:
-            messages.error(request, "You have already used this coupon maximum times")
-            return redirect("select_payment")
+    now = timezone.now()
+    if not (coupon.valid_from <= now <= coupon.valid_to):
+        return JsonResponse({"status": "error", "message": "This coupon is not valid now"})
 
-        # Optional: check min order amount
-        cart_items = CartItems.objects.filter(user=request.user).select_related('variant')
-        total_price = sum(Decimal(item.variant.price) * item.quantity for item in cart_items)
-        if total_price < coupon.min_order_amount:
-            print(coupon.min_order_amount)
-            messages.error(request, f"Minimum order amount for this coupon is ₹{coupon.min_order_amount}")
-            return redirect("select_payment")
+    # Check user usage limit via UserCoupon (do NOT increase used_count here)
+    user_coupon, _ = UserCoupon.objects.get_or_create(user=request.user, coupon=coupon)
+    if user_coupon.used_count >= coupon.usage_limit:
+        return JsonResponse({"status": "error", "message": "You have already used this coupon maximum times"})
 
-        # Save coupon in session
-        request.session["coupon_id"] = coupon.id
-        print("Coupon saved in session.")
-        messages.success(request, f'Coupon "{coupon.code}" applied successfully!')
-        return redirect("select_payment")
-    return redirect("select_payment")
+    # Calculate cart total
+    cart_items = CartItems.objects.filter(user=request.user).select_related("variant")
+    total_price = sum(Decimal(item.variant.price) * item.quantity for item in cart_items)
+    if total_price < coupon.min_order_amount:
+        return JsonResponse({
+            "status": "error",
+            "message": f"Minimum order amount for this coupon is ₹{coupon.min_order_amount}"
+        })
+
+    # Calculate discount depending on type
+    if coupon.discount_type == 'percentage':
+        discount = (total_price * (Decimal(coupon.discount_value) / Decimal('100'))).quantize(Decimal('0.01'))
+    else:
+        discount = Decimal(coupon.discount_value).quantize(Decimal('0.01'))
+
+    # Ensure discount doesn't exceed subtotal
+    discount = min(discount, total_price)
+    final_total = (total_price - discount).quantize(Decimal('0.01'))
+
+    # Save coupon to session (do NOT mark used yet)
+    request.session["coupon_id"] = str(coupon.id)
+    request.session["discount"] = str(discount)           # string for safe session storage
+    request.session["final_total"] = str(final_total)
+
+    return JsonResponse({
+        "status": "success",
+        "message": f'Coupon "{coupon.code}" applied successfully!',
+        "applied_coupon": {"code": coupon.code},
+        "discount": str(discount),
+        "final_total": str(final_total)
+    })
 
 #=-----------to remove coupon in user------
 @login_required(login_url='login')
-def remove_coupon(request): 
-    if 'coupon_id' in request.session:
-        del request.session['coupon_id']
-        print("Coupon removed from session.")
-        messages.success(request, "Coupon removed successfully.")
-    return redirect('sellect_payment')
+@require_POST
+def remove_coupon(request):
+    request.session.pop("coupon_id", None)
+    request.session.pop("discount", None)
+    request.session.pop("final_total", None)
+
+    cart_items = CartItems.objects.filter(user=request.user).select_related("variant")
+    total_price = sum(Decimal(item.variant.price) * item.quantity for item in cart_items)
+    total_price = Decimal(total_price).quantize(Decimal('0.01'))
+
+    # Update session final_total to fallback to subtotal
+    request.session["final_total"] = str(total_price)
+
+    return JsonResponse({
+        "status": "success",
+        "message": "Coupon removed",
+        "final_total": str(total_price),
+        "applied_coupon": None,
+        "discount": "0"
+    })
+
+#=======================REFER & EARN==========================
+
+
+@login_required(login_url='/signup/')
+def refer_earn(request):
+    user = request.user
+    referral_code = None
+
+    try:
+        referral = Referral.objects.get(referrer=user)
+        referral_code = referral.referral_code
+    except Referral.DoesNotExist:
+        referral_code = "No referral code found"
+
+    context = {
+        'referral_code': referral_code
+    }
+    return render(request, 'user/refer_earn.html', context)
+
+#=======================MY REFERRALS==========================
+
+
+def my_referrals(request):
+    user = request.user
+    referred_users = []
+
+    try:
+        referral = Referral.objects.get(referrer=user)
+        # Only call .all() if referral exists
+        referred_users = referral.referred_users.all()
+    except Referral.DoesNotExist:
+        # User has no referral record yet
+        referred_users = []
+
+    context = {
+        'referred_users': referred_users
+    }
+    return render(request, 'user/my_referrals.html', context)
