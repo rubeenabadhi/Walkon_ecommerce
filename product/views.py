@@ -191,7 +191,7 @@ def product_list(request):
     products = Product.objects.all().order_by('-created_at')
 
     # ---- PAGINATION ----
-    paginator = Paginator(products, 2)  # 2 users per page
+    paginator = Paginator(products, 10)  # 2 users per page
     page_number = request.GET.get('page')
     products = paginator.get_page(page_number)
     return render(request, 'admin/products.html', {'products': products})
@@ -328,6 +328,23 @@ def delete_product(request, slug):
         return JsonResponse({"success": True, "message": "Product and all variants deleted successfully!"})
     return JsonResponse({"success": False, "message": "Invalid request!"}, status=400)
 
+
+#=========================================stock update view==============================
+@login_required(login_url="admin_login")
+@csrf_exempt
+def update_stock(request):
+    if request.method == "POST" and request.headers.get("x-requested-with") == "XMLHttpRequest":
+        product_id = request.POST.get("product_id")
+        stock = request.POST.get("stock")
+        try:
+            stock = int(stock)
+            product = Product.objects.get(id=product_id)
+            product.stock = stock
+            product.save()
+            return JsonResponse({"success": True})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+    return JsonResponse({"success": False, "error": "Invalid request"})
 
 #======================================================== User Views ========================================================
 

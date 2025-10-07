@@ -65,11 +65,11 @@
 </div>
 </div>
 <script>
-  let timeLeft = 60; // seconds
-let timerDisplay = document.getElementById("timer");
-let resendBtn = document.getElementById("resendBtn");
+  let timeLeft = 5 * 60; // 5 minutes
+  let timerDisplay = document.getElementById("timer");
+  let resendBtn = document.getElementById("resendBtn");
 
-let countdown = setInterval(() => {
+  let countdown = setInterval(() => {
   let minutes = String(Math.floor(timeLeft / 60)).padStart(2, "0");
   let seconds = String(timeLeft % 60).padStart(2, "0");
   timerDisplay.textContent = `${minutes}:${seconds}s`;
@@ -77,13 +77,14 @@ let countdown = setInterval(() => {
   if (timeLeft <= 0) {
     clearInterval(countdown);
     timerDisplay.textContent = "00:00s";
-    resendBtn.disabled = false;   // ✅ Enable resend button
+    resendBtn.disabled = false;
     resendBtn.classList.remove("btn-secondary");
-    resendBtn.classList.add("btn-success"); // just for effect
+    resendBtn.classList.add("btn-success");
   }
 
   timeLeft--;
 }, 1000);
+
   // OTP input joining
   let otpInputs = document.querySelectorAll(".otp-input");
   let otpField = document.getElementById("otpField");

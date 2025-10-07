@@ -18,165 +18,207 @@
 
         <div class="row">
             <div class="col-md-8">
+                <!-- Product Name -->
                 <div class="col-12 mb-1">
-                    <label for="id_name" class="form-label fw-bold" style="font-size: 0.9rem;">Name</label>
-                    <input type="text" name="name" class="form-control" id="id_name" value="{{ product.name|default:'' }}" required style="font-size: 0.9rem; padding: 0.3rem;">
+                    <label for="id_name" class="form-label fw-bold">Name</label>
+                    <input type="text" name="name" class="form-control" id="id_name" value="{{ product.name|default:'' }}" required>
                 </div>
 
+                <!-- Description -->
                 <div class="col-12 mb-1">
-                    <label for="id_description" class="form-label fw-bold" style="font-size: 0.9rem;">Description</label>
-                    <textarea name="description" class="form-control" id="id_description" rows="2" required style="font-size: 0.9rem; padding: 0.3rem; height: 60px;">{{ product.description|default:'' }}</textarea>
+                    <label for="id_description" class="form-label fw-bold">Description</label>
+                    <textarea name="description" class="form-control" id="id_description" rows="2" required>{{ product.description|default:'' }}</textarea>
                 </div>
 
+                <!-- Primary Image -->
                 <div class="col-12 mb-1">
-                    <label for="id_primary_image" class="form-label fw-bold" style="font-size: 0.9rem;">Primary Image</label>
-                    <input type="file" name="primary_image" class="form-control" id="id_primary_image" style="font-size: 0.9rem; padding: 0.3rem; display: inline-block; width: auto;">
-                    <div class="image-preview mt-1" id="primaryImagePreview" style="min-height: 80px; display: inline-block; vertical-align: middle; margin-left: 10px;">
-                        {% if product.primary_image %}
-                            <img src="{{ product.primary_image.url }}" alt="Current Primary Image" style="max-width: 80px; max-height: 80px; margin: 5px; border: 1px solid #ddd;">
-                        {% else %}
-                            <span>No primary image</span>
-                        {% endif %}
+                    <label class="form-label fw-bold">Primary Image</label>
+                    <input type="file" name="primary_image" class="form-control" id="id_primary_image">
+                    <div class="image-preview mt-1" style="min-height: 80px;">
+                        <img id="primaryImagePreview" src="{% if product.primary_image %}{{ product.primary_image.url }}{% endif %}" style="max-width: 150px; max-height: 150px; border:1px solid #ddd;">
                     </div>
+                    <button type="button" class="btn btn-sm btn-success mt-1" id="cropPrimaryBtn">Crop</button>
                 </div>
 
+                <!-- Additional Images -->
                 <div class="col-12 mb-1">
-                    <label class="form-label fw-bold" style="font-size: 0.9rem;">Additional Images</label>
-                </div>
-                <div class="col-12" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                    <label class="form-label fw-bold">Additional Images</label>
                     {% for image in product.images.all %}
                         <div class="mb-1">
-                            <img src="{{ image.image }}" alt="Existing Image" style="max-width: 80px; max-height: 80px; margin: 2px; border: 1px solid #ddd;">
+                            <img src="{{ image.image }}" style="max-width: 80px; max-height: 80px; border:1px solid #ddd;">
                             <input type="checkbox" name="delete_image_{{ forloop.counter0 }}" id="delete_image_{{ forloop.counter0 }}">
                             <label for="delete_image_{{ forloop.counter0 }}">Delete</label>
                         </div>
                     {% endfor %}
                     {% for i in "123"|make_list %}
                         <div class="mb-1">
-                            <label for="id_additional_image{{ i }}" class="form-label" style="font-size: 0.9rem;">Image {{ i }}</label>
-                            <input type="file" name="additional_images" class="form-control" id="id_additional_image{{ i }}" style="font-size: 0.9rem; padding: 0.3rem; display: inline-block; width: auto;" multiple>
-                            <div class="image-preview mt-1" id="additionalImagePreview{{ i }}" style="min-height: 80px; display: inline-block; vertical-align: middle; margin-left: 10px;">
-                            </div>
+                            <label class="form-label">Image {{ i }}</label>
+                            <input type="file" name="additional_images" class="form-control additional-image-input" data-preview="additionalImagePreview{{ i }}">
+                            <div class="image-preview mt-1" id="additionalImagePreview{{ i }}" style="min-height:80px;"></div>
+                            <button type="button" class="btn btn-sm btn-success mt-1 cropAdditionalBtn" data-input="id_additional_image{{ i }}" data-preview="additionalImagePreview{{ i }}">Crop</button>
                         </div>
                     {% endfor %}
                 </div>
             </div>
 
+            <!-- Right side fields (Category, Brand, Gender, Sizes, Colors, Price, Stock, Availability) -->
             <div class="col-md-4">
+                <!-- Category -->
                 <div class="col-12 mb-1">
-                    <label for="id_category" class="form-label fw-bold" style="font-size: 0.9rem;">Category</label>
-                    <select name="category" class="form-select" id="id_category" required style="font-size: 0.9rem; padding: 0.3rem;">
+                    <label class="form-label fw-bold">Category</label>
+                    <select name="category" class="form-select" required>
                         {% for cat in categories %}
                             <option value="{{ cat.id }}" {% if product.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
-
+                <!-- Brand -->
                 <div class="col-12 mb-1">
-                    <label for="id_brand" class="form-label fw-bold" style="font-size: 0.9rem;">Brand</label>
-                    <select name="brand" class="form-select" id="id_brand" required style="font-size: 0.9rem; padding: 0.3rem;">
+                    <label class="form-label fw-bold">Brand</label>
+                    <select name="brand" class="form-select" required>
                         {% for b in brands %}
                             <option value="{{ b.id }}" {% if product.brand_id == b.id %}selected{% endif %}>{{ b.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
-
+                <!-- Gender -->
                 <div class="col-12 mb-1">
-                    <label for="id_gender" class="form-label fw-bold" style="font-size: 0.9rem;">Gender</label>
-                    <select name="gender" class="form-select" id="id_gender" required style="font-size: 0.9rem; padding: 0.3rem;">
+                    <label class="form-label fw-bold">Gender</label>
+                    <select name="gender" class="form-select" required>
                         {% for g in genders %}
                             <option value="{{ g.id }}" {% if product.gender_id == g.id %}selected{% endif %}>{{ g.label }}</option>
                         {% endfor %}
                     </select>
                 </div>
-
+                <!-- Sizes -->
                 <div class="col-12 mb-1">
-                    <label class="form-label fw-bold" style="font-size: 0.9rem;">Sizes</label><br>
+                    <label class="form-label fw-bold">Sizes</label><br>
                     {% for size in sizes %}
                         <div class="form-check form-check-inline">
-                            <input type="checkbox" name="sizes" value="{{ size.id }}" class="form-check-input" {% if size.id in selected_sizes %}checked{% endif %} style="font-size: 0.9rem;">
-                            <label class="form-check-label" style="font-size: 0.9rem;">{{ size.label }}</label>
+                            <input type="checkbox" name="sizes" value="{{ size.id }}" {% if size.id in selected_sizes %}checked{% endif %}>
+                            <label>{{ size.label }}</label>
                         </div>
                     {% endfor %}
                 </div>
-
+                <!-- Colors -->
                 <div class="col-12 mb-1">
-                    <label class="form-label fw-bold" style="font-size: 0.9rem;">Colors</label><br>
+                    <label class="form-label fw-bold">Colors</label><br>
                     {% for color in colors %}
                         <div class="form-check form-check-inline">
-                            <input type="checkbox" name="colors" value="{{ color.id }}" class="form-check-input" {% if color.id in selected_colors %}checked{% endif %} style="font-size: 0.9rem;">
-                            <label class="form-check-label" style="font-size: 0.9rem;">{{ color.name }}</label>
+                            <input type="checkbox" name="colors" value="{{ color.id }}" {% if color.id in selected_colors %}checked{% endif %}>
+                            <label>{{ color.name }}</label>
                         </div>
                     {% endfor %}
                 </div>
-
+                <!-- Price -->
                 <div class="col-12 mb-1">
-                    <label for="id_price" class="form-label fw-bold" style="font-size: 0.9rem;">Price</label>
-                    <input type="number" step="0.01" name="price" class="form-control" id="id_price" value="{% if product.variants.exists %}{{ product.variants.first.price|default:'' }}{% endif %}" required style="font-size: 0.9rem; padding: 0.3rem;">
+                    <label class="form-label fw-bold">Price</label>
+                    <input type="number" step="0.01" name="price" class="form-control" value="{% if product.variants.exists %}{{ product.variants.first.price|default:'' }}{% endif %}" required>
                 </div>
-
+                <!-- Stock -->
                 <div class="col-12 mb-1">
-    <label for="id_stock" class="form-label fw-bold" style="font-size: 0.9rem;">Stock</label>
-    <input type="number" 
-           name="stock" 
-           class="form-control" 
-           id="id_stock" 
-           value="{{ product.stock|default:'' }}" 
-           required 
-           style="font-size: 0.9rem; padding: 0.3rem;">
-</div>
-
-
+                    <label class="form-label fw-bold">Stock</label>
+                    <input type="number" name="stock" class="form-control" value="{{ product.stock|default:'' }}" required>
+                </div>
+                <!-- Availability -->
                 <div class="col-12 mb-1">
                     <div class="form-check">
-                        <input type="checkbox" name="is_available" class="form-check-input" id="id_is_available" {% if product.is_available %}checked{% endif %} style="font-size: 0.9rem;">
-                        <label class="form-check-label" for="id_is_available" style="font-size: 0.9rem;">Available</label>
+                        <input type="checkbox" name="is_available" {% if product.is_available %}checked{% endif %}>
+                        <label>Available</label>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" name="is_featured" {% if product.is_active %}checked{% endif %}>
+                        <label>Active</label>
                     </div>
                 </div>
-                <div class="col-12 mb-1">
-                    <div class="form-check">
-                        <input type="checkbox" name="is_featured" class="form-check-input" id="id_is_featured" {% if product.is_active %}checked{% endif %} style="font-size: 0.9rem;">
-                        <label class="form-check-label" for="id_is_featured" style="font-size: 0.9rem;">Active</label>
-                    </div>
             </div>
         </div>
 
         <div class="col-12 text-center mt-2">
-            <button type="submit" class="btn btn-primary btn-sm" style="font-size: 0.9rem; padding: 0.3rem;">
+            <button type="submit" class="btn btn-primary btn-sm">
                 {% if product.id %}Update Product{% else %}Add Product{% endif %}
             </button>
-            <a href="{% url 'products' %}" class="btn btn-secondary btn-sm ms-2" style="font-size: 0.9rem; padding: 0.3rem;">Go Back</a>
+            <a href="{% url 'products' %}" class="btn btn-secondary btn-sm ms-2">Go Back</a>
         </div>
     </form>
 </div>
 
+<!-- Cropper.js -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    $('#id_primary_image').change(function() {
-        var file = this.files[0];
-        if (file) {
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                $('#primaryImagePreview').html('<img src="' + e.target.result + '" alt="Primary Image" style="max-width: 80px; max-height: 80px; margin: 5px; border: 1px solid #ddd;">');
+    // Primary Image crop
+    let primaryCropper;
+    const primaryImg = document.getElementById('primaryImagePreview');
+    const primaryInput = document.getElementById('id_primary_image');
+
+    primaryInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if(file){
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                primaryImg.src = event.target.result;
+                if(primaryCropper) primaryCropper.destroy();
+                primaryCropper = new Cropper(primaryImg, { aspectRatio: 1, viewMode: 1 });
             }
             reader.readAsDataURL(file);
         }
     });
 
-    $('input[name="additional_images"]').change(function() {
-        var $preview = $(this).closest('div').find('.image-preview');
-        var files = this.files;
-        if (files.length > 0) {
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                $preview.html('<img src="' + e.target.result + '" alt="Preview" style="max-width: 80px; max-height: 80px; margin: 5px; border: 1px solid #ddd;">');
-            }
-            reader.readAsDataURL(files[0]); // Preview first file
+    document.getElementById('cropPrimaryBtn').addEventListener('click', ()=>{
+        if(primaryCropper){
+            const canvas = primaryCropper.getCroppedCanvas({ width: 300, height: 300 });
+            primaryImg.src = canvas.toDataURL();
+            canvas.toBlob(blob => {
+                const file = new File([blob], 'primary_image.png', { type:'image/png' });
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                primaryInput.files = dt.files;
+            });
         }
     });
+
+    // Additional Images crop
+    document.querySelectorAll('.cropAdditionalBtn').forEach(btn => {
+        btn.addEventListener('click', ()=>{
+            const inputId = btn.dataset.input;
+            const previewId = btn.dataset.preview;
+            const inputEl = document.getElementById(inputId);
+            const previewEl = document.getElementById(previewId);
+            const file = inputEl.files[0];
+            if(file){
+                const reader = new FileReader();
+                reader.onload = e=>{
+                    previewEl.innerHTML = `<img id="tempCrop" src="${e.target.result}" style="max-width:150px;">`;
+                    const tempImg = document.getElementById('tempCrop');
+                    const cropper = new Cropper(tempImg, { aspectRatio:1, viewMode:1 });
+                    // Confirm crop
+                    const confirmBtn = document.createElement('button');
+                    confirmBtn.textContent = 'Apply Crop';
+                    confirmBtn.className = 'btn btn-sm btn-success mt-1';
+                    previewEl.appendChild(confirmBtn);
+                    confirmBtn.onclick = ()=>{
+                        const canvas = cropper.getCroppedCanvas({ width:300, height:300 });
+                        tempImg.src = canvas.toDataURL();
+                        canvas.toBlob(blob=>{
+                            const newFile = new File([blob], 'additional_image.png', {type:'image/png'});
+                            const dt = new DataTransfer();
+                            dt.items.add(newFile);
+                            inputEl.files = dt.files;
+                        });
+                        cropper.destroy();
+                        confirmBtn.remove();
+                    }
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    });
 </script>
+
 <style>
-    .date-time { margin-bottom: 2px; }
     .image-preview { border: 1px solid #ddd; padding: 2px; text-align: center; background-color: #e9ecef; border-radius: 4px; min-height: 80px; }
     .form-control, .form-select { height: 30px; }
 </style>

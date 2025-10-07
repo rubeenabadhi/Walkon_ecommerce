@@ -18,14 +18,27 @@
       --text-rgb-133-122-122: #857A7A;
     }
 
-    body {
-      font-family: var(--font-family-inter);
-      background-color: #FFFFFF;
-    }
+    
 
     .product-details {
-      padding: 24px;
-    }
+    
+    max-width: 80%;
+    margin: 40px auto;
+    background: linear-gradient(135deg, #ffffff, #9ee3f0);
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    padding: 30px;
+    color: rgb(8, 2, 2);
+    font-family: 'Inter', sans-serif;
+    transition: transform 0.3s ease;
+ 
+  }
+  .product-details:hover {
+    transform: translateY(-5px);
+  }
+
+      
+    
 
     @media (max-width: 768px) {
       .product-details {

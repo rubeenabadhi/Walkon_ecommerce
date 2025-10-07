@@ -20,7 +20,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from product.models import Product
 from offers.models import Referral
-from wallet.models import Wallet
+from wallet.models import Wallet, WalletTransaction
 
 
 #user-defined views for signup and OTP verification,home view
@@ -135,9 +135,18 @@ def verify_otp_view(request):
 
                 # Add referral amount to referrer's wallet
                     wallet = Wallet.objects.get(user=ref.referrer)
-                    wallet.amount += settings.REFERRAL_AMOUNT
-                    print("wallet updated",wallet.amount)
+                    wallet.balance += settings.REFERRAL_AMOUNT
+                    print("wallet updated",wallet.balance)
                     wallet.save()
+
+                # create a wallet transaction
+                    WalletTransaction.objects.create(
+                        wallet=wallet,
+                        amount=settings.REFERRAL_AMOUNT,
+                        transaction_type="credit",
+                        description=f"Referral bonus added for {user.username}"
+                    )
+                    print("wallet transaction created",wallet.balance)
 
                 except Referral.DoesNotExist:
                     pass
@@ -478,7 +487,7 @@ def admin_user_management(request):
 
     users = users.order_by('-date_joined')
 
-    paginator = Paginator(users, 3)  # 3 users per page
+    paginator = Paginator(users, 10)  # 3 users per page
     page_number = request.GET.get('page')
     users = paginator.get_page(page_number)
 

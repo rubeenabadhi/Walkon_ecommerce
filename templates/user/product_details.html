@@ -18,9 +18,9 @@
 {% endblock %}
 {% block content %}
 
-<!-- Inline Success/Error Messages -->
-<div id="cartMessage" class="alert d-none mt-3"></div>
-<div id="cartErrorMsg" class="text-danger mb-2" style="display:none;"></div>
+<!-- Alert Box for Messages -->
+<div id="cartMessage" class="alert-custom alert alert-success d-none" role="alert"></div>
+<div id="cartErrorMsg" class="alert-custom alert alert-danger text-center " style="display:none;"></div>
 
 <div class="product-details container">
   <div class="row">
@@ -126,8 +126,8 @@
 <form id="addToCartForm" action="{% url 'cart:add_to_cart' product.slug %}" method="post">
     {% csrf_token %}
     <input type="hidden" name="variant_id" id="selectedVariantInput">
-    <input type="number" name="quantity" value="1" min="1">
-    <button type="submit" class="btn btn-dark">Add to Cart</button>
+    <input type="number" name="quantity" value="1" min="1" max="10">
+    <button type="submit" class="btn btn-cart">Add to Cart</button>
 </form>
         {% else %}
           <button class="btn btn-danger" disabled>Out of Stock</button>
@@ -198,15 +198,16 @@
       <p class="text-muted">No related products available.</p>
     {% endfor %}
   </div>
-
+</div>
   <!-- Hidden form for add-to-cart -->
-<form id="addToCartForm" action="{% url 'cart:add_to_cart' product.slug %}" method="post">
+<form id="addToCartForm" action="{% url 'cart:add_to_cart' product.slug %}" method="post" style="display: none;">
     {% csrf_token %}
     <input type="hidden" name="variant_id" id="selectedVariantInput">
     <input type="hidden" name="color_id" id="selectedColorInput">
     <input type="number" name="quantity" value="1" min="1">
     <button type="button" class="btn btn-dark">Add to Cart</button>
 </form>
+
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>

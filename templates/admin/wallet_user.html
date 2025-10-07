@@ -1,0 +1,96 @@
+{% extends 'admin/base.html' %}
+{% block title %}User Wallets - Walkon Admin{% endblock %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <!-- Page Title -->
+  <div class="mb-4">
+    <h2 class="fw-semibold">User Wallets</h2>
+  </div>
+
+  <!-- Search -->
+  <form method="get" class="row g-2 mb-3 align-items-center">
+    <div class="col-12 col-md-4">
+      <input type="text" name="search" value="{{ search_query }}" class="form-control" placeholder="Search by username or email">
+    </div>
+    <div class="col-12 col-md-2">
+      <button type="submit" class="btn btn-primary flex-fill">Search</button>
+    </div>
+  </form>
+
+  <!-- Wallet Table -->
+  <div class="table-responsive">
+    <table class="table table-striped align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>User</th>
+          <th>Email</th>
+          <th>Wallet Balance</th>
+          <th>Last Updated</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for wallet in wallets %}
+        <tr>
+          <td>{{ wallet.id }}</td>
+          <td>{{ wallet.user.username }}</td>
+          <td>{{ wallet.user.email }}</td>
+          <td>₹{{ wallet.balance }}</td>
+          <td>{{ wallet.updated_at|date:"d-m-Y H:i" }}</td>
+          <td>
+            <a href="{% url 'admin_wallet_details' wallet.id %}" class="btn btn-info btn-sm">
+              <i class="bi bi-card-list"></i> Transactions
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center text-muted">No wallets found</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="d-flex justify-content-center mt-3 gap-2 flex-wrap">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}" class="btn btn-outline-primary">Previous</a>
+    {% endif %}
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}" class="btn btn-outline-primary">Next</a>
+    {% endif %}
+    <span class="text-muted ms-2">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+  </div>
+</div>
+
+<!-- Responsive Styles -->
+<style>
+.table th, .table td {
+    font-size: 0.9rem;
+    padding: 0.5rem;
+    word-wrap: break-word;
+    white-space: normal;
+    text-align: center;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+    .table th, .table td {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .table th, .table td {
+        font-size: 0.8rem;
+    }
+}
+</style>
+{% endblock %}

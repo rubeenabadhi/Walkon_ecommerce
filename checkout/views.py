@@ -17,6 +17,8 @@ from django.utils import timezone
 from .models import Payment
 from decimal import Decimal
 from offers.models import Coupon, UserCoupon
+from wallet.models import Wallet, WalletTransaction
+import json
 
 
 
@@ -122,6 +124,15 @@ def select_payment(request):
 
     total_price = sum(item.variant.price * item.quantity for item in cart_items)
 
+    # wallet integration
+    wallet, _ = Wallet.objects.get_or_create(user=request.user)
+    wallet_balance = wallet.balance  # actual balance
+    
+    # Use session final_total if exists (after coupon), else total_price
+    final_total = request.session.get("final_total")
+    if final_total is None:
+        final_total = Decimal(total_price)
+
     # Check if there is already a pending order
     order = Order.objects.filter(user=request.user, status="pending").last()
     
@@ -148,9 +159,115 @@ def select_payment(request):
         "cart_items": cart_items,
         "total_price": total_price,
         "order": order,  # ✅ ensures order.id exists
+        "wallet_balance": wallet_balance,
+        "final_total": final_total
     })
-#==================== RAZORPAY INTEGRATION ===============================
 
+# ==================== WALLET PAYMENT VIEW ===============================
+@login_required(login_url="login")
+def wallet_payment(request, order_id):
+    if request.method != "POST":
+        messages.error(request, "Invalid request method.")
+        return redirect("select_payment")
+
+    user = request.user
+    wallet = get_object_or_404(Wallet, user=user)
+    order = get_object_or_404(Order, id=order_id, user=user)
+
+    # Get amount (final total)
+    final_total = request.session.get("final_total")
+    if final_total is None:
+        cart_items = CartItems.objects.filter(user=request.user).select_related('variant')
+        final_total = sum(Decimal(item.variant.price) * item.quantity for item in cart_items)
+
+    final_total = Decimal(str(final_total)).quantize(Decimal('0.01'))
+    print("Wallet Payment Initiated: User:", user.username, "Order:", order.order_id, "Amount:", final_total)
+    if wallet.balance < Decimal(final_total):
+        messages.error(request, "Insufficient wallet balance! Please add money to continue.")
+        return redirect("add_money")
+
+    try:
+        with transaction.atomic():
+            # Deduct wallet balance
+            print("Wallet balance before deduction:", wallet.balance)
+            wallet.balance = F('balance') - Decimal(final_total)
+            wallet.save(update_fields=['balance'])
+            
+            print("Wallet balance after deduction:", wallet.balance," Deducted amount:", final_total)
+
+            # Record wallet transaction
+            WalletTransaction.objects.create(
+                wallet=wallet,
+                transaction_type="debit",
+                amount=Decimal(final_total),
+                description=f"Payment for Order #{order.order_id}"
+            )
+
+            # Mark order as confirmed and paid
+            order.payment_method = "wallet"
+            order.status = "confirmed"
+            order.save()
+            print("Order confirmed:", order.order_id)
+
+            # Move cart items to OrderItems & reduce stock
+            cart_items = CartItems.objects.filter(user=user).select_related('variant')
+            for ci in cart_items:
+                if not OrderItem.objects.filter(order=order, product_variant=ci.variant).exists():
+                    OrderItem.objects.create(
+                    order=order,
+                    product_variant=ci.variant,
+                    quantity=ci.quantity,
+                    price=ci.variant.price,
+                )
+
+                # Reduce product stock
+                product = ci.variant.product
+                product.stock = F('stock') - ci.quantity
+                product.save(update_fields=['stock'])
+
+            # Clear cart
+            cart_items.delete()
+
+            # If coupon applied -> mark used
+            coupon_id = request.session.get("coupon_id")
+            if coupon_id:
+                try:
+                    coupon = Coupon.objects.get(id=coupon_id)
+                    order.coupon = coupon
+                    order.save(update_fields=['coupon'])
+
+                    user_coupon, _ = UserCoupon.objects.get_or_create(user=user, coupon=coupon)
+                    user_coupon.used_count = F('used_count') + 1
+                    user_coupon.save()
+                except Coupon.DoesNotExist:
+                    pass
+
+            # Clear session coupon data
+            request.session.pop("coupon_id", None)
+            request.session.pop("discount", None)
+            request.session.pop("final_total", None)
+
+            # Create payment record
+            Payment.objects.create(
+                order=order,
+                payment_method="wallet",
+                payment_status="paid",
+                paid_amount=Decimal(final_total),
+                payment_gateway="Wallet"
+            )
+            print("Wallet payment successful for order:", order.order_id)
+
+        return JsonResponse({
+            "status": "success",
+            "redirect_url": reverse("order_success", args=[order.order_id])
+            })
+
+    except Exception as e:
+        print("Wallet payment error:", str(e))
+        messages.error(request, "Payment failed. Please try again later.")
+        return redirect("cart:cart")
+
+#===================== RAZORPAY INTEGRATION ===============================
 
 @csrf_exempt
 @login_required(login_url="login")
@@ -259,12 +376,14 @@ def verify_razorpay_payment(request):
             # Move cart items → OrderItems and decrease stock
             cart_items = CartItems.objects.filter(user=request.user).select_related('variant')
             for ci in cart_items:
-                OrderItem.objects.create(
-                    order=order,
-                    product_variant=ci.variant,
-                    quantity=ci.quantity,
-                    price=ci.variant.price,
-                )
+                if not OrderItem.objects.filter(order=order, product_variant=ci.variant).exists():
+                    OrderItem.objects.create(
+                        order=order,
+                        product_variant=ci.variant,
+                        quantity=ci.quantity,
+                        price=ci.variant.price,
+
+                    )
                 # decrease stock safely
                 product = ci.variant.product
                 product.stock = F('stock') - ci.quantity

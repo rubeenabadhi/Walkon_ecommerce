@@ -48,6 +48,28 @@
                         </div>
                     </div>
 
+                    <!--Wallet Option-->
+                    <div class="card mb-3 shadow-sm payment-card">
+                        <div class="card-body d-flex align-items-center p-3">
+                            <div class="form-check me-3">
+                                <input class="form-check-input" type="radio" name="payment_method" value="wallet" id="wallet"
+                                       {% if request.session.payment_method == "wallet" %}checked{% endif %} {% if wallet_balance < final_total %}disabled{% endif %} required>
+                                </div>
+                            <label class="form-check-label w-100 d-flex align-items-center" for="wallet">
+                                <i class="fa-solid fa-wallet fa-lg text-warning me-2"></i>
+                                <div>
+                                    <h5 class="card-title mb-1">Wallet</h5>
+                                    <p class="card-text mb-0">Pay from your wallet balance.</p>
+                                </div>
+                                <div class="ms-auto">
+                                <span class="float-end text-muted" style="font-size: 0.9rem;">(Balance: ₹{{ wallet_balance }}) {% if wallet_balance < final_total %}<br>
+                                    <small class="text-danger">Insufficient balance. <a href="{% url 'wallet' %}" class="text-danger btn-link">Add Money</a></small>{% endif %}</span>
+                                </div>
+                        
+                                </label>
+                        </div>
+                    </div>
+
                     <!-- COD Option -->
                     <div class="card mb-3 shadow-sm payment-card">
                         <div class="card-body d-flex align-items-center p-3">
@@ -273,6 +295,36 @@
             })
             .catch(err => console.error("Create order error:", err));
         }
+        if (selectedMethod.value === "wallet") {
+    e.preventDefault();
+
+    const order_id = document.getElementById("order_id").value;
+    const final_total = document.getElementById("final_total").value;
+
+    fetch(`/checkout/wallet-payment/${order_id}/`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({ amount: final_total })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === "success") {
+            window.location.href = data.redirect_url;
+        } else {
+            alert(data.message || "Wallet payment failed.");
+            window.location.href = "/checkout/payment/";
+        }
+    })
+    .catch(err => {
+        console.error("Wallet payment error:", err);
+        alert("Something went wrong during wallet payment.");
+    });
+    return;
+}
+
     });
 </script>
 

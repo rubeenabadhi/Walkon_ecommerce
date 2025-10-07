@@ -9,6 +9,7 @@ urlpatterns = [
     path('coupons/save/', views.save_coupon, name='save_coupon'),
     path('coupons/save/<int:pk>/', views.save_coupon, name='save_coupon'),
     path('coupons/delete/<int:pk>/', views.delete_coupon, name='delete_coupon'),
+    path('referrals/', views.admin_referrals, name='admin_referrals'),
 
     #-------------------------------------------------------USER VIEW-------------------------------------------------------
     path('my-coupons/', views.available_coupons, name='user_coupons'),

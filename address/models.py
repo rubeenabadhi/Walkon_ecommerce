@@ -13,7 +13,7 @@ class Address(models.Model):
     state = models.CharField(max_length=100)
     country = models.CharField(max_length=100)
     pincode = models.CharField(max_length=10)
-    street = models.CharField(max_length=200, default=False, null=True, blank=True)
+    street = models.CharField(max_length=200, default="", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_default = models.BooleanField(default=False)
