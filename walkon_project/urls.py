@@ -40,6 +40,7 @@ urlpatterns = [
     path('order/',include("order.urls")),
     path('offers/', include('offers.urls')),
     path('wallet/', include('wallet.urls')),
+    path('review/', include('review.urls')),
 ]
 def custom_404_view(request, exception):
     return render(request, "404.html", status=404)

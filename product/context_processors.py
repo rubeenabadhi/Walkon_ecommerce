@@ -7,7 +7,7 @@ def user_product_list(request):
     products = Product.objects.all()
     filter_form = ProductFilterForm(request.GET or None)
     genders = Gender.objects.all()
-
+    
     if filter_form.is_valid():
         category = filter_form.cleaned_data.get("category")
         brand = filter_form.cleaned_data.get("brand")
@@ -48,6 +48,8 @@ def user_product_list(request):
         wishlist_ids = WishlistItem.objects.filter(
             wishlist__user=request.user
         ).values_list("product_variant__product_id", flat=True)
+        
+
 
     paginator = Paginator(products, 3)
     page_number = request.GET.get("page")

@@ -2,11 +2,18 @@ from decimal import Decimal
 from django.utils import timezone
 from offers.models import Coupon
 from .models import CartItems
+from wishlist.models import WishlistItem
 
 def cart_context(request):
     total_price = Decimal("0.00")
     discount = Decimal("0.00")
     applied_coupon = None
+    cart_count=0
+    count_wishlist=0
+
+    if request.user.is_authenticated:
+        cart_count = CartItems.objects.filter(user=request.user).count()
+        count_wishlist = WishlistItem.objects.filter(wishlist__user=request.user).count()
 
     if request.user.is_authenticated:
         cart_items = CartItems.objects.filter(user=request.user).select_related('product', 'variant')
@@ -40,4 +47,6 @@ def cart_context(request):
         'discount': discount,
         'final_total': final_total,
         'applied_coupon': applied_coupon,
+        'cart_count': cart_count,
+        'count_wishlist': count_wishlist
     }

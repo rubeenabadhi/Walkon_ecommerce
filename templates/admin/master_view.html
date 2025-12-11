@@ -1,0 +1,151 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+
+    <h2 class="fw-bold mb-4 text-center">Master Data Management</h2>
+
+    <div class="row g-4">
+
+        {% for section in sections %}
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ section.title }}</h5>
+                    <a href="{% url section.add_url %}" class="btn btn-primary btn-sm">+ Add New</a>
+                </div>
+
+                <div class="card-body p-0">
+                    <table class="table table-bordered mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width:70%">Name</th>
+                                <th style="width:30%">Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                        {% for item in section.items %}
+                            <tr id="{{ section.type }}-row-{{ item.id }}">
+                                {% if item.label %}<td>{{ item.label }}</td>{% else %}
+                                <td>{{ item.name }}</td>
+                                {% endif %}
+                                <td>
+                                    <button class="btn btn-warning btn-sm"
+                                        onclick="openEditModal('{{ section.type }}','{{ item.id }}','{{ item.name }}')">
+                                        Edit
+                                    </button>
+
+                                    <button class="btn btn-danger btn-sm"
+                                        onclick="deleteItem('{{ section.type }}','{{ item.id }}')">
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+
+                        {% empty %}
+                            <tr><td colspan="2" class="text-center">No items found</td></tr>
+                        {% endfor %}
+                        </tbody>
+
+                    </table>
+                </div>
+
+            </div>
+        </div>
+        {% endfor %}
+
+    </div>
+</div>
+
+<!-- ========================================= -->
+<!-- 🔥 EDIT MODAL (placed OUTSIDE the loop)   -->
+<!-- ========================================= -->
+<div class="modal fade" id="editModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Item</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" id="editType">
+        <input type="hidden" id="editId">
+
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" id="editName" class="form-control">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" onclick="saveEdit()">Save</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+let editModal = new bootstrap.Modal(document.getElementById("editModal"));
+
+function openEditModal(type, id, name) {
+    document.getElementById("editType").value = type;
+    document.getElementById("editId").value = id;
+    document.getElementById("editName").value = name;
+    editModal.show();
+}
+
+function saveEdit() {
+    let type = document.getElementById("editType").value;
+    let id = document.getElementById("editId").value;
+    let name = document.getElementById("editName").value;
+
+    fetch("{% url 'ajax_edit_variant' %}", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: `type=${type}&id=${id}&name=${name}`
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === "success") {
+            document.querySelector(`#${type}-row-${id} td:first-child`).innerText = name;
+            editModal.hide();
+        } else {
+            alert("Error updating item");
+        }
+    });
+}
+
+function deleteItem(type, id) {
+    if (!confirm("Are you sure you want to delete this?")) return;
+
+    fetch("{% url 'ajax_delete_variant' %}", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: `type=${type}&id=${id}`
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === "success") {
+            document.getElementById(`${type}-row-${id}`).remove();
+        } else {
+            alert("Error deleting item.");
+        }
+    });
+}
+</script>
+
+{% endblock %}

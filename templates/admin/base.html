@@ -5,17 +5,70 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Walkon Admin{% endblock %}</title>
+
+  <!-- Bootstrap & Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'admin/styles.css' %}">
+ 
 </head>
 <body>
 
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
-  <div class="container-fluid">
-    <!-- Mobile toggle -->
-    <button class="btn btn-primary d-lg-none me-2" id="mobileSidebarToggle">
+<!-- Sidebar -->
+<nav id="sidebarMenu" class="sidebar bg-white">
+  <div class="position-sticky sidebar-sticky">
+    <div class="list-group list-group-flush mx-3 mt-4 ">
+      <a href="{% url 'dashboard' %}" class="list-group-item list-group-item-action py-2 ripple {% if request.path == '/' %}active{% endif %}" title="Dashboard">
+        <i class="bi bi-house-door me-3" ></i><span class="sidebar-text text-capitalize fw-bold fs-5 lh-1 mb-0 ps-1">Dashboard</span>
+      </a>
+      <a href="{% url 'admin_orders' %}" class="list-group-item list-group-item-action py-2 ripple {% if request.path == '/admin/orders/' %}active{% endif %}" title="Orders">
+        <i class="bi bi-cart me-3"></i><span class="sidebar-text">Orders</span>
+      </a>
+      <a href="{% url 'admin_return_requests' %}" class="list-group-item list-group-item-action py-2 ripple {% if request.path == '/admin/return-requests/' %}active{% endif %}" title="Return Requests">
+        <i class="bi bi-arrow-counterclockwise me-3"></i><span class="sidebar-text">Return Requests</span>
+      </a>
+      <a href="{% url 'products' %}" class="list-group-item list-group-item-action py-2 ripple {% if request.path == '/products/' %}active{% endif %}" title="Products">
+        <i class="bi bi-box me-3"></i><span class="sidebar-text">Products</span>
+      </a>
+      <a href="{% url 'admin_review' %}" class="list-group-item list-group-item-action py-2 ripple {% if request.path == '/admin/review/' %}active{% endif %}" title="Reviews">
+        <i class="bi bi-star me-3"></i><span class="sidebar-text">Reviews</span>
+      </a>
+      <a href="{% url 'admin_product_offers' %}" class="list-group-item list-group-item-action py-2 ripple {% if request.path == '/admin/product-offers/' %}active{% endif %}" title="Product Offers">
+        <i class="bi bi-tag-fill me-3"></i><span class="sidebar-text">Product Offers</span>
+      </a>
+      <a href="{% url 'admin_category_offers' %}" class="list-group-item list-group-item-action py-2 ripple {% if request.path == '/admin/category-offers/' %}active{% endif %}" title="Category Offers">
+        <i class="bi bi-tags-fill me-3"></i><span class="sidebar-text">Category Offers</span>
+      </a>
+      <a href="{% url 'admin_coupons' %}" class="list-group-item list-group-item-action py-2 ripple {% if request.path == '/admin/coupons/' %}active{% endif %}" title="Coupons">
+        <i class="bi bi-tag me-3"></i><span class="sidebar-text">Coupons</span>
+      </a>
+      <a href="{% url 'admin_referrals' %}" class="list-group-item list-group-item-action py-2 ripple {% if request.path == '/admin/referrals/' %}active{% endif %}" title="Referrals">
+        <i class="bi bi-gift me-3"></i><span class="sidebar-text">Referrals</span>
+      </a>
+      <a href="{% url 'admin_wallets' %}" class="list-group-item list-group-item-action py-2 ripple {% if request.path == '/admin/wallets/' %}active{% endif %}"  title="Wallets">
+        <i class="bi bi-wallet2 me-3"></i><span class="sidebar-text">Wallets</span>
+      </a>
+      <a href="{% url 'user_management' %}" class="list-group-item list-group-item-action py-2 ripple {% if request.path == '/admin/users/' %}active{% endif %}"  title="Customers">
+        <i class="bi bi-person-circle me-3"></i><span class="sidebar-text">Customers</span>
+      </a>
+      <a href="{% url 'add_category' %}" class="list-group-item list-group-item-action py-2 ripple {% if request.path == '/admin/category/' %}active{% endif %}" title="Category">
+        <i class="bi bi-tags me-3"></i><span class="sidebar-text">AddCategory</span>
+      </a>
+      <a href="{% url 'admin_master' %}" class="list-group-item list-group-item-action py-2 ripple {% if request.path == '/admin/master/' %}active{% endif %}" title="Master Data">
+        <i class="bi bi-diagram-3 me-3"></i><span class="sidebar-text">Master Data</span>
+      </a>
+      <a href="{% if user.is_authenticated and user.is_staff %}{% url 'logout' %}{% else %}{% url 'admin_login' %}{% endif %}" class="list-group-item list-group-item-action py-2 ripple" title="Sign Out">
+        <i class="bi bi-box-arrow-right me-3"></i><span class="sidebar-text">{% if user.is_authenticated and user.is_staff %}Sign Out{% else %}Sign In{% endif %}</span>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- Top Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
+  <div class="container-fluid p-0 m-0">
+    <!-- Sidebar Toggle Always Visible -->
+    <button id="sidebarToggle" class="btn btn-primary me-2">
       <i class="bi bi-list"></i>
     </button>
 
@@ -23,151 +76,97 @@
     <a class="navbar-brand d-flex align-items-center" href="{% url 'dashboard' %}">
       <img src="{% static 'images/logo.png' %}" alt="Walkon Logo" class="img-fluid" style="max-width: 50px; max-height: 35px; object-fit: contain;">
     </a>
-
-    <!-- Profile -->
-    <ul class="navbar-nav ms-auto">
-      <li class="nav-item">
-        <a class="nav-link" href="#">
-          <i class="bi bi-person-circle"></i> Profile
-        </a>
-      </li>
-    </ul>
   </div>
 </nav>
 
-<!-- Sidebar + Main -->
-<div class="d-flex flex-column min-vh-100">
-  <!-- Sidebar -->
-  <div id="sidebar" class="bg-dark text-white p-3 position-fixed top-0 start-0 h-100 d-flex flex-column" style="z-index: 1000; transition: all 0.3s; width: 220px;">
-    <button id="sidebarToggle" class="btn btn-primary rounded-circle p-1 position-absolute top-1 end-0 translate-middle-x">
-      <i class="bi bi-chevron-left text-white"></i>
-    </button>
-    <h6 class="mb-3 text-white d-none d-md-block">Menu</h6>
-    <ul class="nav nav-pills flex-column mb-auto">
-      <li class="nav-item">
-        <a href="{% url 'dashboard' %}" class="nav-link text-white d-flex align-items-center {% if request.path == '/' %}active{% endif %}">
-          <i class="bi bi-house-door"></i><span class="ms-2">Dashboard</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="{% url 'admin_orders' %}" class="nav-link text-white d-flex align-items-center {% if request.path == '/admin/orders/' %}active{% endif %}">
-          <i class="bi bi-cart"></i><span class="ms-2">Orders</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="#" class="nav-link text-white d-flex align-items-center">
-          <i class="bi bi-graph-up"></i><span class="ms-2">Sales Report</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="{% url 'products' %}" class="nav-link text-white d-flex align-items-center {% if request.path == '/products/' %}active{% endif %}">
-          <i class="bi bi-box"></i><span class="ms-2">Products</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="{% url 'admin_coupons' %}" class="nav-link text-white d-flex align-items-center {% if request.path == '/admin/coupons/' %}active{% endif %}">
-          <i class="bi bi-tag"></i><span class="ms-2">Coupons</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="{% url 'admin_referrals' %}" class="nav-link text-white d-flex align-items-center {% if request.path == '/admin/referrals/' %}active{% endif %}">
-          <i class="bi bi-gift"></i><span class="ms-2">Referrals</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="{% url 'admin_wallets' %}" class="nav-link text-white d-flex align-items-center {% if request.path == '/admin/wallets/' %}active{% endif %}">
-          <i class="bi bi-wallet2"></i><span class="ms-2">Wallets</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="{% url 'user_management' %}" class="nav-link text-white d-flex align-items-center {% if request.path == '/admin/users/' %}active{% endif %}">
-          <i class="bi bi-person-circle"></i><span class="ms-2">Customers</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="{% url 'add_category' %}" class="nav-link text-white d-flex align-items-center {% if request.path == '/admin/category/' %}active{% endif %}">
-          <i class="bi bi-tags"></i><span class="ms-2">Category</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        {% if user.is_authenticated and user.is_staff %}
-          <a href="{% url 'logout' %}" class="nav-link text-white d-flex align-items-center">
-            <i class="bi bi-box-arrow-right"></i><span class="ms-2">Sign Out</span>
-          </a>
-        {% else %}
-          <a href="{% url 'admin_login' %}" class="nav-link text-white d-flex align-items-center">
-            <i class="bi bi-box-arrow-right"></i><span class="ms-2">Sign In</span>
-          </a>
-        {% endif %}
-      </li>
-    </ul>
+<!-- Main Content -->
+<main id="mainContent">
+  <div class="container pt-5 mt-4">
+    {% block content %}{% endblock %}
   </div>
-
-  <!-- Main content -->
-  <div id="main-content" class="flex-grow-1 p-3" style="margin-left: 220px; transition: all 0.3s;">
-    {% block content %}
-    {% endblock %}
-  </div>
-</div>
+</main>
 
 <!-- Footer -->
 <footer class="mt-auto py-3 bg-light text-center text-muted">
-  © 2025 | Walkon | All Rights Reserved | Style with Confidence.
+  © 2025 | Walkon | All Rights Reserved
 </footer>
 
-<!-- JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  const sidebar = document.getElementById('sidebar');
   const toggleBtn = document.getElementById('sidebarToggle');
-  const mobileToggle = document.getElementById('mobileSidebarToggle');
-  const mainContent = document.getElementById('main-content');
+  const sidebar = document.getElementById('sidebarMenu');
+  const mainContent = document.getElementById('mainContent');
 
-  // Desktop toggle
+  // On page load, sidebar collapsed
+  sidebar.classList.remove('expanded');
+  mainContent.classList.remove('sidebar-expanded');
+
   toggleBtn.addEventListener('click', () => {
-    sidebar.classList.toggle('collapsed');
-    const isCollapsed = sidebar.classList.contains('collapsed');
-    sidebar.style.width = isCollapsed ? '60px' : '220px';
-    mainContent.style.marginLeft = isCollapsed ? '60px' : '220px';
-    toggleBtn.querySelector('i').classList.toggle('bi-chevron-right');
-    toggleBtn.querySelector('i').classList.toggle('bi-chevron-left');
-  });
+    sidebar.classList.toggle('expanded');
+    mainContent.classList.toggle('sidebar-expanded');
 
-  // Mobile toggle
-  mobileToggle.addEventListener('click', () => {
-    sidebar.classList.toggle('show');
-    if (sidebar.classList.contains('show')) {
-      sidebar.style.left = '0';
-      mainContent.style.marginLeft = '220px';
-    } else {
-      sidebar.style.left = '-220px';
-      mainContent.style.marginLeft = '0';
-    }
+    // Optional: toggle dark mode on collapse
+    sidebar.classList.toggle('sidebar-dark');
   });
-
-  // Adjust layout on resize
-  window.addEventListener('resize', () => {
-    if (window.innerWidth > 992) {
-      sidebar.classList.remove('show');
-      sidebar.classList.remove('collapsed');
-      sidebar.style.left = '0';
-      sidebar.style.width = '220px';
-      mainContent.style.marginLeft = '220px';
-    } else {
-      sidebar.classList.remove('collapsed');
-      if (!sidebar.classList.contains('show')) {
-        sidebar.style.left = '-220px';
-        mainContent.style.marginLeft = '0';
-      }
-    }
-  });
-
-  // Ensure sidebar is visible on page load for desktop
-  if (window.innerWidth > 992) {
-    sidebar.style.left = '0';
-    mainContent.style.marginLeft = '220px';
-  }
 </script>
-
 </body>
 </html>
+<style>
+  /* Sidebar default collapsed: only icons */
+  .sidebar {
+    position: fixed;
+    top: 0; bottom: 0; left: 0;
+    padding: 58px 0 0;
+    width: 60px; /* collapsed by default */
+    background-color: #fff;
+    box-shadow: 0 2px 5px 0 rgb(0 0 0 / 5%), 0 2px 10px 0 rgb(0 0 0 / 5%);
+    transition: width 0.3s, background-color 0.3s;
+    overflow-x: hidden;
+    z-index: 600;
+  }
+  /* list text style */
+
+
+  .sidebar .list-group-item {
+    border: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* sidebar expanded */
+  .sidebar.expanded { width: 240px; }
+
+  .sidebar .list-group-item span {
+    display: none; /* hide text by default */
+    transition: opacity 0.3s;
+  }
+
+  .sidebar.expanded .list-group-item span {
+    display: inline; /* show text when expanded */
+  }
+
+  /* main content adjustment */
+  main { margin-left: 60px; transition: margin-left 0.3s; }
+  main.sidebar-expanded { margin-left: 240px; }
+
+  /* Optional dark mode */
+  .sidebar-dark { background-color: #212529; color: #706a6aff; }
+  .sidebar-dark .list-group-item { color: #0f0f0fff; }
+  .sidebar-dark .list-group-item.active {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: #f3f2f2ff;
+  }
+  .sidebar-dark .list-group-item:hover { background-color: #343a40; color: #fff; }
+  .sidebar-dark .list-group-item .bi { color: #070606ff; }
+  .sidebar-dark .list-group-item.active .bi { color: #fff; }
+  .sidebar-dark .list-group-item:hover .bi { color: #fff; }
+  .sidebar-dark .sidebar-text { text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); }
+  @media (max-width: 991.98px) {
+    .sidebar { width: 100%; }
+    main { margin-left: 0; }
+  }
+  
+</style>

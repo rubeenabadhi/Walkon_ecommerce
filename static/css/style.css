@@ -1,7 +1,4 @@
-     body {
-      background-color: #dae7f4;
-      font-family: Arial, sans-serif;
-     }
+    
     .signup-card {
       border-radius: 20px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.1);
@@ -169,3 +166,4 @@
   .footer-section p {
     margin-bottom: 0;
   }
+  

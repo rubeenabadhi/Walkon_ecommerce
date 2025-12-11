@@ -138,10 +138,10 @@
             
             <!-- Actions -->
             <div class="mt-2 d-flex justify-content-end">
-                <a href="{% url 'order_details' order.order_id %}" class="btn btn-sm btn-outline-info me-2">View Details</a>
-                <a href="{% url 'invoice_pdf' order.id %}" class="btn btn-sm btn-outline-secondary me-2">Invoice</a>
+                <a href="{% url 'order_details' order.order_id %}" class="btn btn-sm btn-primary me-2">View Details</a>
+                <a href="{% url 'invoice_pdf' order.id %}" class="btn btn-sm btn-success me-2">Invoice</a>
                 {% if order.status in 'pending confirmed' %}
-                    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal{{ order.id }}">Cancel Order</button>
+                    <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal{{ order.id }}">Cancel Order</button>
                 {% endif %}
             </div>
         </div>
@@ -152,6 +152,7 @@
                 <div class="modal-content">
                     <form method="POST" action="{% url 'cancel_order' order.id %}">
                         {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
                         <div class="modal-header">
                             <h5 class="modal-title">Cancel Order</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -176,6 +177,7 @@
                     <div class="modal-content">
                         <form method="POST" action="{% url 'cancel_item' item.id %}">
                             {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
                             <div class="modal-header">
                                 <h5 class="modal-title">Cancel Item</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>

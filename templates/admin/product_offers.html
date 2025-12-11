@@ -1,0 +1,193 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+{% block title %}Product Offers - Walkon Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <!-- Page Title -->
+  <div class="mb-4">
+    <h2 class="fw-semibold">Product Offer Management</h2>
+  </div>
+
+  <!-- Search + Filter + Add Button -->
+  <form method="get" class="row g-2 mb-3 align-items-center">
+    <div class="col-12 col-md-4 col-lg-3">
+      <input type="text" name="search" value="{{ search_query }}" class="form-control" placeholder="Search Product">
+    </div>
+    <div class="col-6 col-md-3 col-lg-2">
+      <select name="status" class="form-select">
+        <option value="">All Status</option>
+        <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+        <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option>
+      </select>
+    </div>
+    <div class="col-12 col-md-3 col-lg-2 d-flex gap-2">
+      <button type="submit" class="btn btn-primary flex-fill">Filter</button>
+      <button type="button" class="btn btn-dark flex-fill" id="addOfferBtn">
+        <i class="bi bi-plus-lg"></i> New
+      </button>
+    </div>
+  </form>
+
+  <!-- Offers Table -->
+  <div class="table-responsive p-3" style="border: 1px solid #dee2e6; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+    <table class="table table-striped align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>Product</th>
+          <th>Discount (%)</th>
+          <th>Valid From</th>
+          <th>Valid To</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for offer in offers %}
+        <tr>
+          <td>{{ offer.id }}</td>
+          <td>{{ offer.product.name }}</td>
+          <td>{{ offer.discount_percentage }}%</td>
+          <td>{{ offer.valid_from|date:"d-m-Y H:i" }}</td>
+          <td>{{ offer.valid_to|date:"d-m-Y H:i" }}</td>
+          <td>
+            {% if offer.is_active %}
+              <span class="badge bg-success">Active</span>
+            {% else %}
+              <span class="badge bg-danger">Inactive</span>
+            {% endif %}
+          </td>
+          <td>
+            <button class="btn btn-warning btn-sm editOfferBtn" data-id="{{ offer.id }}">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-outline-danger btn-sm">
+              <a href="{% url 'delete_product_offer' offer.id %}" class="text-decoration-none text-danger" onclick="return confirm('Are you sure you want to delete this offer?');">
+                <i class="bi bi-trash"></i>
+              </a>
+            </button>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="text-center text-muted">No product offers available</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="d-flex justify-content-center align-items-center mt-3 gap-2 flex-wrap">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&status={{ request.GET.status }}" class="btn btn-outline-primary">Previous</a>
+    {% endif %}
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&status={{ request.GET.status }}" class="btn btn-outline-primary">Next</a>
+    {% endif %}
+    <span class="text-muted ms-2">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+  </div>
+
+  <!-- Add/Edit Offer Modal -->
+  <div class="modal fade" id="offerModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form id="offerForm">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalTitle">Add Offer</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body" id="modalBody"></div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Custom CSS -->
+<style>
+.table th, .table td { font-size: 0.9rem; padding: 0.5rem; }
+.btn-sm { padding: 0.25rem 0.5rem; font-size: 0.8rem; }
+.modal-dialog { max-width: 90%; margin: 1rem auto; }
+@media (max-width: 576px) {
+  .table th, .table td { font-size: 0.8rem; }
+  .btn-sm { padding: 0.2rem 0.4rem; font-size: 0.75rem; }
+}
+.modal-body { max-height: 60vh; overflow-y: auto; }
+.modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+.modal-body::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+.modal-body::-webkit-scrollbar-track {
+    background-color: rgba(0, 0,, 0.1);
+    border-radius: 4px;
+}
+</style>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  let offerModal = new bootstrap.Modal(document.getElementById('offerModal'));
+  let modalTitle = document.getElementById('modalTitle');
+  let modalBody = document.getElementById('modalBody');
+  let offerForm = document.getElementById('offerForm');
+
+  // Add Offer
+// Add Offer
+document.getElementById('addOfferBtn').addEventListener('click', function () {
+  fetch('/offers/product-offers/load-form/')
+    .then(res => res.json())
+    .then(data => {
+      modalTitle.innerText = "Add Product Offer";
+      modalBody.innerHTML = data.html;
+      offerModal.show();
+    });
+});
+
+// Edit Offer
+document.querySelectorAll('.editOfferBtn').forEach(btn => {
+  btn.addEventListener('click', function () {
+    let id = this.dataset.id;
+    fetch(`/offers/product-offers/load-form/${id}/`)
+      .then(res => res.json())
+      .then(data => {
+        modalTitle.innerText = "Edit Product Offer";
+        modalBody.innerHTML = data.html;
+        offerModal.show();
+      });
+  });
+});
+
+// Submit Form (fix save URL too)
+offerForm.addEventListener('submit', function (e) {
+  e.preventDefault();
+  let formData = new FormData(offerForm);
+  let pk = formData.get('id');
+  let url = (!pk || pk === "None") 
+    ? '/offers/product-offers/save/' 
+    : `/offers/product-offers/save/${pk}/`;
+
+  fetch(url, { method: 'POST', body: formData })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        offerModal.hide();
+        location.reload();
+      } else {
+        modalBody.innerHTML = data.html;
+      }
+    });
+});
+});
+</script>
+{% endblock %}

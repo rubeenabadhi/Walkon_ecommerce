@@ -15,7 +15,7 @@
                                 <h5 class="card-title fw-bold">{{ coupon.code }}</h5>
                                 <p class="card-text fs-5">
                                     {% if coupon.discount_type == 'percentage' %}
-                                        {{ coupon.discount_value }}% Off
+                                        {{ coupon.discount_value|floatformat }}% Off
                                     {% else %}
                                         ₹{{ coupon.discount_value }} Off
                                     {% endif %}

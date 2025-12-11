@@ -1,5 +1,6 @@
 {% extends 'user/base.html' %}
 {% load static %}
+{% load custom_filters %}
 {% block title %}Home - Walkon{% endblock %}
 
 {% block extra_css %}
@@ -10,9 +11,9 @@
 
 <!-- Hero Carousel -->
 <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
-  <div class="carousel-inner">
+  <div class="carousel-inner d-flex align-items-center m-2 p-2" style="border-radius:15px; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
     <div class="carousel-item active">
-      <section class="hero-section" style="background-image: url('{% static "images/shoe.jpg" %}');">
+      <section class="hero-section " style="background-image: url('{% static "images/1877.jpg" %}');">
         <div class="hero-content">
           <h1>Step Into Style</h1>
           <p>Explore our vibrant collection of premium shoes</p>
@@ -21,7 +22,7 @@
       </section>
     </div>
     <div class="carousel-item">
-      <section class="hero-section" style="background-image: url('{% static "images/hero2.png" %}');">
+      <section class="hero-section" style="background-image: url('{% static "images/Fashion-Web-Banner-11.jpg" %}');">
         <div class="hero-content">
           <h1>Walk With Confidence</h1>
           <p>Trendy, durable and stylish shoes just for you</p>
@@ -69,32 +70,54 @@
 </section>
 
 <!-- Top Trends Section -->
-<section class="trends-section">
+<section class="trends-section my-5">
   <div class="container">
-    <h2>🔥 Top Trends</h2>
+    <h2 class="fw-bold mb-4 text-center">🔥 Top Trends</h2>
     <div class="row g-4">
       {% for product in products|slice:":4" %}
+      {% with variant=product.variants.first %}
       <div class="col-md-3 col-sm-6">
-        <div class="card shadow-sm border-0" style="border-radius:12px; transition:transform 0.3s;">
-          <img src="{{ product.primary_image.url }}" alt="{{ product.name }}" class="card-img-top bg-light"
-               style="height:220px; object-fit:contain; padding:15px;">
+        <div class="card shadow-sm border-0" 
+             style="border-radius:12px; transition:transform 0.3s, box-shadow 0.3s;"
+             onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 15px rgba(0,0,0,0.1)';"
+             onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
+
+          <img src="{{ product.primary_image.url }}" alt="{{ product.name }}" 
+               class="card-img-top bg-light"
+               style="height:220px; object-fit:contain; padding:15px; border-top-left-radius:12px; border-top-right-radius:12px;">
+
           <div class="card-body text-center">
             <h6 class="card-title" style="font-size:1rem; font-weight:600; color:#333;">{{ product.name }}</h6>
+
+            {% with offer_price=variant.get_offer_price %}
+            {% if offer_price < variant.price %}
             <p style="margin:5px 0; font-size:1.1rem; font-weight:700; color:#2e7d32;">
-              ₹{{ product.variants.first.price }}
+              ₹{{ offer_price }}
               <span style="text-decoration:line-through; font-size:0.9rem; color:#999; margin-left:5px;">
-                ₹{{ product.variants.first.mrp }}
+                ₹{{ variant.price }}
               </span>
-              <span style="color:#e53935; font-size:0.9rem; font-weight:600; margin-left:5px;">
-                {{ product.variants.first.discount }}% off
+              <span style="color:#e53935; font-size:0.9rem; font-weight:600; margin-left:5px;">{{variant.get_offer_percentage }}
+                % off
               </span>
             </p>
+            {% else %}
+            <p style="margin:5px 0; font-size:1.1rem; font-weight:700; color:#2e7d32;">
+              ₹{{ variant.price }}
+            </p>
+            {% endif %}
+            {% endwith %}
+
             <p style="font-size:0.8rem; color:#6a1b9a; font-weight:600;">Top Discount of the Sale</p>
-            <a href="{% url 'product_details' product.slug %}" class="btn btn-primary"
-               style="border-radius:20px; padding:6px 15px; font-size:0.9rem;">View Details</a>
+
+            <a href="{% url 'product_details' product.slug %}" 
+               class="btn btn-primary"
+               style="border-radius:20px; padding:6px 15px; font-size:0.9rem;">
+               View Details
+            </a>
           </div>
         </div>
       </div>
+      {% endwith %}
       {% empty %}
       <p class="text-center">No trending products available.</p>
       {% endfor %}
@@ -102,27 +125,56 @@
   </div>
 </section>
 
+
 <!-- New Arrivals Section -->
 <section class="arrivals-section">
   <div class="container">
     <h2>✨ New Arrivals</h2>
-    <div class="row g-4">
-      {% for product in new_products|dictsortreversed:"created_at"|slice:":4" %}
+    <div class="row g-4 mt-2">
+      {% for product in new_products|slice:":4" %}
+      {% with variant=product.variants.first %}
       <div class="col-md-3 col-sm-6">
-        <div class="card shadow-sm border-0" style="border-radius:12px; transition:transform 0.3s;">
+        <div class="card shadow-sm border-0" 
+             style="border-radius:12px; transition:transform 0.3s, box-shadow 0.3s;"
+             onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 15px rgba(0,0,0,0.1)';"
+             onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
+
           <img src="{{ product.primary_image.url }}" alt="{{ product.name }}" 
-               class="card-img-top bg-light" style="height:220px; object-fit:contain; padding:15px;">
+               class="card-img-top bg-light"
+               style="height:220px; object-fit:contain; padding:15px; border-top-left-radius:12px; border-top-right-radius:12px;">
+
           <div class="card-body text-center">
-            <span class="badge bg-warning text-dark mb-2" style="font-size:0.8rem;">New</span>
             <h6 class="card-title" style="font-size:1rem; font-weight:600; color:#333;">{{ product.name }}</h6>
+
+            {% with offer_price=variant.get_offer_price %}
+            {% if offer_price < variant.price %}
             <p style="margin:5px 0; font-size:1.1rem; font-weight:700; color:#2e7d32;">
-              ₹{{ product.variants.first.price }}
+              ₹{{ offer_price }}
+              <span style="text-decoration:line-through; font-size:0.9rem; color:#999; margin-left:5px;">
+                ₹{{ variant.price }}
+              </span>
+              <span style="color:#e53935; font-size:0.9rem; font-weight:600; margin-left:5px;">{{ variant.get_offer_percentage }}
+                % off
+              </span>
             </p>
-            <a href="{% url 'product_details' product.slug %}" class="btn btn-warning"
-               style="border-radius:20px; padding:6px 15px; font-size:0.9rem;">View Details</a>
+            {% else %}
+            <p style="margin:5px 0; font-size:1.1rem; font-weight:700; color:#2e7d32;">
+              ₹{{ variant.price }}
+            </p>
+            {% endif %}
+            {% endwith %}
+
+            <p style="font-size:0.8rem; color:#6a1b9a; font-weight:600;">Top Discount of the Sale</p>
+
+            <a href="{% url 'product_details' product.slug %}" 
+               class="btn btn-primary"
+               style="border-radius:20px; padding:6px 15px; font-size:0.9rem;">
+               View Details
+            </a>
           </div>
         </div>
       </div>
+      {% endwith %}
       {% empty %}
       <p class="text-center">No new arrivals available.</p>
       {% endfor %}

@@ -21,18 +21,26 @@ from django.core.exceptions import ValidationError
 from product.models import Product
 from offers.models import Referral
 from wallet.models import Wallet, WalletTransaction
-
+from offers.models import ProductOffer
+from django.views.decorators.csrf import csrf_protect
 
 #user-defined views for signup and OTP verification,home view
 #=====================HOME VIEW===============================================
 def home(request):
-    products = Product.objects.all()
-    new_products = Product.objects.all().order_by('-created_at')  
-    
+    products = Product.objects.all().prefetch_related('variants')
+    new_products = Product.objects.all().order_by('-created_at').prefetch_related('variants')
+
+    for product in products:
+        for variant in product.variants.all():
+            variant.final_price = variant.get_offer_price()
+    for product in new_products:
+        for variant in product.variants.all():
+            variant.final_price = variant.get_offer_price()
+
     context = {
         'products': products,
         'new_products': new_products
-    }  
+    }
     return render(request, 'user/index.html', context)
 
 #=====================SIGNUP VIEW===============================================
@@ -183,6 +191,8 @@ def resend_otp(request):
     return redirect('verify_otp')
 
 #=====================LOGIN VIEW===============================================
+@never_cache
+@csrf_protect
 def user_login(request):
     if request.method == 'POST':
         email = request.POST['email']

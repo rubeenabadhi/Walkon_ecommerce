@@ -2,6 +2,10 @@ from django.db import models
 from django.utils.text import slugify
 from django.conf import settings
 from cloudinary.models import CloudinaryField
+from django.utils import timezone
+from django.contrib.auth.models import User
+from decimal import Decimal
+from django.db.models import Avg
 
 
 # Create your models here.
@@ -92,6 +96,8 @@ class Product(models.Model):
     gender = models.ForeignKey(Gender, on_delete=models.SET_NULL, null=True, related_name='products')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    #offers
+    
 
     class Meta:
         verbose_name = "Product"
@@ -104,8 +110,14 @@ class Product(models.Model):
         if not self.slug:
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
-
-
+    
+    @property
+    def average_rating(self):
+        avg = self.reviews.aggregate(avg_rating=Avg('rating'))['avg_rating']
+        return round(avg or 0, 1)    
+    
+        # ================== OFFER PRICE METHOD ==================
+ 
 class ProductVariant(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
     size = models.ForeignKey(Size, on_delete=models.SET_NULL, null=True, related_name='variants')
@@ -121,6 +133,72 @@ class ProductVariant(models.Model):
 
     def __str__(self):
         return f"{self.product.name} - {self.size.label if self.size else ''} {self.color.name if self.color else ''}"
+    
+    def get_offer_price(self):
+        from offers.models import ProductOffer, CategoryOffer  # import inside method
+        now = timezone.now()
+
+    # Convert base price to Decimal
+        base_price = Decimal(self.price)
+
+    # Product-level offer
+        product_offer = ProductOffer.objects.filter(
+            product=self.product,  # ✅ should be self.product, not self
+            active=True,
+            valid_from__lte=now,
+            valid_to__gte=now
+        ).first()
+
+        if product_offer:
+            discount = Decimal(product_offer.discount_percentage) / Decimal(100)
+            discount_price = base_price * (Decimal(1) - discount)
+            return discount_price.quantize(Decimal('0.01'))
+
+    # Category-level offer
+        if self.product and self.product.category:
+            category_offer = CategoryOffer.objects.filter(
+                category=self.product.category,
+                active=True,
+                valid_from__lte=now,
+                valid_to__gte=now
+            ).first()
+
+            if category_offer:
+                discount = Decimal(category_offer.discount_percentage) / Decimal(100)
+                discount_price = base_price * (Decimal(1) - discount)
+                return discount_price.quantize(Decimal('0.01'))
+
+        return base_price
+    
+    def get_offer_percentage(self):
+        from offers.models import ProductOffer, CategoryOffer  # import inside method
+        now = timezone.now()
+
+        # Product-level offer
+        product_offer = ProductOffer.objects.filter(
+            product=self.product,
+            active=True,
+            valid_from__lte=now,
+            valid_to__gte=now
+        ).first()
+
+        if product_offer:
+            return product_offer.discount_percentage
+
+        # Category-level offer
+        if self.product and self.product.category:
+            category_offer = CategoryOffer.objects.filter(
+                category=self.product.category,
+                active=True,
+                valid_from__lte=now,
+                valid_to__gte=now
+            ).first()
+
+            if category_offer:
+                return category_offer.discount_percentage
+
+        return 0  # No offer
+
     
 class Image(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images", null=True, blank=True)

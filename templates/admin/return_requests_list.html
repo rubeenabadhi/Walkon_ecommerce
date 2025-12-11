@@ -1,0 +1,87 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Return Requests - Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <h2 class="text-center fw-bold mb-4">Return Requests</h2>
+    <!-----------message----->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3 shadow-sm d-inline-block"
+                 role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    <!-----------message----->
+
+    <div class="table-responsive p-3"
+         style="border:1px solid #dee2e6; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,0.1);">
+
+<table class="table table-bordered">
+    <thead class="table-dark">
+        <tr class="text-center">
+            <th>Order ID</th>
+            <th>Type</th>
+            <th>Item</th>
+            <th>User</th>
+            <th>Reason</th>
+            <th>Requested At</th>
+            <th>Action</th>
+            <th>Details</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for r in requests %}
+        <tr>
+            <td>{{ r.order.order_id }}</td>
+
+            <td>{{ r.request_type|title }}</td>
+
+            <td>
+                {% if r.item %}
+                    {{ r.item.product_variant.product.name }}
+                {% else %}
+                    Entire Order
+                {% endif %}
+            </td>
+
+            <td>{{ r.requested_by.username }}</td>
+
+            <td>{{ r.reason }}</td>
+
+            <td>{{ r.requested_at }}</td>
+
+            <td>
+                <!-- APPROVE -->
+                <form action="{% url 'admin_process_return' r.id %}" method="POST" style="display:inline-block;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="approve">
+                    <button class="btn btn-success btn-sm">Approve</button>
+                </form>
+
+                <!-- REJECT -->
+                <form action="{% url 'admin_process_return' r.id %}" method="POST" style="display:inline-block;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="reject">
+                    <button class="btn btn-danger btn-sm">Reject</button>
+                </form>
+            </td>
+            <td>
+                <a href="{% url 'admin_return_details' r.id %}" class="btn btn-primary btn-sm">View Details</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+    </div>
+
+</div>
+{% endblock %}

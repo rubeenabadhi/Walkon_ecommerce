@@ -29,12 +29,15 @@ class Coupon(models.Model):
             return price * (1 - self.discount_value / 100)
         else:
             return price - self.discount_value
+        
+    
     
 # Coupon usage by User
 class UserCoupon(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     coupon = models.ForeignKey(Coupon, on_delete=models.CASCADE)
     used_count = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True, editable=False, null=True, blank=True)
 
     class Meta:
         unique_together = ('user', 'coupon')
@@ -49,9 +52,16 @@ class ProductOffer(models.Model):
     valid_from = models.DateTimeField(default=timezone.now)
     valid_to = models.DateTimeField()
     active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True )
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.product.name} - {self.discount_percentage}% OFF"
+    
+    def is_active(self):
+        now = timezone.now()
+        return self.active and self.valid_from <= now <= self.valid_to
+    
 
 
 # Category Offer
@@ -61,12 +71,18 @@ class CategoryOffer(models.Model):
     valid_from = models.DateTimeField(default=timezone.now)
     valid_to = models.DateTimeField()
     active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.category.name} - {self.discount_percentage}% OFF"
     class Meta:
         verbose_name = "Category Offer"
         verbose_name_plural = "Category Offers"
+    def is_active(self):
+        now = timezone.now()
+        return self.active and self.valid_from <= now <= self.valid_to
+    
 
 #================================================REFERREL OFFER===============================================
 

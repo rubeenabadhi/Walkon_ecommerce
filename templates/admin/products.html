@@ -34,13 +34,14 @@
     </div>
 
     <!-- Product Table -->
-    <div class="table-responsive">
+    <div class="table-responsive p-3" style="border: 1px solid #dee2e6; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
       <table class="table table-striped align-middle">
         <thead class="table-dark">
           <tr>
             <th scope="col">Product</th>
             <th scope="col">Product ID</th>
             <th scope="col">Price</th>
+            
             <th scope="col">Added on</th>
             <th scope="col">Category</th>
             <th scope="col">Stock</th>
@@ -53,7 +54,24 @@
           <tr id="row-{{ product.id }}" class="bg-light">
             <td>{{ product.name }}</td>
             <td class="text-rgb-59-51-137">{{ product.id }}</td>
-            <td>₹{{ product.variants.first.price }}</td>
+            <td>
+    {% with offer_price=variants.get_offer_price %}
+        {% if offer_price < variant.price %}
+            <!-- Offer available -->
+            <span style="color: green; font-weight: 600;">
+                ₹{{ offer_price }}
+            </span>
+            <br>
+            <span style="text-decoration: line-through; color:#888;">
+                ₹1{{ variant.price }}
+            </span>
+        {% else %}
+            <!-- No offer -->
+            ₹{{ variant.price }}
+        {% endif %}
+    {% endwith %}
+</td>
+
             <td>{{ product.created_at|date:"d-m-Y" }}</td>
             <td>{{ product.category }}</td>
             <td>

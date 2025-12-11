@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.db.models import F, Sum
 from cart.models import CartItems
-from .forms import CouponForm, ProductOfferForm, ProductOfferForm
+from .forms import CouponForm, ProductOfferForm, CategoryOfferForm
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.core.paginator import Paginator
@@ -23,6 +23,10 @@ from django.utils.dateparse import parse_date
 
 @login_required(login_url='admin_login')
 def admin_coupons(request):
+    # Auto-update coupon active status based on current date
+    today = timezone.now().date()
+    Coupon.objects.filter(valid_to__lt=today, active=True).update(active=False) #bulk update
+    Coupon.objects.filter(valid_to__gte=today, active=False).update(active=True)
     coupons = Coupon.objects.all().order_by('-created_at')
 
     # Search by code
@@ -66,6 +70,18 @@ def admin_coupons(request):
     }
     return render(request, 'admin/coupons.html', context)
 
+#=================users used coupons===================
+
+@login_required(login_url='admin_login')
+def users_used_coupons(request, coupon_id):
+    coupon = get_object_or_404(Coupon, id=coupon_id)
+    user_coupons = UserCoupon.objects.filter(coupon=coupon).select_related('user')
+
+    context = {
+        'coupon': coupon,
+        'user_coupons': user_coupons,
+    }
+    return render(request, 'admin/coupon_users.html', context)
 
 # ==========to load coupon form for add and edit=============
 @login_required(login_url='admin_login')
@@ -119,6 +135,214 @@ def delete_coupon(request, pk):
     return redirect('admin_coupons')
 
 
+#========Refer & Earn========
+@login_required(login_url='admin_login')
+def admin_referrals(request):
+    referrals = Referral.objects.all().order_by('-created_at')
+
+    # Search
+    search_query = request.GET.get('search', '')
+    if search_query:
+        referrals = referrals.filter(referrer__username__icontains=search_query)
+
+    # Status filter (optional: active/inactive)
+    status_filter = request.GET.get('status', '')
+    if status_filter == 'active':
+        referrals = referrals.filter(referrer__is_active=True)
+    elif status_filter == 'inactive':
+        referrals = referrals.filter(referrer__is_active=False)
+
+    # Pagination
+    paginator = Paginator(referrals, 10)  # 10 per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'referrals': page_obj,
+        'page_obj': page_obj,
+        'search_query': search_query,
+        'status_filter': status_filter,
+    }
+    return render(request, 'admin/referral_users.html', context)
+
+#=======================PRODUCT OFFER MANAGEMENT==========================
+@login_required(login_url='admin_login')
+def admin_product_offers(request):
+    offers = ProductOffer.objects.all().order_by('-created_at')
+
+    # Search by product name
+    search_query = request.GET.get('search')
+    if search_query:
+        offers = offers.filter(product__name__icontains=search_query)
+
+    # Status filter (optional: active/inactive)
+    status_filter = request.GET.get('status')
+    if status_filter == 'active':
+        offers = offers.filter(is_active=True)
+    elif status_filter == 'inactive':
+        offers = offers.filter(is_active=False)
+
+    # Pagination
+    paginator = Paginator(offers, 10)  # 10 per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'offers': page_obj,
+        'page_obj': page_obj,
+        'search_query': search_query,
+    }
+    return render(request, 'admin/product_offers.html', context)
+
+#==========to load product offer form for add and edit=============
+@login_required(login_url='admin_login')
+def load_product_offer_form(request, pk=None):
+    if pk:
+        offer = get_object_or_404(ProductOffer, pk=pk)
+        form = ProductOfferForm(instance=offer)
+    else:
+        form = ProductOfferForm()
+    html = render_to_string('admin/product_offer_form_partial.html', {'form': form}, request=request)
+    return JsonResponse({'html': html})
+#==========to save product offer form for add and edit=============
+@login_required(login_url='admin_login')
+def save_product_offer(request, pk=None):
+    if pk:
+        offer = get_object_or_404(ProductOffer, pk=pk)
+        form = ProductOfferForm(request.POST, instance=offer)
+        print("Editing Product Offer")
+    else:
+        print("Adding Product Offer")
+        form = ProductOfferForm(request.POST)
+
+    if form.is_valid():
+        offer = form.save()
+        data = {
+            'success': True,
+            'offer': {
+                'id': offer.id,
+                'product': offer.product.name,
+                'discount_percentage': offer.discount_percentage,
+                'valid_from': offer.valid_from.strftime('%d-%m-%y %H:%M'),
+                'valid_to': offer.valid_to.strftime('%d-%m-%y %H:%M'),
+            }
+        }
+        print(data)
+        return JsonResponse(data)
+    else:
+        print(form.errors)
+        html = render_to_string('admin/product_offer_form_partial.html', {'form': form}, request=request)
+        return JsonResponse({'success': False, 'html': html})
+
+   
+#===============delete product offer=============
+
+@login_required(login_url='admin_login')
+def delete_product_offer(request, pk):
+    offer = get_object_or_404(ProductOffer, pk=pk)
+    offer.delete()
+    messages.success(request, "Product offer deleted successfully.")
+    return redirect('admin_product_offers')
+
+#===============Category Offer Management=======================
+
+@login_required(login_url='admin_login')
+def admin_category_offers(request):
+    offers = CategoryOffer.objects.all().order_by('-created_at')    
+
+    # Search by category name
+    search_query = request.GET.get('search')
+    if search_query:
+        offers = offers.filter(category__name__icontains=search_query)
+
+    # Status filter (optional: active/inactive)
+    status_filter = request.GET.get('status')
+    if status_filter == 'active':
+        offers = offers.filter(is_active=True)
+    elif status_filter == 'inactive':
+        offers = offers.filter(is_active=False)
+
+    # Pagination
+    paginator = Paginator(offers, 10)  # 10 per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'offers': page_obj,
+        'page_obj': page_obj,
+        'search_query': search_query,
+    }
+
+    return render(request, 'admin/category_offers.html', context)
+
+#==========to load category offer form for add and edit=============
+@login_required(login_url='admin_login')    
+def load_category_offer_form(request, pk=None):
+    if pk:
+        offer = get_object_or_404(CategoryOffer, pk=pk)
+        form = CategoryOfferForm(instance=offer)
+    else:
+        form = CategoryOfferForm()
+    html = render_to_string('admin/category_offer_form_partial.html', {'form': form}, request=request)
+    return JsonResponse({'html': html})
+#==========to save category offer form for add and edit=============
+@login_required(login_url='admin_login')
+def save_category_offer(request, pk=None):
+    if pk:
+        offer = get_object_or_404(CategoryOffer, pk=pk)
+        form = CategoryOfferForm(request.POST, instance=offer)
+        print("Editing Category Offer")
+
+    else:
+        print("Adding Category Offer")
+        form = CategoryOfferForm(request.POST)
+
+    if form.is_valid():
+        offer = form.save()
+        data = {
+            'success': True,
+            'offer': {
+                'id': offer.id,
+                'category': offer.category.name,
+                'discount_percentage': offer.discount_percentage,
+                'valid_from': offer.valid_from.strftime('%d-%m-%y %H:%M'),
+                'valid_to': offer.valid_to.strftime('%d-%m-%y %H:%M'),
+            }
+        }
+        print(data)
+        return JsonResponse(data)
+    else:
+        print(form.errors)
+        html = render_to_string('admin/category_offer_form_partial.html', {'form': form}, request=request)
+        return JsonResponse({'success': False, 'html': html})
+    
+#===============delete category offer=============
+@login_required(login_url='admin_login')
+def delete_category_offer(request, pk): 
+    offer = get_object_or_404(CategoryOffer, pk=pk)
+    offer.delete()
+    messages.success(request, "Category offer deleted successfully.")
+    return redirect('admin_category_offers')
+
+#=====get best offer====
+from django.utils import timezone
+
+
+def get_best_offer(product):
+    now = timezone.now()
+
+    product_offer = ProductOffer.objects.filter(
+        product=product, is_active=True, valid_from__lte=now, valid_to__gte=now
+    ).first()
+
+    category_offer = CategoryOffer.objects.filter(
+        category=product.category, is_active=True, valid_from__lte=now, valid_to__gte=now
+    ).first()
+
+    product_discount = product_offer.discount_percentage if product_offer else 0
+    category_discount = category_offer.discount_percentage if category_offer else 0
+
+    return max(product_discount, category_discount)
 
 #===========================================================================USER VIEW TO APPLY COUPON==============================================
 #==================================================================================================================================================
@@ -128,15 +352,22 @@ def available_coupons(request):
     if not request.user.is_authenticated:
         return redirect("login")
 
-    now = timezone.now()
+    now = timezone.localtime(timezone.now())  # ✅ converts UTC → local timezone
+
     coupons = Coupon.objects.filter(active=True, valid_from__lte=now, valid_to__gte=now)
+
+    # Debugging logs
+    print("Current time:", now)
+    filtered = coupons.filter(active=True, valid_from__lte=now, valid_to__gte=now)
+    print("Filtered coupons:", list(filtered.values('code', 'valid_from', 'valid_to')))
 
     # Filter out coupons already fully used by the user
     available = []
     for coupon in coupons:
-        user_coupon = UserCoupon.objects.filter(user=request.user, coupon=coupon).first()
-        if not user_coupon or user_coupon.used_count < coupon.usage_limit:
+        user_coupon = UserCoupon.objects.filter(user=request.user, coupon=coupon).first() #get usage record
+        if not user_coupon or user_coupon.used_count < coupon.usage_limit: # means can still use it 
             available.append(coupon)
+
     return render(request, 'user/user_coupons.html', {'coupons': available})
 
 #=-----------to apply coupon in user------
@@ -257,34 +488,4 @@ def my_referrals(request):
     return render(request, 'user/my_referrals.html', context)
 
 
-#========================================================================ADMIN VIEW =========================================================
 
-#========Refer & Earn========
-@login_required(login_url='admin_login')
-def admin_referrals(request):
-    referrals = Referral.objects.all().order_by('-created_at')
-
-    # Search
-    search_query = request.GET.get('search', '')
-    if search_query:
-        referrals = referrals.filter(referrer__username__icontains=search_query)
-
-    # Status filter (optional: active/inactive)
-    status_filter = request.GET.get('status', '')
-    if status_filter == 'active':
-        referrals = referrals.filter(referrer__is_active=True)
-    elif status_filter == 'inactive':
-        referrals = referrals.filter(referrer__is_active=False)
-
-    # Pagination
-    paginator = Paginator(referrals, 10)  # 10 per page
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    context = {
-        'referrals': page_obj,
-        'page_obj': page_obj,
-        'search_query': search_query,
-        'status_filter': status_filter,
-    }
-    return render(request, 'admin/referral_users.html', context)

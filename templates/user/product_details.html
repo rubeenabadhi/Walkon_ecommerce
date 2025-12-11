@@ -4,6 +4,31 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/product.css' %}">
 <style>
+.star-rating-display .star {
+    font-size: 1.4rem;
+    color: #f5f508ff;
+    position: relative;
+    display: inline-block;
+    width: 1.2em;
+}
+
+.star-rating-display .star.filled {
+    color: #ffc107;
+}
+
+.star-rating-display .star.half::before {
+    content: '★';
+    position: absolute;
+    left: 0;
+    color: #ffc107;
+    width: 50%;
+    overflow: hidden;
+}
+
+.star-rating-display .star.empty {
+    color: #f2cb05ff;
+}
+
     .thumb:hover { opacity: 0.7; }
     .main-image-container { position: relative; overflow: hidden; }
     .zoomed { transform: scale(2) !important; transition: transform 0.2s ease; }
@@ -84,19 +109,36 @@
       <p class="product-brand fw-semibold">Brand: {{ product.brand.name }}</p>
       <p class="product-price text-success fw-bold fs-4">₹{{ product.variants.first.price|default:"N/A" }}</p>
       <p class="product-stock">Available Stock: {{product.stock}}</p>
-      <p class="product-discount fw-semibold">Discount: 0 %</p>
+      <!-- Discount Percentage Placeholder -->
+      {% if discounted_price %}
+        <p class="product-discount fw-semibold mb-2 ">Discount: ₹{{ discounted_price }}</p>
+      {% endif %}
+      {% if discounted_price < variants.first.price %}
+      <del class="text-muted fs-6 fw-semibold mb-2 " > ₹{{ variants.first.price }}</del>
+      {% endif %}
       <input type="hidden" id="product_id" value="{{ product.id }}">
+<!-- Rating -->
+<!-- RATING - 100% WORKING VERSION -->
+<div class="d-flex align-items-center my-3">
+    {% if product.reviews.exists %}
+        {% with product.average_rating|floatformat:0|add:0 as full_stars %}
+            {% for i in "12345"|make_list %}
+                {% if forloop.counter <= full_stars %}
+                    <span class="text-warning fs-4">★</span>
+                {% else %}
+                    <span class="text-muted fs-4">☆</span>
+                {% endif %}
+            {% endfor %}
+        {% endwith %}
 
-      <div class="ratings">
-        {% for i in "12345" %}
-          {% if forloop.counter <= product.average_rating|default:0 %}
-            ⭐
-          {% else %}
-            ☆
-          {% endif %}
-        {% endfor %}
-        <span>{{ product.reviews.count }} </span>
-      </div>
+        <span class="ms-2 fw-bold text-warning">{{ product.average_rating }}</span>
+        <small class="text-muted ms-1">
+            ({{ product.reviews.count }} review{{ product.reviews.count|pluralize }})
+        </small>
+    {% else %}
+        <small class="text-muted">No reviews yet</small>
+    {% endif %}
+</div>
 <!-- Size Selection -->
 <div class="size-selection mb-3">
     {% regroup product.variants.all by size as size_groups %}

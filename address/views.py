@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from .models import *
 from .forms import *
+from order.models import Order
 
 # Create your views here.
 
@@ -54,7 +55,13 @@ def edit_address(request, address_id):
                                                                                     ##delete address###
 @login_required(login_url="login")
 def delete_address(request, address_id):
-    address = get_object_or_404(Address, id=address_id)
+    address = get_object_or_404(Address, id=address_id, user=request.user)
+
+    # Unlink the address from existing orders (keep snapshot intact)
+    Order.objects.filter(address=address).update(address=None)
+
+    # Now delete the address safely
     address.delete()
-    return redirect("address")  
+    messages.success(request, "Address deleted successfully.")
+    return redirect("address")
 

@@ -1,0 +1,131 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Return Request Details{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <h2 class="fw-bold mb-4 text-primary">Return Request Details</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3 shadow-sm d-inline-block"
+                 role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Request ID:</strong> {{ rr.id }}</p>
+                    <p><strong>Order ID:</strong> 
+                        <a href="{% url 'admin_order_details' request.order.order_id %}" class="text-decoration-none">
+                            {{ request.order.order_id }}
+                        </a>
+                    </p>
+                    <p><strong>Customer:</strong> {{ request.requested_by.get_full_name|default:request.requested_by.username }}</p>
+                    <p><strong>Request Type:</strong>
+                        <span class="badge bg-info text-dark">
+                            {% if request.request_type == "item" %}
+                                Single Item Return
+                            {% else %}
+                                Full Order Return
+                            {% endif %}
+                        </span>
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Status:</strong>
+                        <span class="badge 
+                            {% if request.status == 'requested' %}bg-warning
+                            {% elif request.status == 'approved' %}bg-success
+                            {% elif request.status == 'rejected' %}bg-danger
+                            {% endif %}">
+                            {{ request.get_status_display }}
+                        </span>
+                    </p>
+                    <p><strong>Requested On:</strong> {{ request.requested_at|date:"d M Y, h:i A" }}</p>
+                    {% if rr.processed_at %}
+                        <p><strong>Processed On:</strong> {{ request.processed_at|date:"d M Y, h:i A" }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <hr>
+
+            <p><strong>Reason for Return:</strong></p>
+            <div class="bg-light p-3 rounded border">
+                {{ request.reason|linebreaks }}
+            </div>
+
+            <!-- Single Item Return ആണെങ്കിൽ മാത്രം കാണിക്കുക -->
+            {% if request.request_type == "item" and request.order_item %}
+                <hr>
+                <h5>Item to be Returned:</h5>
+                <div class="border p-3 rounded bg-white">
+                    <p><strong>Product:</strong> {{ request.order_item.product_variant.product.name }}</p>
+                    <p><strong>Variant:</strong> {{ request.order_item.product_variant.get_variant_display }}</p>
+                    <p><strong>Quantity:</strong> {{ request.order_item.quantity }}</p>
+                    <p><strong>Price:</strong> ₹{{ request.order_item.total_price }}</p>
+                </div>
+            {% endif %}
+
+            <!-- Full Order Return ആണെങ്കിൽ -->
+            {% if request.request_type == "order" %}
+                <hr>
+                <div class="alert alert-info">
+                    <strong>Full Order Return Requested</strong><br>
+                    All items in order {{ request.order.order_id }} will be returned.
+                </div>
+            {% endif %}
+
+            <!-- Approve / Reject Buttons (Requested ആണെങ്കിൽ മാത്രം) -->
+            {% if rr.status == "requested" %}
+                <hr>
+                <div class="mt-4">
+                    <h5>Take Action:</h5>
+                    
+                    <form action="{% url 'admin_process_return' rr.id %}" method="POST" style="display:inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="approve">
+                        <button type="submit" class="btn btn-success btn-lg px-4">
+                            Approve Return
+                        </button>
+                    </form>
+
+                    <form action="{% url 'admin_process_return' rr.id %}" method="POST" style="display:inline; margin-left:10px;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="reject">
+                        <button type="submit" class="btn btn-danger btn-lg px-4"
+                                onclick="return confirm('Are you sure you want to REJECT this return request?')">
+                            Reject Return
+                        </button>
+                    </form>
+                </div>
+            {% else %}
+                <div class="alert alert-secondary mt-4">
+                    <strong>Action Already Taken</strong><br>
+                    
+                    {% if request.notes %}
+                        <br><em>{{ request.notes }}</em>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a href="{% url 'admin_return_requests' %}" class="btn btn-secondary">
+            ← Back to Return Requests
+        </a>
+    </div>
+
+</div>
+{% endblock %}

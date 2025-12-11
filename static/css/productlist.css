@@ -214,7 +214,7 @@
 
     .badge {
         background-color: var(--accent-color);
-        color: #333;
+        color: #fef8f8;
         position: absolute;
         top: 1rem;
         right: 1rem;

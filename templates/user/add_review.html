@@ -1,0 +1,12 @@
+<h3>Write a Review</h3>
+
+<form method="POST">
+    {% csrf_token %}
+    <label>Rating (1-5)</label>
+    {{ form.rating }}
+
+    <label>Your Comment</label>
+    {{ form.comment }}
+
+    <button type="submit" class="btn btn-primary mt-3">Submit Review</button>
+</form>
