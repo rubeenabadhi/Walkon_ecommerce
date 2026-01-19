@@ -23,8 +23,9 @@ import cloudinary
 
 
 
-# Create your views here.
-#Gender Management
+# =======================================================ADMIN PANEL========================================================================
+
+#-----------------Gender Management------------
 @staff_member_required
 def add_gender(request):
     if request.method == 'POST':
@@ -37,7 +38,7 @@ def add_gender(request):
         form = GenderForm()
     return render(request, 'admin/add_gender.html', {'form': form})
 
-# Brand Management
+#--------------------------------- Brand Management
 @staff_member_required
 def add_brand(request):
     if request.method == 'POST':
@@ -52,7 +53,7 @@ def add_brand(request):
         form = BrandForm()
     return render(request, 'admin/add_brand.html', {'form': form})
 
-# Category Management
+# -----------------------------------------------Category Management
 @staff_member_required
 def add_category(request):
     if request.method == 'POST':
@@ -69,7 +70,7 @@ def add_category(request):
     return render(request, 'admin/add_category.html', {'form': form})   
 
 
-# Size Management
+# -----------------------------------Size Management
 @staff_member_required
 def add_size(request):
     if request.method =='POST':
@@ -85,7 +86,7 @@ def add_size(request):
         form = SizeForm()
         return render(request, 'admin/add_size.html', {'form': form})
     
-# Color Management
+# -------------------------------------Color Management
 @staff_member_required
 def add_color(request):    
     if request.method == 'POST':
@@ -104,7 +105,7 @@ def add_color(request):
         form = ColorForm()
         return render(request, 'admin/add_color.html', {'form': form})
     
-# Product Management
+#--------------------------------- Product Management
 @staff_member_required
 def add_product(request):
     if request.method == "POST":
@@ -116,7 +117,7 @@ def add_product(request):
         price = request.POST.get("price")
         stock = int(request.POST.get("stock", 0))   # ✅ stock comes before product create
         is_available = True if request.POST.get("is_available") == "on" else False
-        is_active = True if request.POST.get("is_active") == "on" else False
+        is_active = True if request.POST.get("is_active") == "on" else False    
 
         # Primary Image (Cloudinary with cropping)
         primary_image_url = None
@@ -185,17 +186,18 @@ def add_product(request):
     }
     return render(request, "admin/add_product.html", context)
 
-# view to list all products
+#--------------------------------------- view to list all products
 @staff_member_required
 def product_list(request):
     products = Product.objects.all().order_by('-created_at')
 
     # ---- PAGINATION ----
-    paginator = Paginator(products, 2)  # 2 users per page
+    paginator = Paginator(products, 10)  # 2 users per page
     page_number = request.GET.get('page')
     products = paginator.get_page(page_number)
     return render(request, 'admin/products.html', {'products': products})
 
+#--------------------------------------- Product Detail View
 @staff_member_required
 def product_view(request, slug):
     product = get_object_or_404(Product, slug=slug)
@@ -213,7 +215,8 @@ def product_view(request, slug):
         'unique_sizes': unique_sizes,
         'unique_colors': unique_colors
     })
-#edit product view
+
+#--------------------------------------------edit product view
 
 @staff_member_required
 def edit_product(request, slug=None):
@@ -231,7 +234,7 @@ def edit_product(request, slug=None):
         brand_id = request.POST.get("brand")
         gender_id = request.POST.get("gender")
         is_available = True if request.POST.get("is_available") == "on" else False
-
+        is_active = True if request.POST.get("is_active") == "on" else False
         price = request.POST.get("price")
         stock = request.POST.get("stock")
 
@@ -246,6 +249,7 @@ def edit_product(request, slug=None):
             product.brand_id = brand_id
             product.gender_id = gender_id
             product.is_available = is_available
+            product.is_active = is_active
             product.stock = int(stock) if stock else product.stock
             product.slug = slugify(name)
             product.save()
@@ -253,9 +257,9 @@ def edit_product(request, slug=None):
             product = Product.objects.create(
                 name=name,
                 description=description,
-                category_id=category_id,
-                brand_id=brand_id,
-                gender_id=gender_id,
+                category=category_id,
+                brand=brand_id,
+                gender=gender_id,
                 is_available=is_available,
                 stock=int(stock) if stock else 0,
                 slug=slugify(name),
@@ -316,6 +320,7 @@ def edit_product(request, slug=None):
     }
     return render(request, 'admin/add_product.html', context)
 
+#--------------------------------------- delete product view
 @login_required
 def delete_product(request, slug):
     if request.method == "POST" and request.headers.get("x-requested-with") == "XMLHttpRequest": # means it's an AJAX request for a specific product
@@ -329,7 +334,121 @@ def delete_product(request, slug):
     return JsonResponse({"success": False, "message": "Invalid request!"}, status=400)
 
 
-#======================================================== User Views ========================================================
+#=========================================stock update view==============================
+@login_required(login_url="admin_login")
+@csrf_exempt
+def update_stock(request):
+    if request.method == "POST" and request.headers.get("x-requested-with") == "XMLHttpRequest":
+        product_id = request.POST.get("product_id")
+        stock = request.POST.get("stock")
+        try:
+            stock = int(stock)
+            product = Product.objects.get(id=product_id)
+            product.stock = stock
+            product.save()
+            return JsonResponse({"success": True})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+    return JsonResponse({"success": False, "error": "Invalid request"})
+
+#--------------------------------- view for admin all master data management(size,color,category,gender,brand)
+@staff_member_required(login_url="admin_login")
+def admin_master_view(request):
+
+    sections = [
+        {
+            "title": "Sizes",
+            "items": Size.objects.all(),
+            "type": "size",
+            "add_url": "add_size",
+        },
+        {
+            "title": "Colors",
+            "items": Color.objects.all(),
+            "type": "color",
+            "add_url": "add_color",
+        },
+        {
+            "title": "Categories",
+            "items": Category.objects.all(),
+            "type": "category",
+            "add_url": "add_category",
+        },
+        {
+            "title": "Gender",
+            "items": Gender.objects.all(),
+            "type": "gender",
+            "add_url": "add_gender",
+        },
+        {
+            "title": "Brands",
+            "items": Brand.objects.all(),
+            "type": "brand",
+            "add_url": "add_brand",
+        },
+    ]
+
+    return render(request, "admin/master_view.html", {"sections": sections})
+
+#--------------------------------- edit for admin add size,color,category
+
+@staff_member_required(login_url="admin_login")
+def ajax_edit_variant(request):
+
+    if request.method != "POST":
+        return JsonResponse({"status": "error"})
+
+    item_type = request.POST.get("type")
+    item_id = request.POST.get("id")
+    name = request.POST.get("name")
+
+    models = {
+        "size": Size,
+        "color": Color,
+        "category": Category,
+        "gender": Gender,
+        "brand": Brand,
+    }
+
+    Model = models.get(item_type)
+    if not Model:
+        return JsonResponse({"status": "error"})
+
+    item = get_object_or_404(Model, id=item_id)
+    item.name = name
+    item.save()
+
+    return JsonResponse({"status": "success"})
+
+
+#--------------------------------- Ajax view to delete size,color,category
+
+@staff_member_required(login_url="admin_login")
+def ajax_delete_variant(request):
+    if request.method == "POST":
+        item_type = request.POST.get("type")
+        item_id = request.POST.get("id")
+
+        models = {
+            "size": Size,
+            "color": Color,
+            "category": Category,
+            "gender": Gender,
+            "brand": Brand,
+        }
+
+        model = models.get(item_type)
+        if model:
+            try:
+                model.objects.get(id=item_id).delete()
+                return JsonResponse({"status": "success"})
+            except:
+                return JsonResponse({"status": "error"})
+
+    return JsonResponse({"status": "invalid"})
+
+
+#============================================================================= USER VIEW==============================================================
 
 # Product Listing with Filters, Sorting, Pagination, Wishlist Integration
 def user_product_list(request):
@@ -386,11 +505,12 @@ def user_product_list(request):
     })
 
 
+
 def product_detail(request, slug):
     product = get_object_or_404(Product, slug=slug)
 
     # All variants of the product with related color and size
-    variants = ProductVariant.objects.filter(product=product).prefetch_related('images') 
+    variants = ProductVariant.objects.filter(product=product).prefetch_related('images')
 
     # Unique colors for this product
     colors = {v.color.id: v.color for v in variants if v.color}.values()
@@ -398,15 +518,20 @@ def product_detail(request, slug):
     # Unique sizes for this product
     sizes = Size.objects.filter(variants__product=product).distinct()
 
-    # total stock
-    
-
+    # Calculate discounted price from the first variant (if available)
+    first_variant = variants.first()
+    if first_variant:
+        offer_price = first_variant.get_offer_price()
+        discounted_price = offer_price if offer_price < first_variant.price else first_variant.price
+    else:
+        discounted_price = None
 
     if request.method == 'POST':
-        # Handle any form submissions (e.g., adding to cart, selecting variant)
+        # Handle form submissions (add to cart, etc.)
         pass
 
     return render(request, 'user/product_details.html', {
+        'discounted_price': discounted_price,
         'product': product,
         'variants': variants,
         'colors': colors,

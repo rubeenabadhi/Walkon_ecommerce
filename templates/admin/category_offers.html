@@ -1,0 +1,176 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+{% block title %}Category Offers - WalkOn Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 mt-4">
+  <!-- Page Title -->
+  <div class="mb-4">
+    <h2 class="fw-semibold mb-3 text-uppercase text-center">Category Offer Management</h2>
+  </div>
+
+  <!-- Search + Filter + Add Button -->
+  <form method="get" class="row g-2 mb-3 align-items-center">
+    <div class="col-12 col-md-4 col-lg-3">
+      <input type="text" name="search" value="{{ search_query }}" class="form-control" placeholder="Search Category">
+    </div>
+    <div class="col-6 col-md-3 col-lg-2">
+      <select name="status" class="form-select">
+        <option value="">All Status</option>
+        <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+        <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option>
+      </select>
+    </div>
+    <div class="col-12 col-md-3 col-lg-2 d-flex gap-2">
+      <button type="submit" class="btn btn-primary flex-fill">Filter</button>
+      <button type="button" class="btn btn-dark flex-fill" id="addCategoryOfferBtn">
+        <i class="bi bi-plus-lg"></i> New
+      </button>
+    </div>
+  </form>
+
+  <!-- Offers Table -->
+  <div class="table-responsive p-3" style="border: 1px solid #dee2e6; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+    <table class="table table-striped align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>Category</th>
+          <th>Discount (%)</th>
+          <th>Valid From</th>
+          <th>Valid To</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for offer in offers %}
+        <tr>
+          <td>{{ offer.id }}</td>
+          <td>{{ offer.category.name }}</td>
+          <td>{{ offer.discount_percentage }}%</td>
+          <td>{{ offer.valid_from|date:"d-m-Y H:i" }}</td>
+          <td>{{ offer.valid_to|date:"d-m-Y H:i" }}</td>
+          <td>
+            {% if offer.is_active %}
+              <span class="badge bg-success">Active</span>
+            {% else %}
+              <span class="badge bg-danger">Inactive</span>
+            {% endif %}
+          </td>
+          <td>
+            <button class="btn btn-warning btn-sm editCategoryOfferBtn" data-id="{{ offer.id }}">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-outline-danger btn-sm">
+              <a href="{% url 'delete_category_offer' offer.id %}" class="text-decoration-none text-danger" onclick="return confirm('Are you sure you want to delete this offer?');">
+                <i class="bi bi-trash"></i>
+              </a>
+            </button>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="text-center text-muted">No category offers available</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="d-flex justify-content-center align-items-center mt-3 gap-2 flex-wrap">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&status={{ request.GET.status }}" class="btn btn-outline-primary">Previous</a>
+    {% endif %}
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&status={{ request.GET.status }}" class="btn btn-outline-primary">Next</a>
+    {% endif %}
+    <span class="text-muted ms-2">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+  </div>
+
+  <!-- Add/Edit Category Offer Modal -->
+  <div class="modal fade " id="categoryOfferModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg ">
+      <div class="modal-content">
+        <form id="categoryOfferForm">
+          <div class="modal-header">
+            <h5 class="modal-title" id="categoryModalTitle">Add Category Offer</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body" id="categoryModalBody"></div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Custom CSS -->
+<style>
+.table th, .table td { font-size: 0.9rem; padding: 0.5rem; }
+.btn-sm { padding: 0.25rem 0.5rem; font-size: 0.8rem; }
+.modal-dialog { max-width: 90%; margin: 1rem auto; }
+.modal-body { max-height: 60vh; overflow-y: auto; max-width: 100%; }
+</style>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  let categoryOfferModal = new bootstrap.Modal(document.getElementById('categoryOfferModal'));
+  let modalTitle = document.getElementById('categoryModalTitle');
+  let modalBody = document.getElementById('categoryModalBody');
+  let offerForm = document.getElementById('categoryOfferForm');
+
+  // Add Offer
+  document.getElementById('addCategoryOfferBtn').addEventListener('click', function () {
+    fetch('/offers/category-offers/load-form/')
+      .then(res => res.json())
+      .then(data => {
+        modalTitle.innerText = "Add Category Offer";
+        modalBody.innerHTML = data.html;
+        categoryOfferModal.show();
+      });
+  });
+
+  // Edit Offer
+  document.querySelectorAll('.editCategoryOfferBtn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      let id = this.dataset.id;
+      fetch(`/offers/category-offers/load-form/${id}/`)
+        .then(res => res.json())
+        .then(data => {
+          modalTitle.innerText = "Edit Category Offer";
+          modalBody.innerHTML = data.html;
+          categoryOfferModal.show();
+        });
+    });
+  });
+
+  // Submit Form
+  offerForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    let formData = new FormData(offerForm);
+    let pk = formData.get('id');
+    let url = (!pk || pk === "None") 
+      ? '/offers/category-offers/save/' 
+      : `/offers/category-offers/save/${pk}/`;
+    fetch(url, { method: 'POST', body: formData })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          categoryOfferModal.hide();
+          location.reload();
+        } else {
+          modalBody.innerHTML = data.html;
+        }
+      });
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,84 @@
+/* General table styling */
+.table th, .table td {
+    font-size: 0.9rem;
+    padding: 0.5rem;
+    vertical-align: middle;
+    text-align: center;
+    word-wrap: break-word;  /* wrap long text */
+    white-space: normal;    /* allow line breaks */
+}
+
+/* Buttons */
+.btn, .btn-sm {
+    font-size: 0.85rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Modal */
+.modal-dialog {
+    max-width: 90%;
+    margin: 1rem auto;
+}
+
+/* Table responsiveness */
+.table-responsive {
+    overflow-x: auto;
+}
+
+/* Badge styling */
+.badge {
+    font-size: 0.85rem;
+    padding: 0.35em 0.5em;
+}
+
+/* Smaller screens: stack filter/search fields */
+@media (max-width: 768px) {
+    form.row.g-2 > div {
+        flex: 1 1 100% !important;
+    }
+    .input-group {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .input-group-text {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    .table th, .table td {
+        font-size: 0.8rem;
+    }
+}
+
+/* Extra small screens: stack buttons and table text */
+@media (max-width: 576px) {
+    .table th, .table td {
+        font-size: 0.75rem;
+        padding: 0.3rem;
+    }
+    .btn, .btn-sm {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.4rem;
+    }
+    .d-flex {
+        flex-direction: column !important;
+        gap: 0.5rem;
+    }
+    .d-flex.align-items-center {
+        align-items: flex-start !important;
+    }
+    .pagination {
+        font-size: 0.8rem;
+    }
+}
+
+/* Scrollable table for very small screens */
+@media (max-width: 480px) {
+    .table-responsive {
+        overflow-x: auto;
+    }
+    .table th, .table td {
+        white-space: normal;
+        word-break: break-word;
+    }
+}
+

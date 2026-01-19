@@ -33,23 +33,11 @@
           {% endif %}
         </div>
 
-        <h4 class="text-center mb-4" style="font-family: 'Inter', sans-serif; font-size: clamp(1.2rem, 3vw, 1.5rem); color: var(--accent-color);">PROFILE DETAILS</h4>
+        <h4 class="text-center mb-4 " style="font-family: 'Inter', sans-serif; font-size: clamp(1.2rem, 3vw, 1.5rem); color: var(--accent-color); font-weight: 700;">PROFILE DETAILS</h4>
         <div class="profile-info">
           <!--referrel-->
           {% if referral %}
             <p><strong>Referral Code:</strong> {{ referral.referral_code }}</p>
-            <p>Share your referral link:</p>
-<div class="input-group">
-  <input type="text" class="form-control" 
-         value="{{ request.build_absolute_uri }}?ref={{ referral.referral_code }}" readonly>
-  <button class="btn btn-outline-primary" 
-          onclick="navigator.clipboard.writeText('{{ request.build_absolute_uri }}?ref={{ referral.referral_code }}')">
-    Copy Link
-  </button>
-</div>
-
-          {% else %}
-            <p><strong>Referral Code:</strong> N/A</p>
           {% endif %}
           <p><strong>Name:</strong> {{ user.first_name }} {{ user.last_name }}</p>
           <p><strong>Username:</strong> {{ user.username|capfirst }}</p>

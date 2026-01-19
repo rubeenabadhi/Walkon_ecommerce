@@ -34,8 +34,8 @@
           {% for addr in addresses %}
           <div class="col-md-6">
             <div class="address-card p-4 rounded-3 shadow-sm h-100">
-              <h5 class="fw-bold">{{ addr.user }}</h5>
-              <p class="mb-1">Name: {{ addr.full_name }}</p>
+              <h5 class="fw-bold">{{ addr.user|upper }}</h5>
+              <p class="mb-1">Name: {{ addr.full_name|capfirst }}</p>
               <p class="mb-1">{{ addr.address }}, {{ addr.state }}</p>
               <p class="mb-1">{{ addr.district }}, {{ addr.street }}</p>
               <p class="mb-1">Pin: {{ addr.pincode }}</p>

@@ -99,40 +99,41 @@
     <!-- Header -->
     <div class="invoice-header">
         <h1>Invoice</h1>
-        <p>Order ID: {{ order.order_id }}</p>
-        <p>Date: {{ order.order_date|date:"d M Y" }}</p>
+        <p>Order ID: {{ order.order_id }}<br>
+        <small>Date: {{ order.order_date|date:"d M Y" }}</small>
+        <small>Payment Method: {{ order.payment_method }}</small>
+        </p>
     </div>
-
+    <!--invoice from-->
+    <p>
+    WalkOn Store<br>
+        support@walkon.com<br>
+        
+    </p>
     <!-- Customer Info -->
-    <table class="customer-info">
-        <tr>
-            <td><strong>Customer:</strong> {{ user.get_full_name|default:user.username }}</td>
-        </tr>
-        <tr>
-            <td><strong>Email:</strong> {{ user.email }}</td>
-        </tr>
-        <tr>
-            <td><strong>Address:</strong> 
-                {{ order.address.address }}, {{ order.address.city }}, 
-                {{ order.address.state }} - {{ order.address.pincode }},{{ order.address.district }} <br>
-
-                Country: {{ order.address.country }} <br>
-
-                Phone: {{ order.address.phone_number }}
-
-
-            </td>
-        </tr>
-    </table>
+    <div class ="customer-info">
+        <div class="row ">
+            <div class="col-6">
+                <strong>Customer Name:</strong> {{ order.full_name }}<br>
+                <strong>Customer Email:</strong> {{ order.email }}<br>
+                <strong>Customer Phone:</strong> {{ order.phone_number }}<br>
+            </div>
+            <div class="col-6">
+                <strong>Shipping Address:</strong><br>
+                {{ order.full_name }}<br>
+                {{ order.city }}, {{ order.street }},{{order.district }}<br>
+                {{ order.full_address }},{{ order.pincode }}<br>
+                {{ order.state }},{{ order.country }},
+            </div>
+        </div>
+    </div>
+    
 
     <!-- Items Table -->
     <table class="items-table">
         <thead>
             <tr>
-                <th>Item</th>
-                <th>Size</th>
-                <th>Color</th>
-                <th>Category</th>
+                <th>Discrption
                 <th>Quantity</th>
                 <th>Unit Price</th>
                 <th>Total</th>
@@ -141,10 +142,21 @@
         <tbody>
             {% for item in order.items.all %}
             <tr>
-                <td>{{ item.product_variant.product.brand.name }} <br>{{ item.product_variant.product.name }}</td>
-                <td>{{ item.product_variant.size }}</td>
-                <td>{{ item.product_variant.color.name }}</td>
-                <td>{{ item.product_variant.product.gender.label}},{{ item.product_variant.product.category.name }}</td>
+                <td>
+                    <div class="item-flex">
+                        
+                        <img class="product-img" src="{{ item.product_variant.product.primary_image.url }}" alt="{{ item.product_variant.product.name }}" style="max-height: 60px; width: 60px;">
+                        
+                        <div>
+                            {{ item.product_variant.product.brand.name }} - {{ item.product_variant.product.name }}<br>
+                            <small>Size: {{ item.product_variant.size }} |
+                                   Color: {{ item.product_variant.color.name }} |
+                                   {{ item.product_variant.product.gender.label }},
+                                   {{ item.product_variant.product.category.name }}
+                            </small>
+                        </div>
+                    </div>
+                </td>
                 <td>{{ item.quantity }}</td>
                 <td>{{ item.price|floatformat:2 }}</td>
                 <td>{{ item.price|mul:item.quantity|floatformat:2 }}</td>
@@ -155,9 +167,9 @@
 
     <!-- Totals -->
     <div class="total">
-        <strong>Subtotal:</strong> {{ order.subtotal|floatformat:2 }}<br>
-        <strong>Discount:</strong> -{{ order.discount|floatformat:2 }}<br>
-        <strong>Total:</strong> {{ order.total|floatformat:2 }}
+        <strong>Subtotal:</strong> {{ order.total_amount|floatformat:2 }}<br>
+        <strong>Discount:</strong> -{{ order.discount_amount|floatformat:2 }}<br>
+        <strong>Total:</strong> {{ order.final_amount|floatformat:2 }}
     </div>
 
     <!-- Footer -->

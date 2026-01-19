@@ -1,7 +1,7 @@
 
   :root {
-    --primary-gradient: linear-gradient(135deg, #6dd5ed, #2193b0);
-    --primary-gradient-hover: linear-gradient(135deg, #2193b0, #6dd5ed);
+    --primary-gradient: linear-gradient(135deg, #bbe8f2, #399db6);
+    --primary-gradient-hover: linear-gradient(135deg, #3998b0, #6dd5ed);
     --accent-color: #ffeb3b;
     --accent-hover: #ffd700;
   }
@@ -48,7 +48,7 @@
   .profile-info strong {
     width: 100px;
     display: inline-block;
-    color: var(--accent-color);
+    color: #f3e30a;
     font-weight: 600;
   }
 

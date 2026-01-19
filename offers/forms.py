@@ -26,6 +26,8 @@ class CouponForm(ModelForm):
         if value <= 0:
             raise forms.ValidationError("Discount value must be greater than 0")
         return value
+    
+    
 
     def clean(self):
         cleaned_data = super().clean()
@@ -35,6 +37,8 @@ class CouponForm(ModelForm):
             raise forms.ValidationError("Valid from must be earlier than valid to")
         return cleaned_data
     
+
+
 class ProductOfferForm(ModelForm):
     class Meta:
         model = ProductOffer
@@ -53,16 +57,13 @@ class ProductOfferForm(ModelForm):
         help_texts = {
             'discount_percentage': 'Enter the discount percentage (e.g., 10 for 10%).',
         }
-        error_messages = {
-            'product': {
-                'unique': "An offer for this product already exists.",
-            },
-        }   
+
     def clean_discount_percentage(self):
         discount = self.cleaned_data.get('discount_percentage')
         if discount <= 0 or discount > 100:
             raise forms.ValidationError("Discount percentage must be between 1 and 100.")
         return discount 
+
     def clean(self):
         cleaned_data = super().clean()
         valid_from = cleaned_data.get('valid_from')
@@ -71,13 +72,42 @@ class ProductOfferForm(ModelForm):
         if valid_from and valid_to and valid_from >= valid_to:
             raise forms.ValidationError("The 'valid from' date must be earlier than the 'valid to' date.")
         return cleaned_data
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        # Any additional processing can be done here
-        if commit:
-            instance.save()
-        return instance
+
+
 class CategoryOfferForm(ModelForm):
+    class Meta:
+        model = CategoryOffer
+        fields = ['category', 'discount_percentage', 'valid_from', 'valid_to', 'active']
+        widgets = {
+            'valid_from': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'valid_to': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+        }
+        labels = {
+            'category': 'Category',
+            'discount_percentage': 'Discount Percentage',
+            'valid_from': 'Valid From',
+            'valid_to': 'Valid To',
+            'active': 'Is Active',
+        }
+        help_texts = {
+            'discount_percentage': 'Enter the discount percentage (e.g., 10 for 10%).',
+        }
+
+    def clean_discount_percentage(self):
+        discount = self.cleaned_data.get('discount_percentage')
+        if discount <= 0 or discount > 100:
+            raise forms.ValidationError("Discount percentage must be between 1 and 100.")
+        return discount 
+
+    def clean(self):
+        cleaned_data = super().clean()
+        valid_from = cleaned_data.get('valid_from')
+        valid_to = cleaned_data.get('valid_to')
+
+        if valid_from and valid_to and valid_from >= valid_to:
+            raise forms.ValidationError("The 'valid from' date must be earlier than the 'valid to' date.")
+        return cleaned_data
+
     class Meta:
         model = CategoryOffer
         fields = ['category', 'discount_percentage', 'valid_from', 'valid_to', 'active']

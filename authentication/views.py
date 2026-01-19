@@ -20,19 +20,27 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from product.models import Product
 from offers.models import Referral
-from wallet.models import Wallet
-
+from wallet.models import Wallet, WalletTransaction
+from offers.models import ProductOffer
+from django.views.decorators.csrf import csrf_protect
 
 #user-defined views for signup and OTP verification,home view
 #=====================HOME VIEW===============================================
 def home(request):
-    products = Product.objects.all()
-    new_products = Product.objects.all().order_by('-created_at')  
-    
+    products = Product.objects.all().prefetch_related('variants')
+    new_products = Product.objects.all().order_by('-created_at').prefetch_related('variants')
+
+    for product in products:
+        for variant in product.variants.all():
+            variant.final_price = variant.get_offer_price()
+    for product in new_products:
+        for variant in product.variants.all():
+            variant.final_price = variant.get_offer_price()
+
     context = {
         'products': products,
         'new_products': new_products
-    }  
+    }
     return render(request, 'user/index.html', context)
 
 #=====================SIGNUP VIEW===============================================
@@ -135,9 +143,18 @@ def verify_otp_view(request):
 
                 # Add referral amount to referrer's wallet
                     wallet = Wallet.objects.get(user=ref.referrer)
-                    wallet.amount += settings.REFERRAL_AMOUNT
-                    print("wallet updated",wallet.amount)
+                    wallet.balance += settings.REFERRAL_AMOUNT
+                    print("wallet updated",wallet.balance)
                     wallet.save()
+
+                # create a wallet transaction
+                    WalletTransaction.objects.create(
+                        wallet=wallet,
+                        amount=settings.REFERRAL_AMOUNT,
+                        transaction_type="credit",
+                        description=f"Referral bonus added for {user.username}"
+                    )
+                    print("wallet transaction created",wallet.balance)
 
                 except Referral.DoesNotExist:
                     pass
@@ -174,6 +191,8 @@ def resend_otp(request):
     return redirect('verify_otp')
 
 #=====================LOGIN VIEW===============================================
+@never_cache
+@csrf_protect
 def user_login(request):
     if request.method == 'POST':
         email = request.POST['email']
@@ -478,7 +497,7 @@ def admin_user_management(request):
 
     users = users.order_by('-date_joined')
 
-    paginator = Paginator(users, 3)  # 3 users per page
+    paginator = Paginator(users, 10)  # 3 users per page
     page_number = request.GET.get('page')
     users = paginator.get_page(page_number)
 

@@ -43,7 +43,7 @@
   </form>
 
   <!-- Coupon Table -->
-  <div class="table-responsive">
+    <div class="table-responsive p-3" style="border: 1px solid #dee2e6; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
     <table class="table table-striped align-middle">
       <thead class="table-dark">
         <tr>
@@ -56,6 +56,7 @@
           <th>Valid To</th>
           <th>Limit</th>
           <th>Min Order</th>
+          <th>Users Used</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -66,17 +67,18 @@
           <td><span class="badge bg-light text-dark">{{ coupon.code }}</span></td>
           <td>
             {% if coupon.discount_type == 'percentage' %}
-              {{ coupon.discount_value }}%
+              {{ coupon.discount_value|floatformat }}%
             {% else %}
               ₹{{ coupon.discount_value }}
             {% endif %}
           </td>
           <td>{{ coupon.discount_type|capfirst }}</td>
-          <td>{% if coupon.active %}Active{% else %}Inactive{% endif %}</td>
+          <td>{% if coupon.active %}<span class="badge bg-success">Active{% else %} <span class="badge bg-danger">Inactive{% endif %}</td>
           <td>{{ coupon.valid_from|date:"d-m-Y" }}</td>
           <td>{{ coupon.valid_to|date:"d-m-Y" }}</td>
           <td>{{ coupon.usage_limit }}</td>
           <td>₹{{ coupon.min_order_amount }}</td>
+          <td><a href="{% url 'coupon_users' coupon.id %}" class="btn btn-sm btn-primary">View</a></td>
           <td>
             <button class="btn btn-warning btn-sm editCouponBtn" data-id="{{ coupon.id }}">
               <i class="bi bi-pencil"></i>

@@ -32,7 +32,11 @@ SECRET_KEY = 'django-insecure-w@4r%f)iu(7+i$(=a7$zu+32st7ite^&%t@da04=2q^o01c2q@
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.ngrok-free.dev']
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.ngrok-free.app",
+    "https://*.ngrok-free.dev",
+]
 
 
 # Application definition
@@ -248,3 +252,6 @@ RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET')
 
 #referral amount
 REFERRAL_AMOUNT = 100
+#time
+TIME_ZONE = 'Asia/Kolkata'
+USE_TZ = True

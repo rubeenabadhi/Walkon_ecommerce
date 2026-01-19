@@ -1,46 +1,24 @@
 {% extends 'admin/base.html' %}
 {% block content %}
-<div class="container mt-4 p-4 bg-light rounded shadow-sm" style="max-width: 600px;">
+<div class="container mt-4 p-4 bg-light rounded shadow-sm" style="max-width: 1100px;">
     <div class="date-time text-muted text-end mb-2" style="font-size: 0.8em;">Date & Time: Wednesday, August 27, 2025, 11:15 PM IST</div>
-    <h2 class="mb-3 text-center">Product Details</h2>
+    <h2 class="mb-3 text-center fw-bold text-uppercase text-primary text-decoration-underline">Product Details</h2>
 
     <!-- Product Information -->
-    <div class="mb-4">
-        <h4>{{ product.name }}</h4>
+    <div class="mb-4 p-3 bg-white rounded shadow-sm " style="border: 1px solid #ddd; background-color: #f8f8f8; ">
+        <h4 class="mb-2" style="font-weight: bold;" >{{ product.name }}</h4>
         <p><strong>Description:</strong> {{ product.description|default:"No description" }}</p>
         <p><strong>Category:</strong> {{ product.category.name }}</p>
         <p><strong>Brand:</strong> {{ product.brand.name }}</p>
         <p><strong>Gender:</strong> {{ product.gender.label }}</p>
         <p><strong>Price:</strong> {{ product.variants.first.price|default:"N/A" }}</p>
         <p><strong>Stock:</strong> {{ product.stock|default:"N/A" }}</p>
-        <p><strong>Available:</strong> {% if product.is_available %}Yes{% else %}No{% endif %}
-
-        <!-- Primary Image -->
-        <div class="mb-3">
-            <label class="form-label fw-bold" style="font-size: 0.9rem;">Primary Image</label>
-            {% if product.primary_image %}
-                <img src="{{ product.primary_image.url }}" alt="{{ product.name }} Primary" style="max-width: 150px; max-height: 150px; border: 1px solid #ddd;">
-            {% else %}
-                <p>No primary image available</p>
-            {% endif %}
-        </div>
-
-        <!-- Additional Images -->
-        <div class="mb-3">
-            <label class="form-label fw-bold" style="font-size: 0.9rem;">Additional Images</label>
-            {% if product.images.all %}
-                <div class="d-flex flex-wrap">
-                    {% for image in product.images.all %}
-                        <img src="{{ image.image.url }}" alt="{{ product.name }} Additional" style="max-width: 100px; max-height: 100px; margin: 5px; border: 1px solid #ddd;">
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p>No additional images available</p>
-            {% endif %}
-        </div>
+        <p><strong>Available:</strong> {% if product.is_available %}Yes{% else %}No{% endif %}</p>
+        <p><strong>Active:</strong> {% if product.is_active %}Yes{% else %}No{% endif %}</p>
+        <p><strong>Created At:</strong> {{ product.created_at|date:"d-m-Y H:i" }}</p>
+        <p><strong>Updated At:</strong> {{ product.updated_at|date:"d-m-Y H:i" }}</p>
     </div>
-
-    <!-- Variants -->
+           <!-- Variants -->
     <h4>Variants</h4>
     <div class="mb-3 p-2 bg-white rounded" style="border: 1px solid #ddd;">
         <div class="mb-2">
@@ -57,8 +35,44 @@
         </div>
     </div>
 
+        <!-- Primary Image -->
+        <div class="mb-3 p-2 bg-white rounded" style="border: 1px solid #ddd;   ">
+            <label class="form-label fw-bold" style="font-size: 0.9rem;">Primary Image</label>
+            {% if product.primary_image %}
+            <!-- click image to show full size -->
+                <img src="{{ product.primary_image.url }}" alt="{{ product.name }} Primary" style="max-width: 200px; max-height: 200px; border: 1px solid #ddd; cursor: pointer;" onclick="window.open('{{ product.primary_image.url }}', '_blank')">
+                {% else %}
+                <p>No primary image available</p>
+            {% endif %}
+        
+
+        <!-- Additional Images -->
+        <div class="mb-3 p-2 bg-white rounded" style="border: 1px solid #ddd;   ">
+            <label class="form-label fw-bold" style="font-size: 0.9rem;">Additional Images</label>
+            {% if product.images.all %}
+                <div class="d-flex flex-wrap">
+                    {% for image in product.images.all %}
+                        {% if image.image %}
+                            <img src="{{ image.image.url }}" 
+                                 alt="{{ product.name }} Additional" 
+                                 class="thumb img-thumbnail"
+                                 style="max-width: 100px; max-height: 100px; margin: 5px; border: 1px solid #ddd; cursor: pointer;"
+                                 data-src="{{ image.image.url }}"
+                                 onclick="window.open('{{ image.image.url }}', '_blank')"><!--same window.open -->
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p>No additional images available</p>
+            {% endif %}
+        </div>
+    </div>
+
+ 
+
     <div class="text-center mt-3">
         <a href="{% url 'products' %}" class="btn btn-secondary btn-sm" style="font-size: 0.9rem;">Back to List</a>
+        <a href="{% url 'edit_product' product.slug %}" class="btn btn-primary btn-sm" style="font-size: 0.9rem;">Edit Product</a>
     </div>
 </div>
 {% endblock %}

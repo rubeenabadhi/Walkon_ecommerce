@@ -13,6 +13,10 @@ urlpatterns = [
     path('products/<slug:slug>/view/', views.product_view, name='admin_product_details'),
     path('products/<slug:slug>/edit/', views.edit_product, name='edit_product'),
     path('products/<slug:slug>/delete/', views.delete_product, name='delete_product'),
+    path('update_stock/', views.update_stock, name='update_stock'),
+    path('master/', views.admin_master_view, name='admin_master'),
+    path("delete-variant/", views.ajax_delete_variant, name="ajax_delete_variant"),
+    path("edit-master-item/", views.ajax_edit_variant, name="ajax_edit_variant"),
 
     #========================  User Views  ========================
 

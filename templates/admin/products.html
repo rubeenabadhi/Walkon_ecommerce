@@ -2,7 +2,9 @@
 {% load static %}
 
 {% block title %}Products - Walkon Admin{% endblock %}
+<link rel="stylesheet" href="{% static 'admin/table.css' %}">
 {% block content %}
+
 <div class="container-fluid products-1 py-4">
     <!-- Header -->
     <div class="content-67 mb-4">
@@ -32,13 +34,14 @@
     </div>
 
     <!-- Product Table -->
-    <div class="table-responsive">
-      <table class="table table-bordered">
-        <thead class="bg-black text-white">
+    <div class="table-responsive p-3" style="border: 1px solid #dee2e6; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+      <table class="table table-striped align-middle">
+        <thead class="table-dark">
           <tr>
             <th scope="col">Product</th>
             <th scope="col">Product ID</th>
             <th scope="col">Price</th>
+            
             <th scope="col">Added on</th>
             <th scope="col">Category</th>
             <th scope="col">Stock</th>
@@ -51,10 +54,35 @@
           <tr id="row-{{ product.id }}" class="bg-light">
             <td>{{ product.name }}</td>
             <td class="text-rgb-59-51-137">{{ product.id }}</td>
-            <td>₹{{ product.variants.first.price }}</td>
+            <td>
+    {% with offer_price=variants.get_offer_price %}
+        {% if offer_price < variant.price %}
+            <!-- Offer available -->
+            <span style="color: green; font-weight: 600;">
+                ₹{{ offer_price }}
+            </span>
+            <br>
+            <span style="text-decoration: line-through; color:#888;">
+                ₹1{{ variant.price }}
+            </span>
+        {% else %}
+            <!-- No offer -->
+            ₹{{ variant.price }}
+        {% endif %}
+    {% endwith %}
+</td>
+
             <td>{{ product.created_at|date:"d-m-Y" }}</td>
             <td>{{ product.category }}</td>
-            <td>{{ product.stock }}</td>
+            <td>
+  <input type="number" 
+         value="{{ product.stock }}" 
+         class="form-control form-control-sm stock-input" 
+         data-product-id="{{ product.id }}" 
+         style="width:70px;">
+  <span class="text-success stock-update-msg" style="display:none; font-size:0.8rem;">Updated!</span>
+</td>
+
             <td>
               <div class="d-flex justify-content-center align-items-center gap-2 px-3 py-1 bg-success-subtle border border-success rounded">
                 <span class="text-rgb-0-135-103">{{ product.is_available }}</span>
@@ -64,14 +92,14 @@
               <div class="d-flex gap-2">
                 <!-- Edit -->
                 <a href="{% url 'edit_product' product.slug %}" 
-                   class="btn btn-light cell-action-button p-2" 
+                   class="btn btn-light cell-action-button p-2 text-rgb-59-51-137" 
                    title="Edit">
                   <i class="bi bi-pencil"></i>
                 </a>
 
                 <!-- Delete -->
                 <button type="button"
-                        class="btn btn-light cell-action-button p-2 delete-product"
+                        class="btn btn-outline-danger btn-sm delete-product p-2 text-danger"
                         title="Delete"
                         data-url="{% url 'delete_product' product.slug %}"
                         data-row-id="row-{{ product.id }}">
@@ -80,7 +108,7 @@
 
                 <!-- View -->
                 <a href="{% url 'admin_product_details' product.slug %}" 
-                   class="btn btn-light cell-action-button p-2" 
+                   class="btn btn-light cell-action-button p-2 text-rgb-59-51-137" 
                    title="View">
                   <i class="bi bi-eye"></i>
                 </a>
@@ -159,6 +187,51 @@
         }
     });
   });
+
+$(document).ready(function(){
+    $('.stock-input').on('change', function(){
+        let input = $(this);
+        let productId = input.data('product-id');
+        let stockValue = input.val();
+        let msgSpan = input.siblings('.stock-update-msg');
+
+        $.ajax({
+            url: "{% url 'update_stock' %}",  // new AJAX view URL
+            method: "POST",
+            headers: { "X-CSRFToken": getCookie("csrftoken") },
+            data: { product_id: productId, stock: stockValue },
+            success: function(response){
+                if(response.success){
+                    msgSpan.fadeIn().delay(1000).fadeOut();
+                } else {
+                    alert("Failed to update stock!");
+                }
+            },
+            error: function(xhr){
+                console.log(xhr.responseText);
+                alert("Error updating stock.");
+            }
+        });
+    });
+
+    // CSRF Helper
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            let cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                let cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+
+
 
   // CSRF Helper
   function getCookie(name) {

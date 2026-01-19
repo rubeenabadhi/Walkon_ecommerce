@@ -1,0 +1,7 @@
+<form id="productOfferForm" method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+</form>
+<input type="hidden" name="id" value="{{ form.instance.id }}">
+
+<!--style-->
