@@ -13,7 +13,8 @@ def cart(request):
         cart_items = CartItems.objects.filter(user=request.user).select_related('product', 'variant')
         total_price = 0
         for item in cart_items:
-            item.item_total = item.variant.price * item.quantity  
+            price = item.variant.get_offer_price()
+            item.item_total = price * item.quantity 
             total_price += item.item_total
     else:
         return redirect('login')
@@ -105,7 +106,7 @@ def update_cart(request, cart_item_id):
     action = request.POST.get("action")
     cart_item = get_object_or_404(CartItems, id=cart_item_id, user=request.user)
 
-    max_quantity = min(cart_item.product.stock, 10)  # max 10 per item
+    max_quantity = min(cart_item.product.stock, 10)
 
     if action == "increment":
         if cart_item.quantity < max_quantity:
@@ -124,23 +125,32 @@ def update_cart(request, cart_item_id):
                 "status": "success",
                 "message": "Item removed from cart.",
                 "cart_count": CartItems.objects.filter(user=request.user).count(),
-                "total_price": float(sum(i.variant.price * i.quantity for i in CartItems.objects.filter(user=request.user)))
+                "total_price": float(
+                    sum(
+                        i.variant.get_offer_price() * i.quantity
+                        for i in CartItems.objects.filter(user=request.user)
+                    )
+                )
             })
     else:
         return JsonResponse({"status": "error", "message": "Invalid action."})
 
-    # ✅ Recalculate cart total
+    # ✅ Recalculate cart total (OFFER PRICE)
     cart_items = CartItems.objects.filter(user=request.user)
-    total_price = sum(i.variant.price * i.quantity for i in cart_items)
+    total_price = sum(
+        i.variant.get_offer_price() * i.quantity
+        for i in cart_items
+    )
 
     return JsonResponse({
         "status": "success",
         "message": "Cart updated.",
         "quantity": cart_item.quantity,
-        "item_total": float(cart_item.variant.price * cart_item.quantity),
+        "item_total": float(cart_item.variant.get_offer_price() * cart_item.quantity),
         "total_price": float(total_price),
         "cart_count": cart_items.count()
     })
+
 
 @login_required(login_url='login')
 def remove_from_cart(request, cart_item_id):

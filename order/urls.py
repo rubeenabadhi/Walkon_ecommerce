@@ -13,12 +13,12 @@ urlpatterns = [
     path("request-return/<uuid:order_id>/", views.request_return_order, name="request_return"),
 
     #====================================ADMIN VIEW====================================
-    path("admin/orders/", views.admin_orders, name="admin_orders"),
-    path("admin/orders/<str:order_number>/", views.admin_order_detail, name="admin_order_details"),
-    path("admin/orders/<str:order_number>/update-status/", views.admin_order_action, name="update_order_status"),
+    path("admin/orders-view/", views.admin_orders, name="admin_orders"),
+    path("admin/order-details/<str:order_number>/", views.admin_order_detail, name="admin_order_details"),
+    path("admin/order-action/<str:order_number>/update-status/", views.admin_order_action, name="update_order_status"),
     path("admin/return-requests/", views.admin_return_requests_list, name="admin_return_requests"),
     path("admin/<str:order_number>/action/", views.admin_order_action, name="admin_order_action"),
-    path("admin/returns/<uuid:request_id>/process/", views.admin_process_return, name="admin_process_return"),
-    path("admin/returns/<uuid:request_id>/details/", views.admin_return_request_details, name="admin_return_details"),
+    path("admin/returns-process/<uuid:request_id>/process/", views.admin_process_return, name="admin_process_return"),
+    path("admin/return-request-details/<uuid:request_id>/", views.admin_return_request_details, name="admin_return_details"),
 
 ]

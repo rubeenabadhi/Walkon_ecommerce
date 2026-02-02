@@ -6,8 +6,8 @@
 <style>
     .payment-failure-content {
         max-width: 600px;
-        background-color: #f8d7da;
-        border: 1px solid #f5c2c7;  
+        background-color: #aeaef7;
+        border: 1px solid #a6d1f9;  
         color: #250d0fff;
         padding: 20px;
         border-radius: 10px;
@@ -22,7 +22,7 @@
 
         
     <img src="{% static 'images/payment_failed.png' %}" alt="Payment Failed" width="150">
-    <h2 class="mt-4">Payment Failed</h2>
+    <h2 class="mt-4 text-danger">Payment Failed</h2>
     <p>{{ failure_reason }}</p>
     <a href="{% url 'select_payment' %}" class="btn btn-primary mx-2">Retry Payment</a>
    

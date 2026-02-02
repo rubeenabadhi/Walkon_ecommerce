@@ -23,9 +23,9 @@
       {% endif %}
 
       <!-- Profile Card -->
-      <div class="card profile-card">
+      <div class="card profile-card p-4 shadow-sm rounded-3 ">
         <!-- Profile Picture -->
-        <div class="text-center">
+        <div class="text-center mb-4 p-5">
           {% if user.profile_picture %}
             <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="profile-avatar">
           {% else %}
@@ -33,7 +33,7 @@
           {% endif %}
         </div>
 
-        <h4 class="text-center mb-4 " style="font-family: 'Inter', sans-serif; font-size: clamp(1.2rem, 3vw, 1.5rem); color: var(--accent-color); font-weight: 700;">PROFILE DETAILS</h4>
+        <h4 class="text-center p-0 ">PROFILE DETAILS</h4>
         <div class="profile-info">
           <!--referrel-->
           {% if referral %}

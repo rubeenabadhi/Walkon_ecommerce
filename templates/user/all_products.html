@@ -124,8 +124,36 @@
                             <p class="card-text small text-white">{{ product.category|default:"No Category" }}</p>
                             <p class="card-text small text-white"><i class="bi bi-tags-fill me-1"></i>{{ product.brand|default:"No Brand" }}</p>
                             <p class="card-text small text-white "><i class="bi bi-people-fill me-1"></i>{{ product.gender|default:"No Gender" }}</p>
-                            <p class="card-text fw-bold mb-2">₹{{ product.variants.first.price|default:"N/A" }}</p>
-                            
+                            {% with variant=product.variants.first %}
+                                {% if variant %}
+                                    {% with offer_price=variant.get_offer_price %}
+                                        {% if offer_price < variant.price %}
+                                            <!-- offer badge -->
+                                            <span class="position-absolute top-2 start-1 m-4 badge bg-danger text-white px-2 py-1 fw-bold">
+                                                {{variant.get_offer_percentage }}% OFF
+                                            </span>
+                                            <p class="card-text fw-bold text-danger mb-1">
+                                                <span class="text-decoration-line-through me-2" style="color:#b71c1c; opacity:0.6;">
+                                                     ₹{{ variant.price }}
+                                                </span>
+                                                <span class="text-success">
+                                                     ₹{{ offer_price }}
+                                                </span>
+                                            </p>
+                                        {% else %}
+                                        <!-- No offer -->
+                                        <p class="card-text fw-bold text-dark mb-1">
+                                            <span class="text-info">
+                                                 ₹{{variant.price }}
+                                            </span> 
+                                        </p>
+                                        {% endif %}
+                                    {% endwith %}
+                                {% else %}
+                                <p class="card-text text-muted small">No Price</p>
+                                {% endif %}
+                            {% endwith %}
+
                             <!-- Rating -->
                             <div class="mb-2">
                                 {% for i in "12345" %}
@@ -207,7 +235,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    const addToCartBaseUrl = "{% url 'add_to_cart_from_wishlist' 9999 %}".replace("9999/", "");
+    const addToCartBaseUrl = "{% url 'add_to_cart_from_wishlist' 9999 %}".replace("9999/", "");   
     const csrfToken = "{{ csrf_token }}";
 </script>
 <script src="{% static 'js/addToCart.js' %}"></script>

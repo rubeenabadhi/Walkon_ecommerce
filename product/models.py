@@ -114,8 +114,16 @@ class Product(models.Model):
     @property
     def average_rating(self):
         avg = self.reviews.aggregate(avg_rating=Avg('rating'))['avg_rating']
-        return round(avg or 0, 1)    
+        return round(avg or 0, 1)  
+    #count reviews
+    @property
+    def review_count(self):
+        return self.reviews.count()  
     
+    def get_display_price(self):
+        return self.variants.order_by('price').first()
+    
+
         # ================== OFFER PRICE METHOD ==================
  
 class ProductVariant(models.Model):

@@ -78,66 +78,101 @@
         </div>
 
         <!-- Products Section -->
-        <div class="col-lg-9 col-md-8">
-            <div class="row">
-                {% for product in products %}
-                <div class="col-md-4 mb-3">
-                    <div class="card h-100 shadow-lg border-0 rounded-4 position-relative product-card">
-                        <!-- Wishlist Icon -->
-                        <button class="btn btn-light btn-sm rounded-circle shadow-sm position-absolute top-0 end-0 m-2 wishlist-btn"
-                                data-url="{% url 'toggle_wishlist' product.id %}"
-                                data-variant-id="{{ product.variants.first.id }}"
-                                title="Add to Wishlist">
-                            <i class="{% if product.id in wishlist_ids %}bi bi-heart-fill text-danger{% else %}bi bi-heart text-dark{% endif %}"></i>
-                        </button>
+<div class="col-lg-9 col-md-8">
+    <div class="row">
+        {% for product in products %}
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 shadow-lg border-0 rounded-4 position-relative product-card">
 
-                        <!-- Product Image -->
-                        {% if product.primary_image %}
-                        <a href="{% url 'product_details' product.slug %}" class="text-decoration-none">
-                            <img src="{{ product.primary_image.url }}"
-                                 class="card-img-top p-2 rounded-3"
-                                 alt="{{ product.name }}"
-                                 style="height: 180px; object-fit: contain; background: rgba(255, 255, 255, 0.1);"
-                                 onerror="this.src='#'">
-                        </a>
-                        {% else %}
-                        <div class="d-flex align-items-center justify-content-center bg-light rounded-3"
-                             style="height: 180px; background: rgba(255, 255, 255, 0.1);">
-                            <span class="text-muted small">No Image</span>
-                        </div>
-                        {% endif %}
+                <!-- Wishlist Icon -->
+                <button class="btn btn-light btn-sm rounded-circle shadow-sm position-absolute top-0 end-0 m-2 wishlist-btn"
+                        data-url="{% url 'toggle_wishlist' product.id %}"
+                        data-variant-id="{{ product.variants.first.id }}"
+                        title="Add to Wishlist">
+                    <i class="{% if product.id in wishlist_ids %}bi bi-heart-fill text-danger{% else %}bi bi-heart text-dark{% endif %}"></i>
+                </button>
 
-                        <!-- Product Details -->
-                        <div class="card-body text-center">
-                            <h6 class="card-title fw-bold text-truncate" style="color: #ffeb3b;">{{ product.name|default:"No Name" }}</h6>
-                            <p class="card-text fw-bold mb-2" style="color: #ffeb3b;">
-                                ₹{{ product.variants.first.price|default:"N/A" }}
-                            </p>
-                             <p class="card-text small text-white">{{ product.category|default:"No Category" }}</p>
-                            <p class="card-text small text-white"><i class="bi bi-tags-fill me-1"></i>{{ product.brand|default:"No Brand" }}</p>
-                            <p class="card-text small text-white "><i class="bi bi-people-fill me-1"></i>{{ product.gender|default:"No Gender" }}</p>
-                            
-                            <!-- Rating -->
-                            <div class="mb-2">
-                                {% for i in "12345" %}
-                                    <i class="bi {% if i|add:0 <= rating|floatformat:0 %}bi-star-fill text-warning{% else %}bi-star text-white{% endif %}"></i>
-                                {% endfor %}
-                                <span class="small" style="color: rgba(255, 255, 255, 0.8);">{{ rating|floatformat:1 }})</span>
-                            </div>
-
-                            <!-- Add to Cart Button -->
-                            <button class="btn btn-warning btn-sm px-3 py-1 add-to-cart-btn rounded-pill" type="button"
-                                    data-product-id="{{ product.id }}"
-                                    data-variant-id="{{ product.variants.first.id }}">
-                                <i class="bi bi-cart-plus"></i> Add to Cart
-                            </button>
-                        </div>
-                    </div>
+                <!-- Product Image -->
+                {% if product.primary_image %}
+                <a href="{% url 'product_details' product.slug %}" class="text-decoration-none">
+                    <img src="{{ product.primary_image.url }}"
+                         class="card-img-top p-2 rounded-3"
+                         alt="{{ product.name }}"
+                         style="height:180px; object-fit:contain; background:rgba(255,255,255,0.1);">
+                </a>
+                {% else %}
+                <div class="d-flex align-items-center justify-content-center bg-light rounded-3"
+                     style="height:180px;">
+                    <span class="text-muted small">No Image</span>
                 </div>
-                {% empty %}
-                <p class="text-center text-muted">No products available. Check database or Cloudinary setup.</p>
-                {% endfor %}
+                {% endif %}
+
+                <!-- Product Details -->
+                <div class="card-body text-center">
+                    <h6 class="card-title fw-bold text-truncate" style="color:#ffeb3b;">
+                        {{ product.name|default:"No Name" }}
+                    </h6>
+
+                    <!-- PRICE WITH OFFER  -->
+                    {% with variant=product.variants.first %}
+                    {% if variant %}
+                        {% with offer_price=variant.get_offer_price %}
+                            {% if offer_price < variant.price %}
+                            <span class="position-absolute top-2 start-1 m-4 badge bg-danger text-white px-2 py-1 fw-bold">
+                            
+                {{variant.get_offer_percentage }}% OFF
+            </span>
+                                <p class="fw-bold mb-2" style="color:#2e7d32;">
+                                    ₹{{ offer_price }}
+                                    <span style="text-decoration:line-through; font-size:0.8rem; color:#bbb; margin-left:4px;">
+                                        ₹{{ variant.price }}
+                                    </span>
+                                   
+                                </p>
+                            {% else %}
+                                <p class="fw-bold mb-2" style="color:#ffeb3b;">
+                                    ₹{{ variant.price }}
+                                </p>
+                            {% endif %}
+                        {% endwith %}
+                    {% else %}
+                        <p class="fw-bold mb-2 text-muted">Price not available</p>
+                    {% endif %}
+                    {% endwith %}
+
+                    <p class="card-text small text-white">{{ product.category|default:"No Category" }}</p>
+                    <p class="card-text small text-white">
+                        <i class="bi bi-tags-fill me-1"></i>{{ product.brand|default:"No Brand" }}
+                    </p>
+                    <p class="card-text small text-white">
+                        <i class="bi bi-people-fill me-1"></i>{{ product.gender|default:"No Gender" }}
+                    </p>
+
+                    <!-- Rating -->
+                    <div class="mb-2">
+                        <p style="font-size:0.85rem; color:#ff9800; font-weight:600; margin:4px 0;">
+                            ⭐ {{ product.average_rating }}
+                            <span style="font-size:0.75rem; color:#777;">
+                                ({{ product.review_count }} Reviews)
+                            </span>
+                        </p>
+                    </div>
+
+                    <!-- Add to Cart -->
+                    <button class="btn btn-warning btn-sm px-3 py-1 add-to-cart-btn rounded-pill"
+                            type="button"
+                            data-product-id="{{ product.id }}"
+                            data-variant-id="{{ product.variants.first.id }}">
+                        <i class="bi bi-cart-plus"></i> Add to Cart
+                    </button>
+                </div>
             </div>
+        </div>
+        {% empty %}
+        <p class="text-center text-muted">No products available.</p>
+        {% endfor %}
+    </div>
+</div>
 
             <!-- Pagination -->    
             <div class="d-flex justify-content-center mt-4">

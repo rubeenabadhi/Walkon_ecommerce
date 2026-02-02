@@ -102,7 +102,7 @@
 
                 {% for product in cart_items %}
                 <p class="qty mb-1">
-                    {{ product.quantity }} × ₹{{ product.variant.price }}
+                    {{ product.quantity }} × ₹{{ product.variant.get_offer_price }}
                     <span class="float-end fw-semibold">₹{{ product.item_total }}</span>
                 </p>
                 {% endfor %}
@@ -110,8 +110,6 @@
                 <hr>
                 <p class="fw-semibold">Subtotal: <span class="float-end">₹{{ total_price }}</span></p>
                 <p class="text-success">Delivery Charges: <span class="float-end">Free</span></p>
-                <p class="text-secondary">Platform Fee: <span class="float-end">₹0</span></p>
-
                 <!-- Coupon Section (separate form, not inside payment-form) -->
                 <div id="coupon-section">
                     {% if applied_coupon %}
@@ -146,7 +144,14 @@
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    // ✅ Coupon apply/remove with delegated binding
+    // Helper function to reset button state
+    function resetButton() {
+        const btn = $("#continueToShipping");
+        btn.prop("disabled", false);
+        btn.html('Continue to Shipping');
+    }
+
+    // Coupon apply/remove (your existing code - unchanged, good)
     $(document).on("submit", "#applyCouponForm, #removeCouponForm", function(e) {
         e.preventDefault();
         const form = $(this);
@@ -187,43 +192,61 @@
                 }
             },
             error: function(xhr, status, error) {
-                console.error("AJAX error:", error);
-                alert("Something went wrong. Try again.");
+                console.error("Coupon AJAX error:", error);
+                alert("Something went wrong with coupon. Try again.");
             }
         });
     });
 
-    // ✅ Payment submission
+    // Payment form submission - MAIN FIX HERE
     $("#payment-form").on("submit", function(e) {
-        let selectedMethod = document.querySelector("input[name='payment_method']:checked");
+        e.preventDefault();  // Block all default submits initially
+
+        const btn = $("#continueToShipping");
+
+        // Prevent duplicate submission
+        if (btn.prop("disabled")) {
+            console.log("Already submitting - ignoring duplicate click");
+            return false;
+        }
+
+        // Disable button & show loading
+        btn.prop("disabled", true);
+        btn.html('<span class="spinner-border spinner-border-sm me-2" role="status"></span>Processing...');
+
+        const selectedMethod = document.querySelector("input[name='payment_method']:checked");
 
         if (!selectedMethod) {
-            e.preventDefault();
             alert("Please select a payment method.");
+            resetButton();
             return;
         }
 
-        if (selectedMethod.value === "razorpay") {
-            e.preventDefault();
+        const method = selectedMethod.value;
+        const order_id = document.getElementById("order_id")?.value;
+        const final_total = document.getElementById("final_total")?.value;
 
-            const order_id = document.getElementById("order_id").value;
-            const final_total = document.getElementById("final_total").value; // ✅ Coupon-adjusted total
-
+        if (method === "razorpay") {
+            // Razorpay payment flow
             fetch(`/checkout/create-razorpay-order/${order_id}/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "X-CSRFToken": "{{ csrf_token }}"
                 },
-                body: JSON.stringify({ amount: final_total }) // ✅ send discounted total
+                body: JSON.stringify({ amount: final_total })
             })
             .then(res => res.json())
             .then(data => {
-                if (data.error) { alert(data.error); return; }
+                if (data.error) {
+                    alert(data.error);
+                    resetButton();
+                    return;
+                }
 
                 let options = {
                     "key": data.razorpay_key,
-                    "amount": data.amount * 100, // Razorpay expects paise
+                    "amount": data.amount * 100,
                     "currency": data.currency,
                     "name": "WalkOn",
                     "description": "Order Payment",
@@ -247,45 +270,35 @@
                             }
                         })
                         .catch(err => {
-                            console.error("Fetch error:", err);
-                            alert("Something went wrong during payment verification.");
-                             window.location.href = "{% url 'payment_failure' %}";
+                            console.error("Verification error:", err);
+                            alert("Payment verification failed.");
+                            window.location.href = "{% url 'payment_failure' %}";
                         });
                     },
                     "theme": {"color": "#3399cc"},
-                    // ✅ Failure handler
                     "modal": {
                         "ondismiss": function() {
-                            alert("Payment was cancelled. Please try again.");
-                            
-                            const order_id = document.getElementById("order_id").value;
-                            // Save failed info in Django session
+                            alert("Payment was cancelled.");
+                            resetButton();
+                            // Optional: save failure
                             fetch(`/checkout/payment-failure-save/${order_id}/`, {
                                 method: "POST",
-                                headers: {
-                                    "X-CSRFToken": "{{ csrf_token }}"
-                                }
+                                headers: { "X-CSRFToken": "{{ csrf_token }}" }
                             }).then(() => {
                                 window.location.href = "{% url 'payment_failure' %}";
-                            })
-                            
+                            });
                         }
                     }
                 };
 
                 let rzp1 = new Razorpay(options);
 
-                // ✅ Razorpay failure event
-                rzp1.on("payment.failed", function (response){
+                rzp1.on("payment.failed", function(response) {
                     alert("Payment failed: " + response.error.description);
-
-                    const order_id = document.getElementById("order_id").value;
-                    // Save failed info in Django session
+                    resetButton();
                     fetch(`/checkout/payment-failure-save/${order_id}/`, {
                         method: "POST",
-                        headers: {
-                            "X-CSRFToken": "{{ csrf_token }}"
-                        }
+                        headers: { "X-CSRFToken": "{{ csrf_token }}" }
                     }).then(() => {
                         window.location.href = "{% url 'payment_failure' %}";
                     });
@@ -293,38 +306,42 @@
 
                 rzp1.open();
             })
-            .catch(err => console.error("Create order error:", err));
+            .catch(err => {
+                console.error("Razorpay create error:", err);
+                alert("Failed to initiate Razorpay.");
+                resetButton();
+            });
+        } 
+        else if (method === "wallet") {
+            fetch(`/checkout/wallet-payment/${order_id}/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({ amount: final_total })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    window.location.href = data.redirect_url;
+                } else {
+                    alert(data.message || "Wallet payment failed.");
+                    window.location.href = "/checkout/payment/";
+                }
+            })
+            .catch(err => {
+                console.error("Wallet payment error:", err);
+                alert("Wallet payment failed.");
+                resetButton();
+            });
+        } 
+        else if (method === "cod") {
+            // COD: Submit the form normally (button already disabled)
+            console.log("Submitting COD order...");
+            this.submit();  // This will redirect to place_order view
+            // No resetButton() here - redirect will happen
         }
-        if (selectedMethod.value === "wallet") {
-    e.preventDefault();
-
-    const order_id = document.getElementById("order_id").value;
-    const final_total = document.getElementById("final_total").value;
-
-    fetch(`/checkout/wallet-payment/${order_id}/`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": "{{ csrf_token }}"
-        },
-        body: JSON.stringify({ amount: final_total })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.status === "success") {
-            window.location.href = data.redirect_url;
-        } else {
-            alert(data.message || "Wallet payment failed.");
-            window.location.href = "/checkout/payment/";
-        }
-    })
-    .catch(err => {
-        console.error("Wallet payment error:", err);
-        alert("Something went wrong during wallet payment.");
-    });
-    return;
-}
-
     });
 </script>
 

@@ -106,6 +106,13 @@
             </p>
             {% endif %}
             {% endwith %}
+            <!-- review count-->
+            <p style="font-size:0.85rem; color:#ff9800; font-weight:600; margin:4px 0;">
+  ⭐ {{ product.average_rating }}<span style="font-size:0.75rem; color:#777;">
+  ({{ product.review_count }} Reviews)
+</span>
+
+</p>
 
             <p style="font-size:0.8rem; color:#6a1b9a; font-weight:600;">Top Discount of the Sale</p>
 
@@ -164,7 +171,9 @@
             {% endif %}
             {% endwith %}
 
-            <p style="font-size:0.8rem; color:#6a1b9a; font-weight:600;">Top Discount of the Sale</p>
+            <p style="font-size:0.85rem; color:#ff9800; font-weight:600; margin:4px 0;">
+  ⭐ {{ product.average_rating }} / 5
+</p>
 
             <a href="{% url 'product_details' product.slug %}" 
                class="btn btn-primary"

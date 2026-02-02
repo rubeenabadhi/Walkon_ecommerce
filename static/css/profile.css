@@ -1,102 +1,150 @@
+/* Profile Page - Modern & Clean Theme (WalkOn style match) */
 
-  :root {
-    --primary-gradient: linear-gradient(135deg, #bbe8f2, #399db6);
-    --primary-gradient-hover: linear-gradient(135deg, #3998b0, #6dd5ed);
-    --accent-color: #ffeb3b;
-    --accent-hover: #ffd700;
-  }
+:root {
+  --primary: #0288d1;               /* main blue */
+  --primary-dark: #01579b;
+  --primary-light: #4fc3f7;
+  --gradient-bg: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  --card-bg: #ffffff;
+  --text-dark: #0d47a1;
+  --text-muted: #455a64;
+  --yellow-accent: #ffeb3b;
+  --yellow-dark: #fbc02d;
+  --border: #bbdefb;
+}
 
-  /* Profile Card */
+.profile-card {
+  background: var(--card-bg) !important;
+  border-radius: 16px !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 8px 30px rgba(2, 136, 209, 0.12) !important;
+  padding: 2rem !important;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.35s ease;
+}
+
+.profile-card:hover {
+  box-shadow: 0 12px 40px rgba(2, 136, 209, 0.18) !important;
+  transform: translateY(-4px);
+}
+
+/* Top gradient accent bar */
+.profile-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: var(--gradient-bg);
+  z-index: 0;
+  border-radius: 16px 16px 0 0;
+}
+
+/* Avatar - overlapping effect */
+.profile-avatar {
+  width: 130px !important;
+  height: 130px !important;
+  border-radius: 50% !important;
+  border: 5px solid white !important;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15) !important;
+  margin: -65px auto 1.5rem !important;
+  position: relative !important;
+  z-index: 2 !important;
+  background: white;
+  object-fit: cover;
+  transition: all 0.3s ease;
+}
+
+.profile-avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 30px rgba(2, 136, 209, 0.25) !important;
+}
+
+/* Title - PROFILE DETAILS */
+.profile-card h4 {
+  color: var(--primary-dark) !important;
+  font-weight: 700 !important;
+  letter-spacing: 1px;
+  margin-bottom: 1.8rem !important;
+  position: relative;
+  z-index: 2;
+}
+
+/* Info labels & values */
+.profile-info p {
+  font-size: 1rem !important;
+  color: var(--text-muted) !important;
+  margin-bottom: 1rem !important;
+  padding: 0.6rem 1rem !important;
+  background: rgba(227, 242, 253, 0.4) !important;
+  border-radius: 10px !important;
+  border-left: 4px solid var(--primary) !important;
+  transition: all 0.2s ease;
+}
+
+.profile-info strong {
+  color: var(--primary) !important;
+  font-weight: 600 !important;
+  min-width: 110px;
+  display: inline-block;
+}
+
+/* Hover effect on info rows */
+.profile-info p:hover {
+  background: rgba(227, 242, 253, 0.7) !important;
+  transform: translateX(5px);
+}
+
+/* Yellow Edit Profile button */
+.btn-dark, .btn-outline-dark {
+  border-radius: 50px !important;
+  padding: 0.65rem 1.8rem !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08) !important;
+}
+
+.btn-dark {
+  background: var(--yellow-accent) !important;
+  color: #1a237e !important;
+  border: none !important;
+}
+
+.btn-dark:hover {
+  background: var(--yellow-dark) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(255, 235, 59, 0.4) !important;
+}
+
+.btn-outline-dark {
+  border: 2px solid var(--primary) !important;
+  color: var(--primary) !important;
+  background: white !important;
+}
+
+.btn-outline-dark:hover {
+  background: var(--primary) !important;
+  color: white !important;
+}
+
+/* White text → dark text ആക്കി readability കൂട്ടി */
+.profile-info p,
+.profile-info strong,
+.profile-card h4 {
+  color: var(--text-dark) !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
   .profile-card {
-    max-width: 700px;
-    margin: 40px auto;
-    background: var(--primary-gradient);
-    border-radius: 15px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    padding: 30px;
-    color: white;
-    font-family: 'Inter', sans-serif;
-    transition: transform 0.3s ease;
+    margin: 1rem;
+    padding: 1.5rem;
   }
-  .profile-card:hover {
-    transform: translateY(-5px);
-  }
-
-  
-
-  /* Profile Avatar */
   .profile-avatar {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    border: 4px solid var(--accent-color);
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-    object-fit: cover;
-    margin-bottom: 15px;
-    transition: transform 0.3s ease;
+    width: 110px !important;
+    height: 110px !important;
+    margin: -55px auto 1.2rem !important;
   }
-  .profile-avatar:hover {
-    transform: scale(1.05);
-  }
-
-  /* Profile Info */
-  .profile-info p {
-    margin-bottom: 10px;
-    font-size: clamp(0.85rem, 2vw, 0.9rem);
-    color: #fff;
-  }
-  .profile-info strong {
-    width: 100px;
-    display: inline-block;
-    color: #f3e30a;
-    font-weight: 600;
-  }
-
-  /* Buttons */
-  .profile-card .btn-dark, .profile-card .btn-outline-dark {
-    background: var(--accent-color);
-    color: #333;
-    border: none;
-    border-radius: 50px;
-    font-size: clamp(0.8rem, 2vw, 0.85rem);
-    padding: 0.5rem 1.5rem;
-    transition: all 0.3s ease;
-  }
-  .profile-card .btn-outline-dark {
-    background: transparent;
-    border: 1px solid var(--accent-color);
-    color: var(--accent-color);
-  }
-  .profile-card .btn-dark:hover, .profile-card .btn-outline-dark:hover {
-    background: var(--accent-hover);
-    color: #333;
-    transform: scale(1.05);
-  }
-
-  /* Alerts */
-  .alert {
-    background: var(--primary-gradient);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    font-size: clamp(0.85rem, 2vw, 0.9rem);
-  }
-  .alert .btn-close {
-    filter: invert(1);
-  }
-
-  /* Responsive Adjustments */
-  @media (max-width: 768px) {
-    .profile-card {
-      margin: 20px;
-      padding: 20px;
-    }
-    .profile-avatar {
-      width: 100px;
-      height: 100px;
-    }
-    .profile-sidebar {
-      margin-bottom: 20px;
-    }
-  }
+}

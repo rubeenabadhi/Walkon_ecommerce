@@ -1,3 +1,4 @@
+from itertools import product
 from django.db import models
 import uuid
 from decimal import Decimal
@@ -6,6 +7,7 @@ from django.db import models, transaction
 from django.utils import timezone
 from address.models import Address
 from offers.models import Coupon
+from django.db.models import F
 
 
 # ===================== ORDER =====================
@@ -25,6 +27,8 @@ class Order(models.Model):
         ("delivered", "Delivered"),
         ("cancelled", "Cancelled"),
         ("returned", "Returned"),
+        ('partially_returned', 'Partially Returned'),
+        ('failed', 'Failed'),
         ("out for delivery", "Out for Delivery"),
         
     ]
@@ -53,6 +57,7 @@ class Order(models.Model):
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     final_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    
 
     payment_method = models.CharField(max_length=30, blank=True, null=True)  # COD, Razorpay, etc.
     delivered_at = models.DateTimeField(null=True, blank=True)
@@ -65,27 +70,88 @@ class Order(models.Model):
 
     def __str__(self):
         return f"{self.order_id} - {self.user}"
+    
+    @property
+    def display_final_amount(self):
+        return f"₹{self.final_amount:.2f}"
+
 
     def recalc_totals(self):
-        total = sum(item.total_price for item in self.items.all())
-        self.total_amount = total
-        self.final_amount = total - self.discount_amount
-        self.save(update_fields=["total_amount", "final_amount"])
+        # Skip if fully cancelled/returned
+        if self.status in ["cancelled", "returned"]:
+            print(f"[DEBUG] Skipping recalc_totals for {self.order_id} (status: {self.status})")
+            return
 
-    # Cancel order
+        # only consider active items 
+        remaining_items = self.items.filter(is_cancelled=False, is_returned=False)
+    
+        # new_total 
+        new_total = Decimal('0.00')
+        for item in remaining_items:
+            new_total += Decimal(str(item.total_price or '0.00'))
+
+        new_discount = Decimal('0.00')
+    
+        # Coupon validity check & apply
+        if self.coupon:
+            now = timezone.now()
+            if (self.coupon.active and 
+                self.coupon.valid_from <= now <= self.coupon.valid_to and
+                new_total >= self.coupon.min_order_amount):
+            
+                if self.coupon.discount_type == 'fixed':
+                    new_discount = Decimal(str(self.coupon.discount_value))
+                elif self.coupon.discount_type == 'percentage':
+                    new_discount = (Decimal(str(self.coupon.discount_value)) / Decimal('100')) * new_total
+
+        new_final = new_total - new_discount
+    
+        # Update fields 
+        self.total_amount = new_total
+        self.discount_amount = new_discount
+        self.final_amount = new_final
+        self.save(update_fields=['total_amount', 'discount_amount', 'final_amount'])
+
+
+    # cancel order
     @transaction.atomic
     def cancel_order(self, reason=None):
         if self.status in ["cancelled", "returned"]:
             return False
+
+    # Cancel all non-cancelled items (without calling recalc inside loop)
         for item in self.items.filter(is_cancelled=False):
-            item.cancel_item(reason=reason)
+            item.is_cancelled = True
+            item.cancel_reason = reason
+            item.cancelled_at = timezone.now()
+            item.save(update_fields=['is_cancelled', 'cancel_reason', 'cancelled_at'])
+        # Restock product
+            product = item.product_variant.product
+            product.stock = F("stock") + item.quantity
+            product.save(update_fields=["stock"])
+
+        # individual item tracking
+            OrderTracking.objects.create(
+                order=self,
+                status="cancelled",
+                note=f"Item cancelled: {item.product_variant.product.name} - {reason or 'No reason'}"
+            )
+
+    # Update order status
         self.status = "cancelled"
         self.cancelled_at = timezone.now()
-        print("Order cancelled:", self.order_id)
-        self.save()
-        OrderTracking.objects.create(order=self, status="cancelled", note=reason or "Cancelled")
-        return True
-    
+        self.save(update_fields=['status', 'cancelled_at'])
+
+
+    # Final tracking for full order
+        OrderTracking.objects.create(
+            order=self,
+            status="cancelled",
+            note=reason or "Full order cancelled"
+        )
+
+        print("Order fully cancelled:", self.order_id)
+        return True    
     # Return order
     @transaction.atomic
     def return_order(self, reason=None):
@@ -108,7 +174,7 @@ class Order(models.Model):
 
         coupon = self.coupon
         if coupon:
-            if coupon.discount_type == "amount":
+            if coupon.discount_type == "fixed":
                 total_discount = Decimal(coupon.discount_value)
             elif coupon.discount_type == "percentage":
                 total_discount = (Decimal(coupon.discount_value) / 100) * total_original
@@ -140,7 +206,7 @@ class Order(models.Model):
             product.save(update_fields=["stock"])
 
         # Update totals
-        self.recalc_totals()
+        
 
         # Update order status
         self.status = "returned"
@@ -155,7 +221,7 @@ class Order(models.Model):
     def calculated_total(self):
         total = self.total_amount
         if self.coupon:
-            if self.coupon.discount_type == 'amount':
+            if self.coupon.discount_type == 'fixed':
                 total -= self.coupon.discount_value
             elif self.coupon.discount_type == 'percentage':
                 total -= total * (self.coupon.discount_value / 100)
@@ -189,7 +255,9 @@ class OrderItem(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
-        self.total_price = self.price * self.quantity
+        
+        if not self.total_price:
+            self.total_price = self.price * self.quantity
         super().save(*args, **kwargs)
 
     @transaction.atomic
@@ -207,29 +275,35 @@ class OrderItem(models.Model):
         product.save(update_fields=["stock"])
 
         OrderTracking.objects.create(order=self.order, status="cancelled", note=reason or "Item cancelled")
-        self.order.recalc_totals()
         return True
 
     @transaction.atomic
     def return_item(self, reason):
         if not reason:
             raise ValueError("Return reason required")
-        if self.is_returned:
+
+        if self.is_cancelled or self.is_returned:
             return False
+        if not self.is_returned_requested:
+            raise ValueError("Return not requested")
+
         self.is_returned = True
         self.return_reason = reason
         self.returned_at = timezone.now()
-        self.save()
-        print("Product stock before return:", self.product_variant.product.stock)
+        self.save(update_fields=["is_returned", "return_reason", "returned_at"])
+
         product = self.product_variant.product
         product.stock = models.F("stock") + self.quantity
         product.save(update_fields=["stock"])
-        product.refresh_from_db(fields=["stock"])  # ensures updated value in memory
-        print("Product stock after return:", product.stock)
 
-        OrderTracking.objects.create(order=self.order, status="returned", note=reason)
-        self.order.recalc_totals()
+        OrderTracking.objects.create(
+            order=self.order,
+            status="returned",
+            note=reason
+        )
+
         return True
+
     @property
     def variant(self):
         return self.product_variant
@@ -245,6 +319,8 @@ class ReturnRequest(models.Model):
         ("approved", "Approved"),
         ("rejected", "Rejected"),
         ("cancelled", "Cancelled"),
+        
+        
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

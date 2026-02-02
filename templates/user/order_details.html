@@ -37,8 +37,8 @@
                         {% elif order.status == 'delivered' %}text-success
                         {% elif order.status == 'cancelled' %}text-danger
                         {% elif order.status == 'returned' %}text-dark
-                        {% endif %}
-                    ">
+                        {% elif order.status == 'failed' %}text-danger
+                        {% endif %}" >                       
                         {{ order.get_status_display }}
                     </span><br>
 
@@ -112,6 +112,11 @@
                                     data-bs-target="#returnItemModal{{ item.id }}">
                                 Return
                             </button>
+                        {% elif item.is_returned %}
+                            <span class="badge bg-success">Returned</span>
+                        {% elif item.is_return_requested %}
+                            <span class="badge bg-warning text-dark">Return Requested</span>
+                        
                         {% endif %}
                         <!-- REVIEW BUTTON -->
                         {% if item.product_variant.product.id in reviewed_products %}
@@ -290,7 +295,7 @@
             </div>
 
             <!-- Cancel Order Modal -->
-            <div class="modal fade" id="cancelOrderModal{{ order.id }}" tabindex="-1">
+            <div class="modal fade" id="cancelOrderModal{{ order.id}}" tabindex="-1">
                 <div class="modal-dialog">
                     <div class="modal-content">
 

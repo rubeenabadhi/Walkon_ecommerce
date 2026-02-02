@@ -189,13 +189,20 @@ def add_product(request):
 #--------------------------------------- view to list all products
 @staff_member_required
 def product_list(request):
-    products = Product.objects.all().order_by('-created_at')
+    products = (
+        Product.objects
+        .all()
+        .order_by('-created_at')
+        .prefetch_related('variants')
+    )
 
-    # ---- PAGINATION ----
-    paginator = Paginator(products, 10)  # 2 users per page
+    paginator = Paginator(products, 10)
     page_number = request.GET.get('page')
     products = paginator.get_page(page_number)
-    return render(request, 'admin/products.html', {'products': products})
+
+    return render(request, 'admin/products.html', {
+        'products': products
+    })
 
 #--------------------------------------- Product Detail View
 @staff_member_required
@@ -493,7 +500,7 @@ def user_product_list(request):
         ).values_list("product_variant__product_id", flat=True)
 
     products = products.order_by("id").distinct() 
-    paginator = Paginator(products, 3)
+    paginator = Paginator(products, 6)
     page_number = request.GET.get("page")
     products = paginator.get_page(page_number)
 
@@ -509,29 +516,14 @@ def user_product_list(request):
 def product_detail(request, slug):
     product = get_object_or_404(Product, slug=slug)
 
-    # All variants of the product with related color and size
-    variants = ProductVariant.objects.filter(product=product).prefetch_related('images')
+    variants = ProductVariant.objects.filter(
+        product=product
+    ).select_related('color', 'size').prefetch_related('images')
 
-    # Unique colors for this product
     colors = {v.color.id: v.color for v in variants if v.color}.values()
-
-    # Unique sizes for this product
     sizes = Size.objects.filter(variants__product=product).distinct()
 
-    # Calculate discounted price from the first variant (if available)
-    first_variant = variants.first()
-    if first_variant:
-        offer_price = first_variant.get_offer_price()
-        discounted_price = offer_price if offer_price < first_variant.price else first_variant.price
-    else:
-        discounted_price = None
-
-    if request.method == 'POST':
-        # Handle form submissions (add to cart, etc.)
-        pass
-
     return render(request, 'user/product_details.html', {
-        'discounted_price': discounted_price,
         'product': product,
         'variants': variants,
         'colors': colors,

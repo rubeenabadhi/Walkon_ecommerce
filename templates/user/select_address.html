@@ -92,7 +92,7 @@
                 <h3>Order Summary</h3>
                 <p>In Rupees</p>
                 {% for product in cart_items %}
-                <p class="qty"><span id="control-quantity-{{ product.id }}">{{ product.quantity }}</span> x : ₹{{ product.variant.price }}</p>
+                <p class="qty"><span id="control-quantity-{{ product.id }}">{{ product.quantity }}</span> x : ₹{{ product.variant.get_offer_price }}</p>
                 {% endfor %}
                 <p class="text-success">Delivery Charges: ₹ Free</p>
                 <p>Platform fee: ₹ 0</p>

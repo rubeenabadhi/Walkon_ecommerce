@@ -395,7 +395,9 @@ def apply_coupon(request):
 
     # Calculate cart total
     cart_items = CartItems.objects.filter(user=request.user).select_related("variant")
-    total_price = sum(Decimal(item.variant.price) * item.quantity for item in cart_items)
+    total_price = sum(Decimal(item.variant.get_offer_price()) * item.quantity for item in cart_items)
+    print("Cart total price:", total_price)
+
     if total_price < coupon.min_order_amount:
         return JsonResponse({
             "status": "error",
@@ -434,7 +436,7 @@ def remove_coupon(request):
     request.session.pop("final_total", None)
 
     cart_items = CartItems.objects.filter(user=request.user).select_related("variant")
-    total_price = sum(Decimal(item.variant.price) * item.quantity for item in cart_items)
+    total_price = sum(Decimal(item.variant.get_offer_price()) * item.quantity for item in cart_items)
     total_price = Decimal(total_price).quantize(Decimal('0.01'))
 
     # Update session final_total to fallback to subtotal

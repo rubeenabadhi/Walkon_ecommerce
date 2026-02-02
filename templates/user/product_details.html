@@ -107,15 +107,22 @@
       <p class="product-category fw-semibold">Category: {{ product.category.name }}</p>
       <p class="product-gender">{{ product.gender.label|default:product.gender }}</p>
       <p class="product-brand fw-semibold">Brand: {{ product.brand.name }}</p>
-      <p class="product-price text-success fw-bold fs-4">₹{{ product.variants.first.price|default:"N/A" }}</p>
       <p class="product-stock">Available Stock: {{product.stock}}</p>
-      <!-- Discount Percentage Placeholder -->
-      {% if discounted_price %}
-        <p class="product-discount fw-semibold mb-2 ">Discount: ₹{{ discounted_price }}</p>
+     {% with v=variants.first %}
+  {% if v %}
+    {% with offer=v.get_offer_price %}
+      
+      {% if offer < v.price %}
+        <p class="fw-bold fs-4 text-success mb-1">₹{{ offer }}<span class="text-danger opacity-60 fw-semibold fs-6 ms-2">{{v.get_offer_percentage}}%off</p>
+        <del class="text-dark opacity-70 fw-semibold">₹{{ v.price }}</del>
+      {% else %}
+        <p class="fw-bold fs-4 text-success">₹{{ v.price }}</p>
       {% endif %}
-      {% if discounted_price < variants.first.price %}
-      <del class="text-muted fs-6 fw-semibold mb-2 " > ₹{{ variants.first.price }}</del>
-      {% endif %}
+
+    {% endwith %}
+  {% endif %}
+{% endwith %}
+
       <input type="hidden" id="product_id" value="{{ product.id }}">
 <!-- Rating -->
 <!-- RATING - 100% WORKING VERSION -->

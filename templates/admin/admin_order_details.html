@@ -1,8 +1,6 @@
 {% extends 'admin/base.html' %}
 {% load static %}
-
 {% block title %}Order #{{ order.order_id }} - Admin{% endblock %}
-
 {% block content %}
 <style>
   .order-badge {
@@ -83,16 +81,23 @@
 
             <div class="flex-grow-1">
               <h6 class="fw-semibold mb-1">{{ item.product_variant.product.name }}</h6>
-
-              <div class="small text-muted">
+              <div class="small text-dark">
                 Gender: {{ item.product_variant.product.gender }} <br>
                 Color: {{ item.product_variant.color.name}} <br>
                 Size: {{ item.product_variant.size }}
+                <br>
+                {% if item.is_cancelled %}
+                <span class="text-danger ">Cancelled</span>
+                {% elif item.is_returned %}
+                <span class="text-warning">Returned</span>
+                {% endif %}
               </div>
+              
             </div>
 
             <div class="text-end">
-              <div class="fw-semibold">₹{{ item.product_variant.price }}</div>
+
+              <div class="fw-semibold">₹{{ item.product_variant.get_offer_price }}</div>
               <div class="small">Qty: {{ item.quantity }}</div>
               <div class="fw-bold mt-1">₹{{ item.total_price }}</div>
             </div>
@@ -177,6 +182,7 @@
           <strong>{{ order.full_name }}</strong><br>
           {{ order.full_address }} <br>
           {{ order.city }}, {{ order.state }} - {{ order.pincode }} <br>
+          {{order.street}} ,
           {{ order.district }} <br>
           {{ order.country }}
         </div>

@@ -21,7 +21,14 @@
                             <p class="item-size">Size: {{ item.variant.size }}</p>
                         </div>
                         <p class="qty">Qty: <span id="quantity-{{ item.id }}">{{ item.quantity }}</span></p>
-                        <p class="item-price">₹<span id="price-{{ item.id }}">{{ item.item_total }}</span></p>
+                       <p class="item-price fw-bold text-success">
+                         ₹{{ item.variant.get_offer_price }}
+                           {% if item.variant.get_offer_price < item.variant.price %}
+                            <span class="text-decoration-line-through text-muted ms-2">
+                                ₹{{ item.variant.price }}
+                            </span>
+                           {% endif %}
+                          </p>
                     </div>
                     <div class="col-md-4">
                         <div class="quantity-controls">
@@ -45,13 +52,12 @@
                 <p>In Rupees</p>
                 {% if cart_items %}
                     {% for product in cart_items %}
-                    <p class="qty"><span id="control-quantity-{{ product.id }}">{{ product.quantity }}</span> x : ₹{{ product.variant.price }}</p>
+                    <p class="qty"><span id="control-quantity-{{ product.id }}">{{ product.quantity }}</span> x : ₹{{ product.variant.get_offer_price }}</p>
                     {% endfor %}
                 {% else %}
                     <p class="text-muted">No items in cart</p>
                 {% endif %}
                 <p class="text-success">Delivery Charges: ₹ Free</p>
-                <p>Platform fee: ₹ 0</p>
                 <p class="fw-bold">Total: ₹<span id="grand-total">{{ total_price|default:"0" }}</span></p>
                 <a href="{% url 'select_address' %}" class="btn continue-btn w-100 mt-3 {% if not cart_items %}disabled{% endif %}">Continue to Shipping</a>
             </div>

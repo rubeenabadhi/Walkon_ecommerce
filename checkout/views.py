@@ -118,7 +118,6 @@ def select_payment(request):
         messages.error(request, "Your cart is empty!")
         return redirect("cart:cart")
 
-    # get selected address
     address_id = request.session.get("selected_address_id")
     if not address_id:
         messages.error(request, "Please select an address.")
@@ -126,24 +125,21 @@ def select_payment(request):
 
     address = Address.objects.get(id=address_id, user=request.user)
 
-    # subtotal calculation
-    subtotal = sum(Decimal(item.variant.price) * item.quantity for item in cart_items)
+    # subtotal calculation 
+    subtotal = sum(Decimal(item.variant.get_offer_price()) * item.quantity for item in cart_items)
 
-    # coupon
+    # take coupon from session if any
     coupon = None
     coupon_id = request.session.get("coupon_id")
     if coupon_id:
-        coupon = Coupon.objects.filter(id=coupon_id).first()
+        coupon = Coupon.objects.filter(id=coupon_id, active=True).first()
+        print("Applying coupon in select payment:", coupon)
 
-    # final total
+    # calculate final amount along with discount from utils.py
     _, discount, final_total = calculate_final_amount(cart_items, coupon)
+    print("Select Payment - Subtotal:", subtotal, "Discount:", discount, "Final Total:", final_total)
 
-    # wallet
-    wallet, _ = Wallet.objects.get_or_create(user=request.user)
-
-    # ------------------------------------------------
-    # FIX: GET OR CREATE PENDING ORDER
-    # ------------------------------------------------
+    # pending order update or create
     order = Order.objects.filter(user=request.user, status="pending").last()
 
     if not order:
@@ -151,25 +147,33 @@ def select_payment(request):
             user=request.user,
             address=address,
             total_amount=subtotal,
-            final_amount=final_total,
             discount_amount=discount,
+            final_amount=final_total,
             payment_method="pending",
             status="pending",
             coupon=coupon
         )
+    else:
+        # update existing pending order with latest amounts 
+        order.total_amount = subtotal
+        order.discount_amount = discount
+        order.final_amount = final_total
+        order.coupon = coupon
+        order.save(update_fields=['total_amount', 'discount_amount', 'final_amount', 'coupon'])
+
+    wallet, _ = Wallet.objects.get_or_create(user=request.user)
 
     context = {
         "cart_items": cart_items,
         "address": address,
-        "order": order,                 # <<< IMPORTANT
-        "total_price": subtotal,
+        "order": order,
+        "total_price": subtotal.quantize(Decimal('0.01')),     # Subtotal
+        "final_total": final_total.quantize(Decimal('0.01')),   # Grand Total (discounted)
+        "discount": discount.quantize(Decimal('0.01')),
         "wallet_balance": wallet.balance,
-        "final_total": final_total,
-        "discount": discount,
     }
 
     return render(request, "user/select_payment.html", context)
-
 # ==================== WALLET PAYMENT VIEW ===============================
 @csrf_exempt
 @login_required(login_url="login")
@@ -183,7 +187,7 @@ def wallet_payment(request, order_id):
     wallet = get_object_or_404(Wallet, user=user)
     print("DEBUG: Wallet balance BEFORE payment:", wallet.balance)
 
-    order = get_object_or_404(Order, id=order_id, user=user)
+    order = Order.objects.create(user=user, status="pending", payment_method="wallet")  # Temporary order object for validation,
     if order.status != "pending":
         print("DEBUG: Order already processed")
         return JsonResponse({
@@ -199,7 +203,7 @@ def wallet_payment(request, order_id):
         return JsonResponse({"status": "failed", "message": "Cart is empty"}, status=400)
 
     # SUBTOTAL + DISCOUNT + FINAL TOTAL
-    subtotal = sum(Decimal(ci.variant.price) * ci.quantity for ci in cart_items)
+    subtotal = sum(Decimal(ci.variant.get_offer_price()) * ci.quantity for ci in cart_items)
 
     session_final = request.session.get("final_total")
     session_discount = request.session.get("discount")
@@ -245,7 +249,7 @@ def wallet_payment(request, order_id):
                         order=order,
                         product_variant=ci.variant,
                         quantity=ci.quantity,
-                        price=ci.variant.price,
+                        price=ci.variant.get_offer_price(),
                     )
                     # STOCK REDUCE
                     product = ci.variant.product
@@ -260,6 +264,16 @@ def wallet_payment(request, order_id):
 
             # clear cart
             cart_items.delete()
+            # Duplicate transaction check
+            if WalletTransaction.objects.filter(
+                wallet=wallet,
+                transaction_type="debit",
+                amount=final_total,
+                description__icontains=f"Wallet Payment for Order #{order.order_id}"
+            ).exists():
+                print("DEBUG: Duplicate wallet transaction detected")
+                raise Exception("Duplicate wallet transaction detected")
+            # -------------------------------
 
             # WALLET DEDUCT
             wallet.balance = F("balance") - final_total
@@ -356,7 +370,7 @@ def create_razorpay_order(request, order_id):
 
     if final_total is None:
         cart_items = CartItems.objects.filter(user=request.user).select_related("variant")
-        final_total = sum(Decimal(ci.variant.price) * ci.quantity for ci in cart_items)
+        final_total = sum(Decimal(ci.variant.get_offer_price()) * ci.quantity for ci in cart_items)
 
     final_total = Decimal(str(final_total)).quantize(Decimal('0.01'))  # safe
 
@@ -380,6 +394,7 @@ def create_razorpay_order(request, order_id):
             "gateway_order_id": razorpay_order["id"]
         }
     )
+    print("final_total:", final_total)
 
     if not created:
         payment.paid_amount = final_total
@@ -395,6 +410,8 @@ def create_razorpay_order(request, order_id):
     })
 
     # Verify Razorpay payment
+
+#==================== RAZORPAY PAYMENT VERIFICATION ===========================
 @csrf_exempt
 @login_required(login_url="login")
 def verify_razorpay_payment(request):
@@ -444,8 +461,10 @@ def verify_razorpay_payment(request):
 
             if session_final:
                 order.final_amount = Decimal(str(session_final)).quantize(Decimal('0.01'))
+                print("Order final amount from session:", order.final_amount)
             if session_discount:
                 order.discount_amount = Decimal(str(session_discount)).quantize(Decimal('0.01'))
+                print("Order discount amount from session:", order.discount_amount)
             # copy address snapshot from session
             address_id = request.session.get("selected_address_id")
             if address_id:
@@ -473,7 +492,7 @@ def verify_razorpay_payment(request):
                         order=order,
                         product_variant=ci.variant,
                         quantity=ci.quantity,
-                        price=ci.variant.price,
+                        price=ci.variant.get_offer_price(),
                     )
 
                 # Reduce stock
@@ -567,7 +586,7 @@ def place_order(request):
         return redirect("select_payment")
 
     # Price calculation
-    subtotal = sum(Decimal(ci.variant.price) * ci.quantity for ci in cart_items)
+    subtotal = sum(Decimal(ci.variant.get_offer_price()) * ci.quantity for ci in cart_items)
 
     session_final = request.session.get("final_total")
     session_discount = request.session.get("discount")
@@ -613,7 +632,7 @@ def place_order(request):
                     order=order,
                     product_variant=ci.variant,
                     quantity=ci.quantity,
-                    price=ci.variant.price,
+                    price=ci.variant.get_offer_price(),
                 )
 
                 product = ci.variant.product

@@ -352,3 +352,134 @@
             max-width: 150px;
         }
     }
+
+.product-card,
+.card {
+    /* Very light blue-white gradient → subtle & clean look */
+    background: linear-gradient(145deg, #f8fcff, #f0f7ff, #ffffff) !important;
+    border: 1px solid #e3f0ff !important;          /* very light blue border */
+    border-radius: 12px !important;
+    box-shadow: 0 3px 10px rgba(33, 150, 243, 0.08) !important;  /* subtle blue shadow */
+    color: #222 !important;                         /* dark text */
+    transition: all 0.28s ease;
+    overflow: hidden;
+}
+
+.product-card:hover,
+.card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 28px rgba(33, 150, 243, 0.14) !important;
+}
+
+/* Image – clean white/light bg behind */
+.card-img-top {
+    height: 180px !important;
+    object-fit: contain !important;
+    padding: 14px !important;
+    background: #fafcff !important;                /* almost white with tiny blue hint */
+    border-bottom: 1px solid #e8f0fa !important;
+}
+
+/* Title – dark instead of white */
+.card-title {
+    color: #1a1f36 !important;                     /* deep dark blue-gray */
+    font-weight: 700 !important;
+    font-size: clamp(0.95rem, 2.1vw, 1.05rem) !important;
+}
+
+/* Price area – green offer + red %off like index page */
+.card-body .fw-bold.mb-2 {
+    color: #1e8e3e !important;                     /* nice green */
+    font-size: 1.18rem !important;
+}
+
+.card-body .fw-bold.mb-2 span[style*="line-through"] {
+    color: #6b7280 !important;
+    font-size: 0.92rem !important;
+}
+
+.card-body .fw-bold.mb-2 span[style*="color:#e53935"],
+.card-body .fw-bold.mb-2 span[color="#e53935"] {
+    background: #fee2e2;
+    color: #dc2626 !important;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.78rem !important;
+    font-weight: 600;
+}
+
+/* Small texts (category, brand, gender) */
+.card-text.small {
+    color: #4b5563 !important;
+    font-size: 0.84rem !important;
+}
+
+/* Rating stars – gold */
+.mb-2 [style*="color:#ff9800"] {
+    color: #f59e0b !important;
+}
+
+.add-to-cart-btn {
+    background: #2563eb !important;
+    color: white !important;
+    border: none !important;
+}
+
+.add-to-cart-btn:hover {
+    background: #1d4ed8 !important;
+}
+
+/* Wishlist heart button – subtle improvement */
+.wishlist-btn {
+    background: white !important;
+    border: 1px solid #dbeafe !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+/* Optional: very small discount tag top-left (index പോലെ) */
+.product-card::after {
+    content: "Offer";
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #dc2626;
+    color: white;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 3px 7px;
+    border-radius: 4px;
+    z-index: 2;
+    opacity: 0.92;
+}
+
+@media (max-width: 768px) {
+    .card-img-top {
+        height: 160px !important;
+        padding: 12px !important;
+    }
+}
+/* Remove any fixed "Offer" badge if you added it earlier (like ::after) */
+.product-card::after,
+.card::after,
+.product-card::before,
+.card::before {
+    content: none !important;  /* Remove old fixed "Offer" or any other ::after/before */
+}
+
+/* Style the new % OFF badge (top-left) - make it look good */
+.badge.bg-danger {
+    background-color: #dc2626 !important;  /* Red like screenshot */
+    font-size: 0.8rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    z-index: 3;
+}
+
+/* Optional: If you want smaller on mobile */
+@media (max-width: 768px) {
+    .badge.bg-danger {
+        font-size: 0.7rem;
+        padding: 0.3rem 0.5rem;
+    }
+}

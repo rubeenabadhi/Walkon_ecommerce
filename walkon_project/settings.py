@@ -16,17 +16,17 @@ from dotenv import load_dotenv
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
-# Load environment variables from .env file
+# Load environment variables from .env file for sensitive information
 load_dotenv()
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# Build paths inside the project like this: BASE_DIR / 'subdir'. used for constructing paths relative to the project directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
+# SECURITY WARNING: keep the secret key used in production secret! means used for cryptographic signing means it should be kept secret in production
 SECRET_KEY = 'django-insecure-w@4r%f)iu(7+i$(=a7$zu+32st7ite^&%t@da04=2q^o01c2q@'
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     "grappelli",
     "django_extensions",
     
+    
 ]
 
 MIDDLEWARE = [
@@ -100,6 +101,7 @@ TEMPLATES = [
                 'product.context_processors.user_product_list',
                 'wishlist.context_processors.wishlist_context',
                 'cart.context_processor.cart_context',
+                
             ],
         },
     },

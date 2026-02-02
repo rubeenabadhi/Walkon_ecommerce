@@ -8,20 +8,26 @@ def cart_context(request):
     total_price = Decimal("0.00")
     discount = Decimal("0.00")
     applied_coupon = None
-    cart_count=0
-    count_wishlist=0
+    cart_count = 0
+    count_wishlist = 0
+    cart_items = []
 
     if request.user.is_authenticated:
-        cart_count = CartItems.objects.filter(user=request.user).count()
-        count_wishlist = WishlistItem.objects.filter(wishlist__user=request.user).count()
+        cart_items = CartItems.objects.filter(
+            user=request.user
+        ).select_related('product', 'variant')
 
-    if request.user.is_authenticated:
-        cart_items = CartItems.objects.filter(user=request.user).select_related('product', 'variant')
+        cart_count = cart_items.count()
+        count_wishlist = WishlistItem.objects.filter(
+            wishlist__user=request.user
+        ).count()
+
         for item in cart_items:
-            item.item_total = Decimal(item.variant.price) * item.quantity
+            price = Decimal(item.variant.get_offer_price())
+            item.item_total = price * item.quantity
             total_price += item.item_total
 
-        # Check if coupon exists in session
+        # Coupon logic (unchanged)
         coupon_id = request.session.get("coupon_id")
         if coupon_id:
             try:
@@ -32,17 +38,15 @@ def cart_context(request):
                         discount = total_price * (Decimal(coupon.discount_value) / 100)
                     else:
                         discount = Decimal(coupon.discount_value)
-                    discount = min(discount, total_price)  # Ensure discount doesn't exceed total
+                    discount = min(discount, total_price)
                     applied_coupon = coupon
             except Coupon.DoesNotExist:
-                # Optionally clear invalid coupon from session
-                if "coupon_id" in request.session:
-                    del request.session["coupon_id"]
+                request.session.pop("coupon_id", None)
 
     final_total = total_price - discount
 
     return {
-        'cart_items': cart_items if request.user.is_authenticated else [],
+        'cart_items': cart_items,
         'total_price': total_price,
         'discount': discount,
         'final_total': final_total,

@@ -114,8 +114,8 @@
     <div class ="customer-info">
         <div class="row ">
             <div class="col-6">
-                <strong>Customer Name:</strong> {{ order.full_name }}<br>
-                <strong>Customer Email:</strong> {{ order.email }}<br>
+                <strong>Customer Name:</strong> {{ order.user.username }}<br>
+                <strong>Customer Email:</strong> {{ order.user.email }}<br>
                 <strong>Customer Phone:</strong> {{ order.phone_number }}<br>
             </div>
             <div class="col-6">
