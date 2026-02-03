@@ -92,7 +92,10 @@ class Order(models.Model):
             new_total += Decimal(str(item.total_price or '0.00'))
 
         new_discount = Decimal('0.00')
-    
+        # Proportional discount from original discount_amount
+        if self.discount_amount > 0 and self.total_amount > 0:
+            remaining_ratio = new_total / self.total_amount  #ratio of original total
+            new_discount = (self.discount_amount * remaining_ratio).quantize(Decimal('0.01'))
         # Coupon validity check & apply
         if self.coupon:
             now = timezone.now()

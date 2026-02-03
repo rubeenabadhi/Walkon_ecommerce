@@ -140,7 +140,7 @@ def select_payment(request):
     print("Select Payment - Subtotal:", subtotal, "Discount:", discount, "Final Total:", final_total)
 
     # pending order update or create 
-    order = Order.objects.filter(user=request.user, status="pending", payment_method="pending").last()  
+    order = Order.objects.filter(user=request.user, payment_method="pending").last()  
 
     if not order:
         order = Order.objects.create(
