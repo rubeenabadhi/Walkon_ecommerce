@@ -13,8 +13,8 @@
   .item-thumb {
     width: 10px;
     height: 10px;
-    object-fit: cover;
     border-radius: 8px;
+    
   }
 
   .card-title {
@@ -59,7 +59,18 @@
       </span>
     </div>
   </div>
-
+  <!-- Messages -->
+ <div>
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}  alert-dismissible fade show rounded-3 shadow-sm d-inline-block bg-light text-center text-danger" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+</div>
+  <!-- Main Row -->
   <div class="row">
 
     <!-- LEFT SIDE -->
@@ -69,6 +80,7 @@
       <div class="card shadow-sm mb-4">
         <div class="card-header bg-light">
           <h5 class="card-title mb-0">Order details ({{ order.items.count }})</h5>
+          <h1 class="text-muted small">Payment Method: {{ order.payment_method }}</h1>
         </div>
 
         <div class="card-body">
@@ -76,7 +88,7 @@
           {% for item in order.items.all %}
           <div class="d-flex gap-3 border-bottom pb-3 mb-3">
 
-            <img src="{{ item.product_variant.product.primary_image.url }}" class="item-thumb">
+            <img src="{{ item.product_variant.product.primary_image.url }}" class="item-thumb" alt="Product Image" width="40" height="40">
 
             <div class="flex-grow-1">
               <h6 class="fw-semibold mb-1">{{ item.product_variant.product.name }}</h6>
@@ -117,7 +129,9 @@
             <div>- ₹{{ order.discount_amount }}</div>
           </div>
           {% endif %}
-
+        
+          <!--------unchanged final amount-->
+          
           <div class="d-flex justify-content-between fs-5 fw-bold mt-2">
             <div>Grand Total</div>
             <div>₹{{ order.final_amount }}</div>

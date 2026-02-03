@@ -157,9 +157,10 @@ def cancel_order(request, order_id):
                 raise ValueError("Cancel failed in model method")
             
             # REFUND LOGIC: COD check
-            if order.payment_method.lower() == "cod":
-                print("[DEBUG] COD order - no refund to process")
+            payment_method = (order.payment_method or "").lower()
+            if payment_method == "cod":
                 refund_amount = Decimal("0.00")
+                print("[DEBUG] COD order - no refund applicable")
 
             # Refund logic (use original final amount)
             if refund_amount > 0:
@@ -235,13 +236,16 @@ def cancel_item(request, item_id):
 
             # COD check → refund 0 force 
             refund_amount = Decimal('0.00')
-            is_cod = order.payment_method and order.payment_method.lower() == "cod"
+            payment_method = (order.payment_method or "").lower()
+            is_cod = (payment_method == "cod")
+            print(f"[DEBUG] Payment method: {payment_method} | is_cod: {is_cod}")
 
             if is_cod:
                 print("[DEBUG] COD order - no refund on item cancel")
                 messages.info(request, "COD order - no refund applicable on item cancel.")
                 reason = reason or "Cancelled - COD order"
             else:
+                
                 print("[DEBUG] Non-COD order - calculating proportional refund")
 
             # Item cancel + restock 
@@ -296,6 +300,8 @@ def cancel_item(request, item_id):
         messages.error(request, 'Item cancellation failed. Please try again or contact support.')
         return redirect(redirect_to)
     #--------------------------------------------------------------------request return item---------
+
+#-----------------------------request return item------------------------------
 @login_required(login_url="login")
 def request_return_item(request, item_id):
     item = get_object_or_404(OrderItem, id=item_id, order__user=request.user)
@@ -431,9 +437,11 @@ def admin_orders(request):
 def admin_order_detail(request, order_number):
     order = get_object_or_404(Order, order_id=order_number)
     order_items = order.items.select_related('product_variant__product')
+    total=order.total_amount-order.discount_amount
     context = {
         'order': order,
         'order_items': order_items,
+        'total': total,
     }
     return render(request, 'admin/admin_order_details.html', context)
 
@@ -444,6 +452,13 @@ def admin_order_action(request, order_number):
 
     action = request.POST.get("action")
     item_id = request.POST.get("item_id")
+    # UPDATE ORDER STATUS
+    if order.status=="delivered" and action == "update_status":
+        messages.error(request, "Delivered orders cannot have their status changed.")
+        return redirect("admin_order_details", order.order_id)
+    if order.status=="cancelled" or order.status=="returned" and action == "update_status":
+        messages.error(request, "Cancelled or returned orders cannot have their status changed.")
+        return redirect("admin_order_details", order.order_id)
 
     if action == "update_status":
         new_status = request.POST.get("status")
@@ -557,15 +572,16 @@ def admin_process_return(request, request_id):
     if request.method != "POST":
         return redirect("admin_return_requests")
 
-    action = request.POST.get("action")  # "approve" or "reject"
+    action = request.POST.get("action")  # approve / reject
 
+    # ===================== APPROVE =====================
     if action == "approve":
         try:
-            # Original final amount save
-            original_final = order.final_amount.quantize(Decimal('0.01'))
-            total_refund = Decimal('0.00')
+            # Save original final amount (before return)
+            original_final = order.final_amount.quantize(Decimal("0.01"))
+            total_refund = Decimal("0.00")
 
-            # SINGLE ITEM RETURN
+            # ---------- SINGLE ITEM RETURN ----------
             if rr.request_type == "item" and rr.order_item:
                 item = rr.order_item
 
@@ -573,7 +589,7 @@ def admin_process_return(request, request_id):
                     messages.info(request, "Item already processed.")
                     return redirect("admin_return_requests")
 
-                # Mark returned + refunded
+                # Mark returned
                 item.is_returned = True
                 item.admin_refunded = True
                 item.returned_at = timezone.now()
@@ -583,8 +599,10 @@ def admin_process_return(request, request_id):
                 product = item.product_variant.product
                 product.stock = F("stock") + item.quantity
                 product.save(update_fields=["stock"])
+            # ---------- RECALCULATE TOTALS ----------
+                order.recalc_totals()
 
-            # FULL ORDER RETURN
+            # ---------- FULL ORDER RETURN ----------
             elif rr.request_type == "order":
                 for item in order.items.filter(is_returned=False, is_cancelled=False):
                     item.is_returned = True
@@ -597,17 +615,18 @@ def admin_process_return(request, request_id):
                     product.stock = F("stock") + item.quantity
                     product.save(update_fields=["stock"])
 
-            # Recalculate totals (coupon redistribution happens here)
-            order.recalc_totals()
+            # ---------- RECALCULATE TOTALS ----------
+                order.recalc_totals()
 
-            # Calculate refund based on difference
+            # ---------- REFUND = DIFFERENCE ----------
             total_refund = original_final - order.final_amount
-            total_refund = max(Decimal('0.00'), total_refund.quantize(Decimal('0.01')))
+            total_refund = max(Decimal("0.00"), total_refund.quantize(Decimal("0.01")))
 
+            # ---------- WALLET REFUND ----------
             if total_refund > 0:
                 wallet, _ = Wallet.objects.get_or_create(user=user)
                 wallet.balance += total_refund
-                wallet.save(update_fields=['balance'])
+                wallet.save(update_fields=["balance"])
 
                 WalletTransaction.objects.create(
                     wallet=wallet,
@@ -616,12 +635,12 @@ def admin_process_return(request, request_id):
                     description=f"Admin approved {rr.request_type} return refund (Order: {order.order_id})"
                 )
 
-            # Update order status
+            # ---------- UPDATE ORDER STATUS ----------
             remaining = order.items.filter(is_returned=False, is_cancelled=False)
             order.status = "partially_returned" if remaining.exists() else "returned"
-            order.save(update_fields=['status'])
+            order.save(update_fields=["status"])
 
-            # Update ReturnRequest
+            # ---------- UPDATE RETURN REQUEST ----------
             rr.status = "approved"
             rr.processed = True
             rr.processed_at = timezone.now()
@@ -630,14 +649,18 @@ def admin_process_return(request, request_id):
             rr.notes = f"Approved by admin. Refunded ₹{total_refund:.2f}"
             rr.save()
 
-            messages.success(request, f"Return approved! ₹{total_refund:.2f} refunded to wallet.")
+            messages.success(
+                request,
+                f"Return approved! ₹{total_refund:.2f} refunded to wallet."
+            )
             return redirect("admin_return_requests")
 
         except Exception as e:
-            print(f"Process return error: {str(e)}")
+            print(f"[ADMIN RETURN ERROR] {type(e).__name__}: {str(e)}")
             messages.error(request, "Error approving return. Please try again.")
             return redirect("admin_return_requests")
 
+    # ===================== REJECT =====================
     elif action == "reject":
         rr.status = "rejected"
         rr.processed = True
@@ -645,6 +668,7 @@ def admin_process_return(request, request_id):
         rr.processed_by = request.user
         rr.notes = "Rejected by admin"
         rr.save()
+
         messages.error(request, "Return request rejected.")
         return redirect("admin_return_requests")
 

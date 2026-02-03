@@ -148,6 +148,7 @@
                                             </span> 
                                         </p>
                                         {% endif %}
+
                                     {% endwith %}
                                 {% else %}
                                 <p class="card-text text-muted small">No Price</p>
@@ -156,10 +157,10 @@
 
                             <!-- Rating -->
                             <div class="mb-2">
-                                {% for i in "12345" %}
-                                    <i class="bi {% if i|add:0 <= rating|floatformat:0 %}bi-star-fill text-warning{% else %}bi-star text-white{% endif %}"></i>
-                                {% endfor %}
-                                <span class="small" style="color: rgba(255, 255, 255, 0.8);">{{ rating|floatformat:1 }})</span>
+                                <p style="font-size:0.85rem; color:#ff9800; font-weight:600; margin:4px 0;">
+                                    ⭐ {{ product.average_rating }}
+                                <span style="font-size:0.75rem; color:#777;">({{ product.review_count }} reviews)</span>
+                                </p>
                             </div>
 
                             <!-- Add to Cart Button -->

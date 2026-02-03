@@ -57,9 +57,11 @@ class Order(models.Model):
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     final_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    unchanged_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    unchanged_discount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     
 
-    payment_method = models.CharField(max_length=30, blank=True, null=True)  # COD, Razorpay, etc.
+    payment_method = models.CharField(max_length=30, blank=True, null=True)  # COD, Razorpay, etc.db based = null user based= blank
     delivered_at = models.DateTimeField(null=True, blank=True)
     cancelled_at = models.DateTimeField(null=True, blank=True)
 
@@ -71,13 +73,12 @@ class Order(models.Model):
     def __str__(self):
         return f"{self.order_id} - {self.user}"
     
-    @property
-    def display_final_amount(self):
-        return f"₹{self.final_amount:.2f}"
 
+    
 
     def recalc_totals(self):
         # Skip if fully cancelled/returned
+        
         if self.status in ["cancelled", "returned"]:
             print(f"[DEBUG] Skipping recalc_totals for {self.order_id} (status: {self.status})")
             return

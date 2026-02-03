@@ -139,8 +139,8 @@ def select_payment(request):
     _, discount, final_total = calculate_final_amount(cart_items, coupon)
     print("Select Payment - Subtotal:", subtotal, "Discount:", discount, "Final Total:", final_total)
 
-    # pending order update or create
-    order = Order.objects.filter(user=request.user, status="pending").last()
+    # pending order update or create 
+    order = Order.objects.filter(user=request.user, status="pending", payment_method="pending").last()  
 
     if not order:
         order = Order.objects.create(
@@ -174,6 +174,7 @@ def select_payment(request):
     }
 
     return render(request, "user/select_payment.html", context)
+
 # ==================== WALLET PAYMENT VIEW ===============================
 @csrf_exempt
 @login_required(login_url="login")
@@ -693,7 +694,12 @@ def order_success(request, order_id):
     subtotal = Decimal(subtotal).quantize(Decimal('0.01'))
     discount_amount = Decimal(discount_amount).quantize(Decimal('0.01'))
     final_total = Decimal(final_total).quantize(Decimal('0.01'))
+    # update order with unchanged amount
+    order.unchanged_amount = final_total
+    order.unchanged_discount = discount_amount
+    order.save(update_fields=['unchanged_amount','unchanged_discount'])
 
+    print(order.unchanged_amount, order.unchanged_discount)
     # clear any session keys used in checkout (optional)
     request.session.pop("coupon_id", None)
     request.session.pop("final_total", None)
