@@ -71,7 +71,7 @@ INSTALLED_APPS = [
     "widget_tweaks",
     "grappelli",
     "django_extensions",
-    
+    "stock",
     
 ]
 

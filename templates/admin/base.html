@@ -9,7 +9,11 @@
   <!-- Bootstrap & Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'admin/styles.css' %}">
+  <!-- Custom CSS -->
+  {% block extra_css %}
+  <link rel="stylesheet" href="{% static 'admin/style.css' %}">
+  {% endblock %}
+  
  
 </head>
 <body>
@@ -29,6 +33,9 @@
       </a>
       <a href="{% url 'products' %}" class="list-group-item list-group-item-action py-2 ripple {% if request.path == '/products/' %}active{% endif %}" title="Products">
         <i class="bi bi-box me-3"></i><span class="sidebar-text">Products</span>
+      </a>
+      <a href="{% url 'stock_management' %}" class="list-group-item list-group-item-action py-2 ripple {% if request.path == '/admin/stock/' %}active{% endif %}" title="Stock Management">
+        <i class="bi bi-archive me-3"></i><span class="sidebar-text">Stock Management</span>
       </a>
       <a href="{% url 'admin_review' %}" class="list-group-item list-group-item-action py-2 ripple {% if request.path == '/admin/review/' %}active{% endif %}" title="Reviews">
         <i class="bi bi-star me-3"></i><span class="sidebar-text">Reviews</span>
@@ -112,61 +119,3 @@
 </script>
 </body>
 </html>
-<style>
-  /* Sidebar default collapsed: only icons */
-  .sidebar {
-    position: fixed;
-    top: 0; bottom: 0; left: 0;
-    padding: 58px 0 0;
-    width: 60px; /* collapsed by default */
-    background-color: #fff;
-    box-shadow: 0 2px 5px 0 rgb(0 0 0 / 5%), 0 2px 10px 0 rgb(0 0 0 / 5%);
-    transition: width 0.3s, background-color 0.3s;
-    overflow-x: hidden;
-    z-index: 600;
-  }
-  /* list text style */
-
-
-  .sidebar .list-group-item {
-    border: none;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  /* sidebar expanded */
-  .sidebar.expanded { width: 240px; }
-
-  .sidebar .list-group-item span {
-    display: none; /* hide text by default */
-    transition: opacity 0.3s;
-  }
-
-  .sidebar.expanded .list-group-item span {
-    display: inline; /* show text when expanded */
-  }
-
-  /* main content adjustment */
-  main { margin-left: 60px; transition: margin-left 0.3s; }
-  main.sidebar-expanded { margin-left: 240px; }
-
-  /* Optional dark mode */
-  .sidebar-dark { background-color: #212529; color: #706a6aff; }
-  .sidebar-dark .list-group-item { color: #0f0f0fff; }
-  .sidebar-dark .list-group-item.active {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
-    color: #f3f2f2ff;
-  }
-  .sidebar-dark .list-group-item:hover { background-color: #343a40; color: #fff; }
-  .sidebar-dark .list-group-item .bi { color: #070606ff; }
-  .sidebar-dark .list-group-item.active .bi { color: #fff; }
-  .sidebar-dark .list-group-item:hover .bi { color: #fff; }
-  .sidebar-dark .sidebar-text { text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); }
-  @media (max-width: 991.98px) {
-    .sidebar { width: 100%; }
-    main { margin-left: 0; }
-  }
-  
-</style>

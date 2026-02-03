@@ -1,0 +1,152 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Stock Management - WalkOn Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-4 fw-bold">Stock Management</h2>
+
+  <!-- Quick Stats -->
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card shadow-sm border-danger text-center p-3">
+        <h5 class="text-danger">Low Stock (≤5)</h5>
+        <h3>{{ low_stock_count }}</h3>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow-sm border-warning text-center p-3">
+        <h5 class="text-warning">Out of Stock</h5>
+        <h3>{{ out_stock_count }}</h3>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow-sm border-success text-center p-3">
+        <h5 class="text-success">Total Variants</h5>
+        <h3>{{ total_variants }}</h3>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search & Filter -->
+  <form method="GET" class="mb-4">
+    <div class="row">
+      <div class="col-md-5">
+        <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search product">
+      </div>
+      <div class="col-md-4">
+        <select name="status" class="form-select">
+          <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Stock</option>
+          <option value="low" {% if status_filter == 'low' %}selected{% endif %}>Low Stock (≤5)</option>
+          <option value="out" {% if status_filter == 'out' %}selected{% endif %}>Out of Stock</option>
+          <option value="in" {% if status_filter == 'in' %}selected{% endif %}>In Stock (>5)</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <button type="submit" class="btn btn-primary w-100">Filter</button>
+      </div>
+    </div>
+  </form>
+
+  <!-- Table -->
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>Product</th>
+              <th>Stock</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for v in variants %}
+            <tr {% if v.stock == 0 %}class="table-danger"{% elif v.stock <= 5 %}class="table-warning"{% endif %}>
+              <td>{{ v.name }}</td>
+              <td class="fw-bold">{{ v.stock }}</td>
+              <td>
+                {% if v.stock == 0 %}
+                  <span class="badge bg-danger">Out of Stock</span>
+                {% elif v.stock <= 5 %}
+                  <span class="badge bg-warning text-dark">Low Stock</span>
+                {% else %}
+                  <span class="badge bg-success">In Stock</span>
+                {% endif %}
+              </td>
+            
+                <td class="fw-bold stock-cell" data-product-id="{{ v.id }}">
+  
+  <input type="number" class="stock-input form-control d-none" value="{{ v.stock }}" min="0" style="width: 80px;">
+    <span class="stock-display"></span>
+    <button class="btn btn-sm btn-primary edit-stock ms-2">Edit</button>
+    <button class="btn btn-sm btn-success save-stock ms-2 d-none">Save</button>
+ 
+</td>
+            
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center py-4 text-muted">No variants found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.edit-stock').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const cell = this.closest('.stock-cell');
+        cell.querySelector('.stock-display').classList.add('d-none');
+        cell.querySelector('.stock-input').classList.remove('d-none');
+        cell.querySelector('.save-stock').classList.remove('d-none');
+        this.classList.add('d-none');
+      });
+    });
+
+    document.querySelectorAll('.save-stock').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const cell = this.closest('.stock-cell');
+        const productId = cell.dataset.productId;
+        const newStock = cell.querySelector('.stock-input').value;
+
+        if (!productId) {
+          alert('Product ID missing! Check data-product-id.');
+          return;
+        }
+
+        fetch("{% url 'update_stock' %}", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}',
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: `product_id=${productId}&stock=${newStock}`
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            cell.querySelector('.stock-display').textContent = newStock;
+            cell.querySelector('.stock-display').classList.remove('d-none');
+            cell.querySelector('.stock-input').classList.add('d-none');
+            cell.querySelector('.save-stock').classList.add('d-none');
+            cell.querySelector('.edit-stock').classList.remove('d-none');
+            alert('Stock updated successfully!');
+            location.reload();  // ← FULL PAGE REFRESH on success
+          } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+          }
+        })
+        .catch(error => {
+          alert('Request failed: ' + error);
+        });
+      });
+    });
+  });
+</script>
+{% endblock %}

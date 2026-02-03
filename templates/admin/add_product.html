@@ -1,4 +1,6 @@
 {% extends 'admin/base.html' %}
+{% load static %}
+{% block title %}{% if product.id %}Edit Product - {{ product.name }}{% else %}Add Product{% endif %} - WalkOn Admin{% endblock %}
 {% block content %}
 <div class="container mt-3 p-2 bg-light rounded shadow-sm" style="max-width: 800px; width: 100%;">
     <div class="date-time text-muted text-end mb-1" style="font-size: 0.7em;">Date & Time: Wednesday, August 27, 2025, 10:56 PM IST</div>
