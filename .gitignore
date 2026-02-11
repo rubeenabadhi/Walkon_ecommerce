@@ -1,3 +1,4 @@
+# .gitignore file for a Python Django project // this file used to ignore unnecessary files and directories in git repository
 # Python
 __pycache__/
 *.py[cod]

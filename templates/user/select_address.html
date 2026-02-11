@@ -2,9 +2,10 @@
 {% load static %}
 {% block title %}Select Address - Walkon{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/order.css' %}">
+<link rel="stylesheet" href="{% static 'css/select_address.css' %}">
 {% endblock %}
-
+{% load math_filters %}
+{% load humanize %}
 {% block content %}
 <div class="container my-5">
     <div class="row">
@@ -59,17 +60,17 @@
                                     <i class="bi bi-pencil-square fs-5 text-dark"></i>
                                 </a>
 
-                                <div class="card-body d-flex align-items-start">
+                                <div class="card card-body d-flex align-items-start">
                                     <div class="form-check me-3">
                                         <input class="form-check-input" type="radio" name="selected_address"
                                                value="{{ address.id }}" id="address{{ address.id }}"
                                                {% if address.is_default %}checked{% endif %} required>
                                     </div>
                                     <label class="form-check-label w-100" for="address{{ address.id }}">
-                                        <h5 class="card-title mb-1">{{ address.full_name }}</h5>
-                                        <p class="card-text mb-0">{{ address.address }}</p>
-                                        <p class="card-text mb-0">{{ address.street }}, {{ address.city }}</p>
-                                        <p class="card-text mb-0">{{ address.state }}, {{ address.country }} - {{ address.pincode }}</p>
+                                        <h5 class="card-title mb-1">{{ address.full_name|title }}</h5>
+                                        <p class="card-text mb-0">{{ address.address|title }}</p>
+                                        <p class="card-text mb-0">{{ address.street|title }}, {{ address.city }}</p>
+                                        <p class="card-text mb-0">{{ address.state|title }}, {{ address.country }} - {{ address.pincode }}</p>
                                         <p class="card-text mb-0">Phone: {{ address.phone_number }}</p>
                                     </label>
                                 </div>
@@ -79,8 +80,8 @@
                     </div>
 
                     <!-- Continue Button -->
-                    <div class="mt-4">
-                        <button id="continueToShipping" class="btn continue-btn w-100">Continue to Shipping</button>
+                    <div class="mt-4 d-flex justify-content-center">
+                        <button id="continueToShipping" class="btn continue-btn w-60" style="background-color: #1a73e8; color: white;">Continue to Shipping</button>
                     </div>
                 </form>
             </div>
@@ -88,15 +89,15 @@
 
         <!-- Order Summary -->
         <div class="col-lg-4">
-            <div class="order-summary p-3">
-                <h3>Order Summary</h3>
+            <div class="order-summary p-3 shadow-sm border rounded" style="background: #d6e2ee; ">
+                <h4 class="fw-bold mb-3 text-center" style="color: #1a73e8;">Order Summary</h4>
                 <p>In Rupees</p>
                 {% for product in cart_items %}
-                <p class="qty"><span id="control-quantity-{{ product.id }}">{{ product.quantity }}</span> x : ₹{{ product.variant.get_offer_price }}</p>
+                <p class="qty"><span id="control-quantity-{{ product.id }}">{{ product.quantity }}</span> x : ₹{{ product.variant.get_offer_price }}
+                         = <span class = "float-end" id="subtotal-{{ product.id }}">₹{{ product.quantity|mul:product.variant.get_offer_price|floatformat:2 }}</span></p>
                 {% endfor %}
-                <p class="text-success">Delivery Charges: ₹ Free</p>
-                <p>Platform fee: ₹ 0</p>
-                <p class="fw-bold">Total: ₹<span id="grand-total">{{ total_price }}</span></p>
+                <hr>
+                <p class="fw-bold">Total: ₹<span id="grand-total">{{ total_price|default:"0" }}</span></p>
             </div>
         </div>
     </div>
@@ -233,7 +234,7 @@
                 type: 'POST',
                 data: data,
                 success: function(response) {
-                    console.log(response);
+                    console.log("AJAX Response:", response);
 
                     if (response.status === 'success') {
                         Swal.fire({

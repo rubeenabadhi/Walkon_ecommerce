@@ -1,66 +1,90 @@
 {% extends 'user/base.html' %}
 {% load static %}
-{% block title %}Profile - Walkon{% endblock %}
+
+{% block title %}Profile - WalkOn{% endblock %}
+
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">   <!-- keep your file if you want -->
 {% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-  <div class="row">
-    {% include 'user/user_sidebar.html' %}
 
-    <!-- Right Side: Messages + Profile Info -->
-    <div class="col-md-8">
-      <!-- Flash Messages -->
-      {% if messages %}
-        {% for message in messages %}
-          <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3 shadow-sm" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        {% endfor %}
-      {% endif %}
+<div class="container my-3">
+    <div class="row">
+        {% include 'user/user_sidebar.html' %}
 
-      <!-- Profile Card -->
-      <div class="card profile-card p-4 shadow-sm rounded-3 ">
-        <!-- Profile Picture -->
-        <div class="text-center mb-4 p-5">
-          {% if user.profile_picture %}
-            <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="profile-avatar">
-          {% else %}
-            <img src="{% static 'images/women1.jpeg' %}" alt="Profile Picture" class="profile-avatar">
-          {% endif %}
+        <div class="col-md-8">
+
+            <!-- Flash Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-4 shadow-sm mb-4" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Main Profile Card - EXACT Refer & Earn style -->
+            <div class="refer-card p-4 shadow-sm rounded" 
+                 style="min-height: 520px; background: linear-gradient(135deg, #ffffff, #e3f2fd);">
+
+                <h2 class="mb-3 text-center" style="text-transform: uppercase; color: #1a73e8; font-weight: 700; font-family: 'Inter', sans-serif; font-size: clamp(1.3rem, 3.5vw, 1.8rem);">
+                    Profile Details
+                </h2>
+                <p class="text-center mb-4" style="color: #1a73e8; font-weight: 500; font-family: 'Inter', sans-serif; font-size: clamp(0.8rem, 2vw, 1rem);">
+                    Your personal information
+                </p>
+
+                <!-- Profile Picture -->
+                <div class="text-center mb-4">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="Profile Picture" 
+                             class="rounded-circle shadow" style="width: 140px; height: 140px; object-fit: cover; border: 6px solid #ffffff;">
+                    {% else %}
+                        <img src="{% static 'images/women1.jpeg' %}" alt="Profile Picture" 
+                             class="rounded-circle shadow" style="width: 140px; height: 140px; object-fit: cover; border: 6px solid #ffffff;">
+                    {% endif %}
+                </div>
+
+                <!-- Profile Info -->
+                <div class="profile-info mx-auto" style="max-width: 420px; text-align: left;">
+                    {% if referral %}
+                        <p class="mb-3"><strong>Referral Code:</strong> 
+                            <span style="color: #1a73e8; font-weight: 600;">{{ referral.referral_code }}</span>
+                        </p>
+                    {% endif %}
+                    <p class="mb-3"><strong>Name:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+                    <p class="mb-3"><strong>Username:</strong> {{ user.username|capfirst }}</p>
+                    <p class="mb-3"><strong>Email:</strong> {{ user.email }}</p>
+                    <p class="mb-3"><strong>Phone:</strong> {{ user.mobile_number|default:"Not added yet" }}</p>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex justify-content-center gap-4 mt-5 flex-wrap">
+                    {% if user.has_usable_password %}
+                        <a href="{% url 'change_password' %}" class="btn btn-outline-primary rounded-pill px-4 py-2"
+                           style="font-weight: 600; font-size: 0.95rem; border-color: #1a73e8; color: #1a73e8;">
+                            Change Password
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'edit_profile' %}" class="btn btn-primary rounded-pill px-5 py-2"
+                       style="background: linear-gradient(135deg, #667eea, #3676f6); color: white; font-weight: 700; font-size: 0.95rem; border: none;">
+                        Edit Profile
+                    </a>
+                </div>
+
+            </div>
         </div>
-
-        <h4 class="text-center p-0 ">PROFILE DETAILS</h4>
-        <div class="profile-info">
-          <!--referrel-->
-          {% if referral %}
-            <p><strong>Referral Code:</strong> {{ referral.referral_code }}</p>
-          {% endif %}
-          <p><strong>Name:</strong> {{ user.first_name }} {{ user.last_name }}</p>
-          <p><strong>Username:</strong> {{ user.username|capfirst }}</p>
-          <p><strong>Email:</strong> {{ user.email }}</p>
-          <p><strong>Phone:</strong> {{ user.mobile_number }}</p>
-        </div>
-
-        <div class="d-flex justify-content-between align-items-center mt-5 gap-3">
-          {% if user.has_usable_password %}
-            <a href="{% url 'change_password' %}" class="btn btn-outline-dark">Change Password</a>
-          {% endif %}
-          <a href="{% url 'edit_profile' %}" class="btn btn-dark">Edit Profile</a>
-        </div>
-      </div>
     </div>
-  </div>
 </div>
 
-<!-- SweetAlert2 -->
+
+
+<!-- Your existing SweetAlert2 script (unchanged) -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-  // Handle flash messages with SweetAlert2
   {% if messages %}
     {% for message in messages %}
       Swal.fire({
@@ -77,6 +101,5 @@
     {% endfor %}
   {% endif %}
 </script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+
 {% endblock %}

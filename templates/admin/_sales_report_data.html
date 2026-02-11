@@ -1,0 +1,26 @@
+
+{% load humanize %}
+
+<tbody id="ordersBody">
+  {% for o in orders %}
+  <tr>
+    <td><strong>{{ o.order_id }}</strong></td>
+    <td>{{ o.order_date|date:"d M Y" }}</td>
+    <td>{{ o.user.username|title }}</td>
+    <td>₹{{ o.final_amount|floatformat:2|intcomma }}</td>
+    <td>₹{{ o.discount_amount|floatformat:2|intcomma }}</td>
+    <td>
+      <span class="badge {% if o.status == 'delivered' %}bg-success{% elif o.status == 'partially_returned' %}bg-danger{% else %}bg-info{% endif %}">
+        {{ o.get_status_display|capfirst }}
+      </span>
+    </td>
+    <td>{{ o.payment_method|title|default:"N/A" }}</td>
+  </tr>
+  {% empty %}
+  <tr>
+    <td colspan="7" class="text-center py-4 text-muted">
+      No orders found in this period.
+    </td>
+  </tr>
+  {% endfor %}
+</tbody>

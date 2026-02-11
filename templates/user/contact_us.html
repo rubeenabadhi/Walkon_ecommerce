@@ -1,0 +1,46 @@
+{% extends 'user/base.html' %}
+{% load static %}
+{% block title %}Contact Us - WalkOn{% endblock %}
+
+{% block content %}
+<style>
+    .contact-container {
+        background: linear-gradient(135deg, #ffffff, #e3f2fd);
+        border-radius: 20px;
+        padding: 3rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .contact-title {
+        color: #1a73e8;
+        text-shadow: 0 2px 10px rgba(26, 115, 232, 0.2);
+    }
+    .contact-text {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        color: #333333;
+    }
+</style>
+<div class="container my-5 py-5 contact-container">
+    <h2 class="mb-4 text-center contact-title" style="text-transform: uppercase; font-weight: bold;">Contact Us</h2>
+    <p class="contact-text">
+        We value your feedback and are here to assist you with any questions or concerns you may have. Please feel free to reach out to us through any of the following methods:
+    </p>
+    <ul class="contact-text">
+        <li><strong>Email:</strong>
+            <a href="mailto:rubivv255@gmail.com">rubivv255@gmail.com</a>
+        </li>
+        <li><strong>Phone:</strong>
+            <a href="tel:+919876543210">+91 98765 43210</a>
+        </li>
+        <li><strong>Address:</strong>
+            123 WalkOn Street, Shoe City, Country
+        </li>
+    </ul>
+    <p class="contact-text">
+        Our customer support team is available Monday to Friday from 9:00 AM to 6:00 PM IST. We strive to respond to all inquiries within 24 hours.
+    </p>
+    <p class="contact-text">
+        Thank you for choosing WalkOn. We look forward to hearing from you!
+    </p>
+</div>
+{% endblock %}

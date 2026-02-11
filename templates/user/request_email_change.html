@@ -1,13 +1,20 @@
 {% extends "user/base.html" %}
+
+{% load static %}
+
+{% block title %}Change Email - WalkOn{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+{% endblock %}
 {% block content %}
-<div class="container mt-5">
+<div class="container mt-5 mb-5">
   <div class="row justify-content-center">
-    <div class="col-md-6">
-      <div class="card shadow p-4 rounded-4">
-        <h4 class="text-center mb-3">Change Email</h4>
-        <form method="post">
+    <div class="col-md-6" >
+      <div class="refer-card shadow p-4 rounded-4">
+        <h4 class="text-center mb-3" >Change Email</h4>
+        <form method="post" >
           {% csrf_token %}
-          <div class="mb-3">
+          <div class="mb-3" >
             <label for="new_email" class="form-label">Enter New Email</label>
             <input type="email" name="new_email" id="new_email" class="form-control" placeholder="example@mail.com" required>
           </div>

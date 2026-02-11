@@ -1,103 +1,290 @@
 {% extends 'admin/base.html' %}
-{% block title %}Dashboard - Walkon Admin{% endblock %}
-{% load static %}
+{% load static humanize %}
 
-{% block content %}
-<div class="container-fluid px-3 px-md-4">
-  <h1 class="h3 fw-semibold mb-3">Dashboard</h1>
-
-  <!-- Main Content -->
-  <main class="flex-grow-1">
-    <h4 class="fs-5 mb-3">Today's Sales</h4>
-    <div class="row g-3">
-      <div class="col-6 col-lg-3">
-        <div class="card card-box bg-primary text-white small-card">
-          <div class="card-body p-3">
-            <h5 class="mb-1">$ {{ total_sales }}k</h5>
-            <p class="mb-1 small">Total Sales</p>
-            <small>+4% from yesterday</small>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-6 col-lg-3">
-        <div class="card card-box bg-success text-white small-card">
-          <div class="card-body p-3">
-            <h5 class="mb-1">{{ total_orders }}</h5>
-            <p class="mb-1 small">Total Orders</p>
-            <small>+2% from yesterday</small>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-6 col-lg-3">
-        <div class="card card-box bg-warning text-white small-card">
-          <div class="card-body p-3">
-            <h5 class="mb-1">{{ products_sold }}</h5>
-            <p class="mb-1 small">Products Sold</p>
-            <small>+3% from yesterday</small>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-6 col-lg-3">
-        <div class="card card-box bg-danger text-white small-card">
-          <div class="card-body p-3">
-            <h5 class="mb-1">{{ new_customers }}</h5>
-            <p class="mb-1 small">New Customers</p>
-            <small>+5% from yesterday</small>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Charts -->
-    <div class="row mt-3 g-3">
-      <div class="col-12 col-lg-6">
-        <div class="card p-3 h-100">
-          <h6 class="fs-6">Total Order / Customer Growth / Revenue</h6>
-          <canvas id="pieChart"></canvas>
-        </div>
-      </div>
-      <div class="col-12 col-lg-6">
-        <div class="card p-3 h-100">
-          <h6 class="fs-6">Product Sold</h6>
-          <canvas id="lineChart"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <!-- Revenue -->
-    <div class="card mt-3 p-3">
-  <h6 class="fs-6">Total Revenue</h6>
-  <canvas id="revenueChart" style="height:200px;"></canvas>
-</div>
-
+{% block title %}Dashboard - WalkOn Admin{% endblock %}
 
 <style>
-  /* Reduce card height and padding */
-  .small-card .card-body {
-    min-height: 100px;
+  /* Custom enhancements for real dashboard feel */
+  .dashboard-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
   }
 
-  /* Make text smaller on small devices */
-  @media (max-width: 768px) {
-    h1.h3 {
-      font-size: 1.25rem;
-    }
-    .card-body h5 {
-      font-size: 1rem;
-    }
-    .card-body p,
-    .card-body small {
-      font-size: 0.75rem;
-    }
+  .table-top-products {
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .table-top-products thead th {
+    background-color: #4e73df;
+    color: white;
+    border: none;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+  }
+  .table-top-products tbody tr {
+    transition: background-color 0.15s;
+  }
+  .table-top-products tbody tr:hover {
+    background-color: #f8f9fc;
+  }
+  .table-top-products td {
+    vertical-align: middle;
+  }
+  .rank-badge {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #4e73df;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1rem;
+  }
+  .revenue-text {
+    font-weight: 600;
+    color: #1cc88a;
+  }
+  section.dashboard-section {
+    margin-bottom: 2.5rem;
   }
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+  <h1 class="h3 fw-bold mb-4 text-gray-800">WalkOn Admin Dashboard</h1>
+  <a href="{% url 'ledger_excel' %}" class="btn btn-sm btn-primary shadow-sm">
+    <i class="fas fa-file-excel fa-sm text-white-50"></i> Download Ledger Excel
+  </a>
+  </div>
+  
+  <!----------------------ledger excel and ledger book icons-->
+  
+  <!-- Today's Stats - unchanged as requested -->
+  <div class="row g-4 mb-5">
+    <div class="col-lg-3 col-md-6">
+      <div class="card border-0 shadow-sm text-white bg-primary dashboard-card">
+        <div class="card-body">
+          <h6 class="mb-1">Today's Sales</h6>
+          <h3 id="salesToday">₹{{ total_sales_today|floatformat:2|intcomma }}</h3>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6">
+      <div class="card border-0 shadow-sm text-white bg-success dashboard-card">
+        <div class="card-body">
+          <h6 class="mb-1">Today's Orders</h6>
+          <h3 id="ordersToday">{{ total_orders_today }}</h3>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6">
+      <div class="card border-0 shadow-sm text-white bg-warning dashboard-card">
+        <div class="card-body">
+          <h6 class="mb-1">Products Sold Today</h6>
+          <h3 id="productsSold">{{ products_sold_today }}</h3>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6">
+      <div class="card border-0 shadow-sm text-white bg-danger dashboard-card">
+        <div class="card-body">
+          <h6 class="mb-1">New Customers Today</h6>
+          <h3 id="newCustomers">{{ new_customers_today }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Left column: Chart + Top Products (larger width for main content) -->
+    <div class="col-lg-8">
+
+      <!-- Sales Trend -->
+      <section class="dashboard-section">
+        <div class="card shadow border-0 dashboard-card">
+          <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center" style="background-image: linear-gradient(45deg, #4e73df, #224abe);">
+            <h5 class="mb-0">Sales Trend Overview</h5>
+            <select id="salesFilter" class="form-select w-auto bg-white text-dark">
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </div>
+          <div class="card-body p-4">
+            <canvas id="salesChart" height="140"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Top 10 Products - Attractive Table -->
+      <section class="dashboard-section mb-3 pb-3 border-bottom-0">
+        <div class="card shadow border-4 dashboard-card">
+          <div class="card-header bg-gradient-secondary text-white" style="background-image: linear-gradient(45deg, #858796, #6c757d);">
+            <h5 class="mb-0 text-white text-center ">Top 10 Best Selling Products (All Time)</h5>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive p-2" style="background-image: linear-gradient(45deg, #f8f9fc, #e9ecef);">
+              <table class="table table-hover table-top-products mb-0 align-middle text-nowrap " style="border-radius: 10px; overflow: hidden;">
+                <thead class="table-dark">
+                  <tr>
+                    <th class="text-center">Rank</th>
+                    <th>Product Name</th>
+                    <th class="text-center">Units Sold</th>
+                    <th class="text-end">Revenue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for product in top_products %}
+                  <tr>
+                    <td class="text-center">
+                      <div class="rank-badge">{{ forloop.counter }}</div>
+                    </td>
+                    <td class="fw-bold">{{ product.product_variant__product__name }}</td>
+                    <td class="text-center">{{ product.total_quantity }}</td>
+                    <td class="text-end revenue-text">₹{{ product.total_revenue|floatformat:2|intcomma }}</td>
+                  </tr>
+                  {% empty %}
+                  <tr>
+                    <td colspan="4" class="text-center py-5 text-muted">No sales data available yet</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Right sidebar-like column: Categories + Brands -->
+    <div class="col-lg-4">
+
+      <!-- Top Categories -->
+      <section class="dashboard-section">
+        <div class="card shadow border-0 dashboard-card">
+          <div class="card-header bg-gradient-info text-white" style="background-image: linear-gradient(45deg, #36b9cc, #2c9faf);">
+            <h5 class="mb-0">Top Categories</h5>
+          </div>
+          <div class="card-body p-0">
+            <ul class="list-group list-group-flush">
+              {% for c in top_categories %}
+              <li class="list-group-item d-flex justify-content-between align-items-center px-4 py-3">
+                <span class="fw-medium">{{ c.product_variant__product__category__name }}</span>
+                <span class="badge bg-info rounded-pill px-3 py-2">{{ c.total_quantity }} sold</span>
+              </li>
+              {% empty %}
+              <li class="list-group-item text-center py-4 text-muted">No category data</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Top Brands -->
+      <section class="dashboard-section mb-0 pb-0 border-bottom-0">
+        <div class="card shadow border-0 dashboard-card mb-0 pb-0 " >
+          <div class="card-header bg-gradient-success text-white" style="border-bottom: 1px solid #dee2e6; background-image: linear-gradient(45deg, #1cc88a, #17a673);">
+            <h5 class="mb-0">Top Brands</h5>
+          </div>
+          <div class="card-body p-0">
+            <ul class="list-group list-group-flush">
+              {% for b in top_brands %}
+              <li class="list-group-item d-flex justify-content-between align-items-center px-4 py-3">
+                <span class="fw-medium">{{ b.product_variant__product__brand__name }}</span>
+                <span class="badge bg-success rounded-pill px-3 py-2">{{ b.total_quantity }} sold</span>
+              </li>
+              {% empty %}
+              <li class="list-group-item text-center py-4 text-muted">No brand data</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="{% static 'js/admin_js.js' %}"></script>
 
+<script>
+// Chart script - slightly enhanced
+let salesChart = null;
 
+function loadSalesChart(filter = "monthly") {
+  fetch(`/dashboard/sales_chart_data/?filter=${filter}`)
+    .then(res => res.json())
+    .then(data => {
+      const labels = data.map(d => {
+        if (filter === "yearly") return new Date(d.year).getFullYear();
+        return new Date(d.month).toLocaleString("en-IN", { month: "short", year: "numeric" });
+      });
+
+      const totals = data.map(d => d.total || 0);
+
+      if (salesChart) salesChart.destroy();
+
+      salesChart = new Chart(document.getElementById("salesChart"), {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Revenue (₹)",
+            data: totals,
+            borderColor: "#4e73df",
+            backgroundColor: "rgba(78, 115, 223, 0.15)",
+            tension: 0.4,
+            fill: true,
+            pointRadius: 4,
+            pointHoverRadius: 7,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: "top", labels: { font: { size: 14 } } },
+            tooltip: { mode: "index", intersect: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { callback: v => "₹" + v.toLocaleString("en-IN") }
+            }
+          }
+        }
+      });
+    })
+    .catch(err => console.error(err));
+}
+
+// Stats live update
+function loadDashboardStats() {
+  fetch("{% url 'admin_dashboard_data' %}")
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("salesToday").innerText = "₹" + Number(data.total_sales_today || 0).toLocaleString("en-IN", {minimumFractionDigits: 2});
+      document.getElementById("ordersToday").innerText = data.total_orders_today || 0;
+      document.getElementById("productsSold").innerText = data.products_sold_today || 0;
+      document.getElementById("newCustomers").innerText = data.new_customers_today || 0;
+    });
+}
+
+document.getElementById("salesFilter").addEventListener("change", e => loadSalesChart(e.target.value));
+
+loadSalesChart();
+loadDashboardStats();
+setInterval(loadDashboardStats, 5000);
+</script>
 {% endblock %}

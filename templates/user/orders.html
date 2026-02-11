@@ -1,160 +1,129 @@
 {% extends 'user/base.html' %}
-{% load static math_filters %}
+{% load static math_filters humanize %}
 {% block title %}My Orders - WalkOn{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/order.css' %}">
+{% endblock %}
+
 {% block content %}
-<style>
-    .order-summary, .search-button ,.filter-button{
-        background: #2193b0
-    }
-    /* Card style like your screenshot */
-    .order-card {
-        background: linear-gradient(135deg, #94dfefff, #2193b0);
-        color: white;
-        border: none;
-        border-radius: 8px; /* small rounded corner */
-        padding: 15px;
-    }
-    
-    .order-item {
-        background: rgba(255, 255, 255, 0.15);
-        border-radius: 6px;
-        padding: 8px;
-        margin-bottom: 10px;
-    }
-    .order-item img {
-        border-radius: 4px;
-    }
-    .summary-card {
-        background: #b6d5dcff;
-        border-radius: 10px;
-        border: 1px solid #e0e0e0;
-    }
-</style>
 
 <div class="container my-5">
-    <div class="row">
-    {% include 'user/user_sidebar.html'%}
-    <div class="col-md-8">
-    <h2 class="mb-4 text-center fw-bold" style="color: #1a73e8;">MY ORDERS</h2>
+  <div class="row">
+    {% include 'user/user_sidebar.html' %}
 
-    <!-- Summary Section -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card summary-card shadow-sm text-center p-3">
-                <h5 class="fw-bold">Total Orders</h5>
-                <p class="mb-0 text-primary">{{ orders.paginator.count }}</p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card summary-card shadow-sm text-center p-3">
-                <h5 class="fw-bold">Total Products Purchased</h5>
-                <p class="mb-0 text-success">{{ total_products }}</p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card summary-card shadow-sm text-center p-3">
-                <h5 class="fw-bold">Total Amount Spent</h5>
-                <p class="mb-0 text-danger">₹{{ total_spent }}</p>
-            </div>
-        </div>
-    </div>
+    <div class="col-md-9 col-lg-8 mx-auto">
+      <h2 class="mb-4 text-center fw-bold" style="color: #1a73e8;">MY ORDERS</h2>
 
-    <!-- Search and Filter Form -->
-    <form method="GET" class="mb-4">
-        <div class="row">
-            <div class="col-md-6">
-                <div class="input-group">
-                    <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search by Order ID, Product, Date or Status">
-                    <button type="submit" class="btn search-button">Search</button>
-                </div>
+      <!-- message-->
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert" style="font-size: 0.9rem; border-radius: 10px; margin-bottom: 10px;">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
-            <div class="col-md-3">
-                <select name="status" class="form-select">
-                    <option value="" {% if not status_filter %}selected{% endif %}>All Statuses</option>
-                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
-                    <option value="confirmed" {% if status_filter == 'confirmed' %}selected{% endif %}>Confirmed</option>
-                    <option value="shipped" {% if status_filter == 'shipped' %}selected{% endif %}>Shipped</option>
-                    <option value="delivered" {% if status_filter == 'delivered' %}selected{% endif %}>Delivered</option>
-                    <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
-                    <option value="returned" {% if status_filter == 'returned' %}selected{% endif %}>Returned</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <button type="submit" class="btn filter-button w-100">Filter</button>
-            </div>
-        </div>
-    </form>
-
-    {% for order in orders %}
-        <!-- Smaller card -->
-        <div class="card order-card shadow-sm mb-3 p-3">
-            <div class="row">
-                <div class="col-md-12">
-                    <h6 class="fw-bold text-danger">Order ID: {{ order.order_id }}</h6>
-                    
-                    {% if order.razorpay_order_id %}
-                        <p class="mb-1 small"><strong>Razorpay Order:</strong> {{ order.razorpay_order_id }}</p>
-                    {% endif %}
-
-                    <p class="mb-1 text-muted small">
-                        Status: <span class="fw-bold">{{ order.get_status_display }}</span><br>
-                        Ordered on: {{ order.order_date|date:"M d, Y" }} at {{ order.order_date|time:"h:i A" }} IST<br>
-                        Total: <span class="fw-bold text-success">₹{{ order.final_amount }}</span><br>
-                        Payment Method: <span class="fw-bold">{{ order.payment_method }}</span>
-                    </p>
-                </div>
-            </div>
-
-<!-- Items -->
-        <div class="mt-2">
-            <h6 class="fw-bold text-primary small">Order Items:</h6>
-            {% for item in order.items.all %}
-                <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
-                    <div class="d-flex align-items-center">
-                        <img src="{{ item.product_variant.product.primary_image.url }}" 
-                             alt="{{ item.product_variant.product.name }}" 
-                             class="img-fluid rounded border me-2" 
-                             style="max-height: 60px; width: 60px;">
-                        <div>
-                            <p class="mb-0 fw-bold small">{{ item.product_variant.product.name }}</p>
-                            <small class="text-muted">
-                                Color: {{ item.product_variant.color.name }} | 
-                                Size: {{ item.product_variant.size }} | 
-                                Qty: {{ item.quantity }} | 
-                                Price: ₹{{ item.price|mul:item.quantity }}
-                            </small>
-                            {% if item.is_cancelled %}
-                                <p class="mb-0 text-danger fw-bold small">
-                                    Cancelled {% if item.cancel_reason %} (Reason: {{ item.cancel_reason }}) {% endif %}
-                                </p>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% if order.status in 'pending confirmed' and not item.is_cancelled %}
-                        <button class="btn btn-sm btn-outline-danger" 
-                                data-bs-toggle="modal" 
-                                data-bs-target="#cancelItemModal{{ order.id }}{{ forloop.counter }}">
-                            Cancel Item
-                        </button>
-                    {% endif %}
-                </div>
             {% endfor %}
+        {% endif %}
+
+      <!-- Summary Section -->
+      <div class="row mb-4 g-3">
+        <div class="col-6 col-md-4">
+          <div class="card summary-card shadow-sm text-center p-3">
+            <h5 class="fw-bold mb-1">Total Orders</h5>
+            <p class="mb-0 text-primary fs-4">{{ orders.paginator.count|intcomma }}</p>
+          </div>
         </div>
-        
-        <!-- Actions -->
-        <div class="mt-2 d-flex justify-content-end">
-            <a href="{% url 'order_details' order.order_id %}" class="btn btn-sm btn-primary me-2">View Details</a>
-            <a href="{% url 'invoice_pdf' order.id %}" class="btn btn-sm btn-success me-2">Invoice</a>
+        <div class="col-6 col-md-4">
+          <div class="card summary-card shadow-sm text-center p-3">
+            <h5 class="fw-bold mb-1">Total Items Bought</h5>
+            <p class="mb-0 text-success fs-4">{{ total_products|intcomma }}</p>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="card summary-card shadow-sm text-center p-3">
+            <h5 class="fw-bold mb-1">Total Spent</h5>
+            <p class="mb-0 text-danger fs-4">₹{{ total_spent|floatformat:2|intcomma }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search & Filter -->
+      <form method="GET" class="mb-4">
+        <div class="row g-2">
+          <div class="col-md-6">
+            <div class="input-group input-group-sm">
+              <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search by Order ID / Product / Date / Status">
+              <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <select name="status" class="form-select form-select-sm">
+              <option value="" {% if not status_filter %}selected{% endif %}>All Statuses</option>
+              <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+              <option value="confirmed" {% if status_filter == 'confirmed' %}selected{% endif %}>Confirmed</option>
+              <option value="shipped" {% if status_filter == 'shipped' %}selected{% endif %}>Shipped</option>
+              <option value="delivered" {% if status_filter == 'delivered' %}selected{% endif %}>Delivered</option>
+              <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+              <option value="returned" {% if status_filter == 'returned' %}selected{% endif %}>Returned</option>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <button type="submit" class="btn btn-primary w-100 btn-sm">Filter</button>
+          </div>
+        </div>
+      </form>
+
+      <!-- Orders List (Compact Cards) -->
+{% for order in orders %}
+  <div class="card order-card shadow-sm mb-2" style="border-radius: 8px;">
+    <div class="card-body p-2">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <!-- Left: Order Info -->
+        <div class="d-flex flex-column">
+          <h6 class="fw-bold mb-0 text-danger fs-6">ID: {{ order.order_id }}</h6>
+          <small class="text-muted" style="font-size: 0.75rem;">
+            {{ order.order_date|date:"d M Y" }} • {{ order.get_status_display|capfirst }}
+          </small>
+        </div>
+
+        <!-- Right: Total & Payment + Actions -->
+        <div class="text-end d-flex align-items-center gap-2">
+          <div class="me-2 text-end">
+            <strong class="d-block text-success fs-6">₹{{ order.final_amount|floatformat:2|intcomma }}</strong>
+            <small class="text-muted" style="font-size: 0.7rem;">
+              {{ order.items.count }} item{{ order.items.count|pluralize }}
+              • {{ order.payment_method|title }}
+              {% if order.payment_method == 'cod' %}
+                <span class="badge bg-secondary px-1 py-0 ms-1" style="font-size: 0.65rem;">COD</span>
+              {% endif %}
+            </small>
+          </div>
+
+          <!-- Action Buttons (mini) -->
+          <div class="btn-group btn-group-sm" role="group">
+            <a href="{% url 'order_details' order.order_id %}" class="btn btn-outline-primary px-2 py-1" title="View Details">
+              <i class="bi bi-eye"></i>
+            </a>
+            <a href="{% url 'invoice_pdf' order.id %}" class="btn btn-outline-success px-2 py-1" title="Invoice">
+              <i class="bi bi-file-earmark-arrow-down"></i>
+            </a>
             {% if order.status in 'pending confirmed' %}
-                <button class="btn btn-sm btn-danger" 
-                        data-bs-toggle="modal" 
-                        data-bs-target="#cancelOrderModal{{ order.id }}">
-                    Cancel Order
-                </button>
+              <button class="btn btn-outline-danger px-2 py-1" 
+                      data-bs-toggle="modal" 
+                      data-bs-target="#cancelOrderModal{{ order.id }}" 
+                      title="Cancel Order">
+                <i class="bi bi-x-circle"></i>
+              </button>
             {% endif %}
+          </div>
         </div>
+      </div>
     </div>
-        <!-- Cancel Order Modal -->
+  </div>
+
+          <!-- Cancel Order Modal -->
         <div class="modal fade" id="cancelOrderModal{{ order.id }}" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -178,54 +147,46 @@
             </div>
         </div>
 
-        <!-- Cancel Item Modals -->
-        {% for item in order.items.all %}
-            <div class="modal fade" id="cancelItemModal{{ order.id }}{{ forloop.counter }}" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <form method="POST" action="{% url 'cancel_item' item.id %}">
-                            {% csrf_token %}
-                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Cancel Item</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <p>Cancel <strong>{{ item.product_variant.product.name }}</strong>?</p>
-                                <textarea class="form-control" name="reason" placeholder="Reason (optional)"></textarea>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                                <button type="submit" class="btn btn-danger btn-sm">Confirm Cancel</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        {% endfor %}
-    {% empty %}
-        <p class="text-center text-muted">You have no orders yet.</p>
-    {% endfor %}
+  
+{% empty %}
+  <div class="text-center py-5 text-muted">
+    <i class="bi bi-bag-x fs-1 d-block mb-3"></i>
+    No orders yet.
+  </div>
+{% endfor %}
+      <!-- Pagination -->
+      {% if orders.has_other_pages %}
+      <nav aria-label="Page navigation" class="mt-5">
+        <ul class="pagination justify-content-center">
+          {% if orders.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page=1{% if q %}&q={{ q }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" aria-label="First">
+                <span aria-hidden="true">&laquo;</span>
+              </a>
+            </li>
+            <li class="page-item">
+              <a class="page-link" href="?page={{ orders.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Previous</a>
+            </li>
+          {% endif %}
 
-    <!-- Pagination -->
-    <div class="d-flex justify-content-center mt-4">
-        <nav>
-            <ul class="pagination">
-                {% if orders.has_previous %}
-                    <li class="page-item"><a class="page-link" href="?page=1">&laquo; First</a></li>
-                    <li class="page-item"><a class="page-link" href="?page={{ orders.previous_page_number }}">Previous</a></li>
-                {% endif %}
+          <li class="page-item active">
+            <span class="page-link">{{ orders.number }}</span>
+          </li>
 
-                <li class="page-item active"><span class="page-link">{{ orders.number }}</span></li>
-
-                {% if orders.has_next %}
-                    <li class="page-item"><a class="page-link" href="?page={{ orders.next_page_number }}">Next</a></li>
-                    <li class="page-item"><a class="page-link" href="?page={{ orders.paginator.num_pages }}">Last &raquo;</a></li>
-                {% endif %}
-            </ul>
-        </nav>
+          {% if orders.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ orders.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Next</a>
+            </li>
+            <li class="page-item">
+              <a class="page-link" href="?page={{ orders.paginator.num_pages }}{% if q %}&q={{ q }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" aria-label="Last">
+                <span aria-hidden="true">&raquo;</span>
+              </a>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
     </div>
-    </div>
-    </div>
+  </div>
 </div>
 {% endblock %}

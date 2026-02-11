@@ -1,0 +1,266 @@
+{% extends 'admin/base.html' %}
+{% load static humanize %}
+
+{% block title %}Sales Report - WalkOn Admin{% endblock %}
+<style>
+  .report-card {
+    border-width: 2px;
+  }
+
+  .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255,255,255,0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  }
+/* Optional: table smaller on mobile */
+  @media (max-width: 576px) {
+    #ordersTable th, #ordersTable td {
+      font-size: 12px;
+      padding: 6px;
+    }
+  }
+
+</style>
+
+
+
+{% block content %}
+<div class="container-fluid py-4 ">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold mb-0">Sales Report Dashboard</h2>
+    <div>
+      <a href="?filter={{ filter_type }}&start_date={{ start_date }}&end_date={{ end_date }}&order_status={{ order_status_filter }}&download=pdf" class="btn btn-danger">
+        <i class="bi bi-file-earmark-pdf"></i> PDF
+      </a>
+      <a href="?filter={{ filter_type }}&start_date={{ start_date }}&end_date={{ end_date }}&order_status={{ order_status_filter }}&download=excel" class="btn btn-success btn-sm">
+        <i class="bi bi-file-earmark-excel"></i> Excel
+      </a>
+    </div>
+  </div>
+
+<!-- Filter Card (compact, one line) -->
+<div class="card shadow border-0 mb-4">
+  <div class="card-body py-3">
+    <form id="filterForm" method="GET" class="row g-2 align-items-end">
+      <!-- Report Period -->
+      <div class="col-md-2 col-sm-6">
+        <label class="form-label fw-semibold text-muted small">Period</label>
+        <select name="filter" id="filterType" class="form-select form-select-sm">
+          <option value="daily" {% if filter_type == 'daily' %}selected{% endif %}>Today</option>
+          <option value="weekly" {% if filter_type == 'weekly' %}selected{% endif %}>Week</option>
+          <option value="monthly" {% if filter_type == 'monthly' %}selected{% endif %}>Month</option>
+          <option value="yearly" {% if filter_type == 'yearly' %}selected{% endif %}>Year</option>
+          <option value="custom" {% if filter_type == 'custom' %}selected{% endif %}>Custom</option>
+        </select>
+      </div>
+
+      <!-- Start Date -->
+      <div class="col-md-2 col-sm-6">
+        <label class="form-label fw-semibold text-muted small">From</label>
+        <input type="date" name="start_date" id="startDate" class="form-control form-control-sm" value="{{ start_date|date:'Y-m-d' }}">
+      </div>
+
+      <!-- End Date -->
+      <div class="col-md-2 col-sm-6">
+        <label class="form-label fw-semibold text-muted small">To</label>
+        <input type="date" name="end_date" id="endDate" class="form-control form-control-sm" value="{{ end_date|date:'Y-m-d' }}">
+      </div>
+
+      <!-- Order Status -->
+      <div class="col-md-3 col-sm-6">
+        <label class="form-label fw-semibold text-muted small">Status</label>
+        <select name="order_status" class="form-select form-select-sm">
+          <option value="all" {% if order_status_filter == 'all' %}selected{% endif %}>All</option>
+          <option value="confirmed" {% if order_status_filter == 'confirmed' %}selected{% endif %}>Confirmed</option>
+          <option value="shipped" {% if order_status_filter == 'shipped' %}selected{% endif %}>Shipped</option>
+          <option value="out for delivery" {% if order_status_filter == 'out for delivery' %}selected{% endif %}>Out for Delivery</option>
+          <option value="delivered" {% if order_status_filter == 'delivered' %}selected{% endif %}>Delivered</option>
+          <option value="partially_returned" {% if order_status_filter == 'partially_returned' %}selected{% endif %}>Partially Returned</option>
+        </select>
+      </div>
+
+      <!-- Buttons (Apply + Clear) -->
+      <div class="col-md-2 col-sm-12 d-flex gap-2 align-items-end">
+        <button type="submit" class="btn btn-primary btn-sm w-50" id="applyFilter">
+          <i class="bi bi-funnel-fill"></i> Apply
+        </button>
+        <a href="{% url 'admin_sales_report' %}" class="btn btn-outline-danger btn-sm w-50 text-nowrap" id="clearFilter">
+
+          <i class="bi bi-x-circle"></i> Clear
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay d-none">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="row g-4 mb-4" id="summaryCards">
+    <div class="col-lg-3 col-md-6">
+      <div class="card report-card border-success shadow-sm h-100">
+        <div class="card-body text-center">
+          <h6 class="text-success mb-1">Total Orders</h6>
+          <h3 class="fw-bold">{{ total_orders }}</h3>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6">
+      <div class="card report-card border-primary shadow-sm h-100">
+        <div class="card-body text-center">
+          <h6 class="text-primary mb-1">Total Sales</h6>
+          <h3 class="fw-bold">₹{{ total_amount|floatformat:2|intcomma }}</h3>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6">
+      <div class="card report-card border-warning shadow-sm h-100">
+        <div class="card-body text-center">
+          <h6 class="text-warning mb-1">Total Discount</h6>
+          <h3 class="fw-bold">₹{{ total_discount|floatformat:2|intcomma }}</h3>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6">
+      <div class="card report-card border-info shadow-sm h-100">
+        <div class="card-body text-center">
+          <h6 class="text-info mb-1">Coupons Used</h6>
+          <h3 class="fw-bold">{{ coupon_used }}</h3>
+          <small>(₹{{ coupon_discount|floatformat:2|intcomma }})</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Orders Table -->
+  <div class="card shadow border-0" id="ordersTableContainer">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Orders in Period (Showing latest 50)</h5>
+      <small class="text-muted">Filtered: {{ start_date|date:"d M Y" }} to {{ end_date|date:"d M Y" }}</small>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0" id="ordersTable">
+          <thead class="table-dark">
+            <tr>
+              <th>Order ID</th>
+              <th>Date</th>
+              <th>Customer</th>
+              <th>Amount</th>
+              <th>Discount</th>
+              <th>Status</th>
+              <th>Payment</th>
+            </tr>
+          </thead>
+          <tbody id="ordersBody">
+            {% for o in orders %}
+            <tr>
+              <td><strong>{{ o.order_id }}</strong></td>
+              <td>{{ o.order_date|date:"d M Y" }}</td>
+              <td>{{ o.user.username|title }}</td>
+              <td>₹{{ o.final_amount|floatformat:2|intcomma }}</td>
+              <td>₹{{ o.discount_amount|floatformat:2|intcomma }}</td>
+              <td>
+                <span class="badge {% if o.status == 'delivered' %}bg-success{% elif o.status == 'pending' %}bg-warning{% elif o.status == 'cancelled' %}bg-danger{% else %}bg-info{% endif %}">
+                  {{ o.get_status_display|capfirst }}
+                </span>
+              </td>
+              <td>{{ o.payment_method|title|default:"N/A" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="text-center py-4 text-muted">No orders found in this period.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</main>
+<!-- Live Update Script -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('filterForm');
+    const loading = document.getElementById('loadingOverlay');
+    const summaryCards = document.getElementById('summaryCards');
+    const ordersBody = document.getElementById('ordersBody');
+
+    form.addEventListener('change', function (e) {
+      if (e.target.id === 'filterType') {
+        const type = e.target.value;
+        document.getElementById('startDate').disabled = type !== 'custom';
+        document.getElementById('endDate').disabled = type !== 'custom';
+      }
+      applyFilter();
+    });
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      applyFilter();
+    });
+
+    function applyFilter() {
+      loading.classList.remove('d-none');
+      const formData = new FormData(form);
+      const params = new URLSearchParams(formData).toString();
+
+      fetch(`/dashboard/sales-report/?${params}`, {  # ← /admin/sales-report/ absolute URL to ensure it works regardless of current page
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      })
+      .then(response => response.text())
+      .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+
+        // Update summary cards
+        summaryCards.innerHTML = doc.getElementById('summaryCards').innerHTML;
+
+        // Update table body
+        ordersBody.innerHTML = doc.getElementById('ordersBody').innerHTML;
+
+        loading.classList.add('d-none');
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        loading.classList.add('d-none');
+        alert('Failed to load data. Please try again.');
+      });
+    }
+      const source = new EventSource("/admin/sales-report/live/");
+
+  source.onmessage = function (event) {
+    const data = JSON.parse(event.data);
+
+    if (data.updated) {
+      console.log("Live update received");
+
+      // re-apply current filters automatically
+      document.getElementById("applyFilter").click();
+    }
+  };
+
+  source.onerror = function () {
+    console.log("Live connection closed");
+    source.close();
+  };
+
+
+
+
+  });
+</script>
+{% endblock %} 

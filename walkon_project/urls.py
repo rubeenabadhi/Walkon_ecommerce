@@ -31,7 +31,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('authentication.urls')),
     path('accounts/', include('allauth.urls')),
-    path('', include('admin_dashboard.urls')),
+    path('dashboard/', include('admin_dashboard.urls')),
     path('', include('product.urls')),
     path('cart/', include('cart.urls', namespace='cart')),
     path('address/', include("address.urls")),
@@ -42,6 +42,7 @@ urlpatterns = [
     path('wallet/', include('wallet.urls')),
     path('review/', include('review.urls')),
     path('stock/', include('stock.urls')),
+    path('pages/', include('pages.urls')),
 ]
 def custom_404_view(request, exception):
     return render(request, "404.html", status=404)

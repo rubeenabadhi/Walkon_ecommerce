@@ -63,6 +63,37 @@
     footer .newsletter button {
       height: 38px;
     }
+    /* Category Dropdown - Attractive Enhancements */
+.dropdown-toggle:hover {
+  background: rgba(26, 115, 232, 0.08) !important;
+  transition: all 0.2s ease;
+}
+
+.dropdown-menu {
+  border-radius: 12px !important;
+  animation: dropdownFade 0.3s ease-out;
+}
+
+@keyframes dropdownFade {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-item {
+  transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background: #e3f2fd !important;
+  color: #1a73e8 !important;
+  transform: translateX(5px);
+}
+
+.hover-bg-light:hover {
+  background: #f1f5f9 !important;
+}
+
+.text-pink { color: #e91e63; }
   </style>
 
   {% block extra_css %}{% endblock %}
@@ -81,21 +112,59 @@
     
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">About</a></li>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="categoryDropdown" role="button" data-bs-toggle="dropdown">
-            Category
-          </a>
-          <ul class="dropdown-menu" aria-labelledby="categoryDropdown">
-            <li><a class="dropdown-item" href="{% url 'women_products' %}">Women</a></li>
-            <li><a class="dropdown-item" href="{% url 'men_products' %}">Men</a></li>
-            <li><a class="dropdown-item" href="{% url 'kids_products' %}">Kids</a></li>
-          </ul>
-        </li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'all_products' %}">Shop</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">Blog</a></li>
+        <li class="nav-item position-relative"><a class="nav-link fw-semibold d-flex align-items-center gap-1 px-3 py-2 rounded-pill hover-bg-primary text-dark text-decoration-none" href="{% url 'home' %}">Home</a></li>
+        <li class="nav-item position-relative"><a class="nav-link fw-semibold d-flex align-items-center gap-1 px-3 py-2 rounded-pill hover-bg-primary text-dark text-decoration-none" href="{% url 'about_us' %}">About</a></li>
+        <li class="nav-item position-relative"><a class="nav-link fw-semibold d-flex align-items-center gap-1 px-3 py-2 rounded-pill hover-bg-primary text-dark text-decoration-none" href="{% url 'all_products' %}">Shop</a></li>
+        <li class="nav-item dropdown position-relative">
+  <a class="nav-link dropdown-toggle fw-semibold d-flex align-items-center gap-1 px-3 py-2 rounded-pill hover-bg-primary text-dark text-decoration-none"
+     href="#" id="categoryDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+  Category
+  </a>
+
+  <ul class="dropdown-menu shadow-lg border-0 rounded-3 overflow-hidden mt-2 fade-in"
+      aria-labelledby="categoryDropdown"
+      style="min-width: 220px; border-top: 3px solid #1a73e8;">
+    
+    <li>
+      <a class="dropdown-item d-flex align-items-center gap-3 py-3 px-4 hover-bg-light" href="{% url 'women_products' %}">
+        <i class="bi bi-gender-female fs-4 text-pink"></i>
+        <div>
+          <div class="fw-bold">Women</div>
+          <small class="text-muted">Elegant & Stylish Collection</small>
+        </div>
+      </a>
+    </li>
+
+    <li>
+      <a class="dropdown-item d-flex align-items-center gap-3 py-3 px-4 hover-bg-light" href="{% url 'men_products' %}">
+        <i class="bi bi-gender-male fs-4 text-primary"></i>
+        <div>
+          <div class="fw-bold">Men</div>
+          <small class="text-muted">Bold & Comfortable</small>
+        </div>
+      </a>
+    </li>
+
+    <li>
+      <a class="dropdown-item d-flex align-items-center gap-3 py-3 px-4 hover-bg-light" href="{% url 'kids_products' %}">
+        <i class="bi bi-stars fs-4 text-warning"></i>
+        <div>
+          <div class="fw-bold">Kids</div>
+          <small class="text-muted">Fun & Durable</small>
+        </div>
+      </a>
+    </li>
+
+    <!-- Optional: Divider + All Categories link -->
+    <li><hr class="dropdown-divider my-1"></li>
+    <li>
+      <a class="dropdown-item text-center fw-semibold py-3 text-primary" href="{% url 'all_products' %}">
+        View All Categories →
+      </a>
+    </li>
+  </ul>
+</li>
+        <li class="nav-item position-relative"><a class="nav-link fw-semibold d-flex align-items-center gap-1 px-3 py-2 rounded-pill hover-bg-primary text-dark text-decoration-none" href="{% url 'contact_us' %}">Contact</a></li>
       </ul>
 
       <form method="get" class="d-flex mb-2">
@@ -137,8 +206,8 @@
       <div class="col-md-3 footer-col mb-3">
         <h6>Info</h6>
         <ul class="list-unstyled">
-          <li><a href="#">Contact us</a></li>
-          <li><a href="#">About us</a></li>
+          <li><a href="{% url 'contact_us' %}">Contact us</a></li>
+          <li><a href="{% url 'about_us' %}">About us</a></li>
         </ul>
       </div>
       <div class="col-md-3 footer-col mb-3">

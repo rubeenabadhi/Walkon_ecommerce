@@ -20,6 +20,7 @@ from review.models import Review
 
 
 #========================================================================USER ORDER VIEW===============================================
+
 @login_required(login_url="login")
 def orders(request):
     # 1️⃣ Search and filter parameters
@@ -176,6 +177,7 @@ def cancel_order(request, order_id):
                     wallet=wallet,
                     amount=refund_amount,
                     transaction_type="credit",
+                    purpose="refund",
                     description=f"Full order cancelled refund - Order #{order.order_id}"
                 )
                 print("[DEBUG] Refund transaction created")
@@ -276,6 +278,7 @@ def cancel_item(request, item_id):
                     wallet=wallet,
                     amount=refund_amount,
                     transaction_type="credit",
+                    purpose="refund",
                     description=f"Refund for cancelled item ({item.product_variant.product.name}) in order {order.order_id}"
                 )
             else:
@@ -516,6 +519,7 @@ def admin_order_action(request, order_number):
                         wallet=wallet,
                         amount=refund_amount,
                         transaction_type="credit",
+                        purpose="refund",
                         description=f"Admin approved return refund for item {item.product_variant.product.name} (Order: {order.order_id})"
                     )
 
@@ -599,8 +603,6 @@ def admin_process_return(request, request_id):
                 product = item.product_variant.product
                 product.stock = F("stock") + item.quantity
                 product.save(update_fields=["stock"])
-            # ---------- RECALCULATE TOTALS ----------
-                order.recalc_totals()
 
             # ---------- FULL ORDER RETURN ----------
             elif rr.request_type == "order":
@@ -616,7 +618,7 @@ def admin_process_return(request, request_id):
                     product.save(update_fields=["stock"])
 
             # ---------- RECALCULATE TOTALS ----------
-                order.recalc_totals()
+            order.recalc_totals()
 
             # ---------- REFUND = DIFFERENCE ----------
             total_refund = original_final - order.final_amount
@@ -632,6 +634,7 @@ def admin_process_return(request, request_id):
                     wallet=wallet,
                     amount=total_refund,
                     transaction_type="credit",
+                    purpose="refund",
                     description=f"Admin approved {rr.request_type} return refund (Order: {order.order_id})"
                 )
 

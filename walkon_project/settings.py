@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
     'authentication',
     'cloudinary',
     'cloudinary_storage',
@@ -72,6 +73,7 @@ INSTALLED_APPS = [
     "grappelli",
     "django_extensions",
     "stock",
+    "pages",
     
 ]
 

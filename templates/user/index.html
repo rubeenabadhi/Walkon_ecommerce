@@ -87,7 +87,7 @@
                style="height:220px; object-fit:contain; padding:15px; border-top-left-radius:12px; border-top-right-radius:12px;">
 
           <div class="card-body text-center">
-            <h6 class="card-title" style="font-size:1rem; font-weight:600; color:#333;">{{ product.name }}</h6>
+            <h6 class="card-title" style="font-size:1rem; font-weight:600; color:#333;" title="{{ product.name }}">{{ product.name|truncatewords:4 }}</h6>
 
             {% with offer_price=variant.get_offer_price %}
             {% if offer_price < variant.price %}
@@ -151,7 +151,7 @@
                style="height:220px; object-fit:contain; padding:15px; border-top-left-radius:12px; border-top-right-radius:12px;">
 
           <div class="card-body text-center">
-            <h6 class="card-title" style="font-size:1rem; font-weight:600; color:#333;">{{ product.name }}</h6>
+            <h6 class="card-title" style="font-size:1rem; font-weight:600; color:#333;" title="{{ product.name }}">{{ product.name|truncatewords:4 }}</h6>
 
             {% with offer_price=variant.get_offer_price %}
             {% if offer_price < variant.price %}

@@ -1,0 +1,150 @@
+{% extends 'user/base.html' %}
+{% load static %}
+
+{% block title %}About WalkOn - Your Trusted Footwear Destination{% endblock %}
+
+{% block extra_css %}
+<style>
+  .about-hero {
+    background: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
+    background-size: cover;
+    background-position: center;
+    color: white;
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    text-align: center;
+    padding: 0 1rem;
+  }
+
+  .mission-card, .value-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .mission-card:hover, .value-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+  }
+
+  .feature-icon {
+    font-size: 3rem;
+    color: #1a73e8;
+  }
+
+  .team-member img {
+    width: 140px;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 5px solid #fff;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Hero Section -->
+<div class="container my-5">
+<section class="about-hero">
+  <div class="container">
+    <h1 class="display-4 fw-bold mb-3">Welcome to WalkOn</h1>
+    <p class="lead fs-4 mb-4">Where every step tells a story of comfort, style, and confidence</p>
+    <p class="fs-5">Crafted with love in India • Loved across Kerala & beyond</p>
+  </div>
+</section>
+
+<!-- Who We Are -->
+<section class="py-5 bg-light">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <h2 class="fw-bold mb-4" style="color: #1a73e8;">Who We Are</h2>
+        <p class="lead text-muted mb-4">
+          WalkOn was born in Kerala with a simple belief: <strong>great footwear should be comfortable, stylish, and affordable</strong> — without compromise.
+        </p>
+        <p>
+          From our small workshop in Kochi, we have grown into a trusted name for quality shoes that suit Indian feet, Indian weather, and Indian lifestyles. Whether you're walking to college, heading to work, or stepping out for a weekend vibe — WalkOn is with you every step.
+        </p>
+      </div>
+      <div class="col-lg-6">
+        <img src='{% static "images/about-team-workshop.jpg" %}' alt="Our Workshop" class="img-fluid rounded-4 shadow-lg">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Our Mission & Vision -->
+<section class="py-5">
+  <div class="container">
+    <div class="row g-4 text-center">
+      <div class="col-md-6">
+        <div class="mission-card card border-0 shadow-lg h-100 p-4">
+          <div class="card-body">
+            <i class="bi bi-lightbulb-fill feature-icon mb-3 d-block"></i>
+            <h3 class="fw-bold mb-3">Our Mission</h3>
+            <p class="text-muted fs-5">
+              To deliver footwear that combines Indian craftsmanship with modern design — so every Indian can walk confidently and comfortably.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="mission-card card border-0 shadow-lg h-100 p-4">
+          <div class="card-body">
+            <i class="bi bi-stars feature-icon mb-3 d-block"></i>
+            <h3 class="fw-bold mb-3">Our Vision</h3>
+            <p class="text-muted fs-5">
+              To become the most loved footwear brand in every Indian household — one comfortable step at a time.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Core Values -->
+<section class="py-5 bg-light">
+  <div class="container">
+    <h2 class="text-center fw-bold mb-5" style="color: #1a73e8;">Our Core Values</h2>
+    <div class="row g-4 text-center">
+      <div class="col-md-4">
+        <div class="value-card card border-0 shadow-sm h-100 p-4">
+          <i class="bi bi-heart-fill text-danger fs-1 mb-3"></i>
+          <h4 class="fw-bold">Comfort First</h4>
+          <p class="text-muted">Every pair is designed keeping Indian feet in mind — breathable, cushioned, durable.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="value-card card border-0 shadow-sm h-100 p-4">
+          <i class="bi bi-leaf-fill text-success fs-1 mb-3"></i>
+          <h4 class="fw-bold">Sustainable Craft</h4>
+          <p class="text-muted">We use eco-friendly materials and ethical manufacturing wherever possible.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="value-card card border-0 shadow-sm h-100 p-4">
+          <i class="bi bi-currency-rupee fs-1 mb-3 text-warning"></i>
+          <h4 class="fw-bold">Affordable Luxury</h4>
+          <p class="text-muted">Premium look & feel at prices that don't hurt your wallet.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Call to Action -->
+<section class="py-5 text-center bg-primary text-white">
+  <div class="container">
+    <h2 class="fw-bold mb-4">Ready to WalkOn?</h2>
+    <p class="lead mb-4">Discover footwear that moves with you — not against you.</p>
+    <a href="{% url 'all_products' %}" class="btn btn-light btn-lg px-5 py-3 fw-bold shadow-lg">
+      Explore Collection
+    </a>
+  </div>
+</section>
+</div>
+
+{% endblock %}

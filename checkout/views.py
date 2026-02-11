@@ -69,6 +69,8 @@ def add_address_checkout(request):
     return JsonResponse({"status": "error", "message": "Invalid request"}, status=400)
     
 #=======================================edit address view checkout page ==========================
+
+
 @login_required(login_url="login")
 def edit_address_checkout(request, address_id):
     print("Editing Address ID:", address_id, request.user) # Debugging line
@@ -100,19 +102,25 @@ def edit_address_checkout(request, address_id):
             not address.country or
             not address.pincode
         ):
-            messages.error(request, "Please fill all the fields.")
-            return redirect("edit_address", address_id=address_id)
+            return JsonResponse({"status": "error", "message": "All fields are required."}, status=400)
 
         print("Address updated successfully.", address.full_name, address.street) 
         address.save() 
-        messages.success(request, "Address updated successfully ")
-        return redirect("select_address")
+        
+        return JsonResponse({"status": "success", "message": "Address updated successfully!"})
     
-    return redirect("select_address")  # Always redirect to checkout
+    return JsonResponse({"status": "error", "message": "Invalid request method"}, status=400)
+
+#------------get delivery charge function------
+def get_delivery_charge(state):
+    if state and 'kerala' in state.lower():
+        return Decimal('50.00')  # Within Kerala
+    return Decimal('150.00')  # Outside Kerala or state not provided
 
 #======================================selecr payment method view =========================
 @login_required(login_url="login")
 def select_payment(request):
+    print(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)  # Debugging line
     cart_items = CartItems.objects.filter(user=request.user).select_related('variant')
     if not cart_items.exists():
         messages.error(request, "Your cart is empty!")
@@ -138,6 +146,12 @@ def select_payment(request):
     # calculate final amount along with discount from utils.py
     _, discount, final_total = calculate_final_amount(cart_items, coupon)
     print("Select Payment - Subtotal:", subtotal, "Discount:", discount, "Final Total:", final_total)
+    # delivery charge calculation
+    delivery_charge = get_delivery_charge(address.state)
+    final_total += delivery_charge
+    print("Delivery Charge:", delivery_charge, "New Final Total:", final_total)
+    #sessio storage for final amount and discount to be used in payment processing views
+    request.session["final_total"] = float(final_total)  # Convert Decimal to float for JSON serialization
 
     # pending order update or create 
     order = Order.objects.filter(user=request.user, payment_method="pending").last()  
@@ -146,6 +160,7 @@ def select_payment(request):
         order = Order.objects.create(
             user=request.user,
             address=address,
+            delivery_charge=delivery_charge,
             total_amount=subtotal,
             discount_amount=discount,
             final_amount=final_total,
@@ -155,11 +170,12 @@ def select_payment(request):
         )
     else:
         # update existing pending order with latest amounts 
+        order.delivery_charge = delivery_charge
         order.total_amount = subtotal
         order.discount_amount = discount
         order.final_amount = final_total
         order.coupon = coupon
-        order.save(update_fields=['total_amount', 'discount_amount', 'final_amount', 'coupon'])
+        order.save(update_fields=['total_amount', 'discount_amount', 'final_amount', 'coupon', 'delivery_charge'])
 
     wallet, _ = Wallet.objects.get_or_create(user=request.user)
 
@@ -168,6 +184,7 @@ def select_payment(request):
         "address": address,
         "order": order,
         "total_price": subtotal.quantize(Decimal('0.01')),     # Subtotal
+        "delivery_charge": delivery_charge.quantize(Decimal('0.01')),
         "final_total": final_total.quantize(Decimal('0.01')),   # Grand Total (discounted)
         "discount": discount.quantize(Decimal('0.01')),
         "wallet_balance": wallet.balance,
@@ -286,6 +303,8 @@ def wallet_payment(request, order_id):
                 wallet=wallet,
                 transaction_type="debit",
                 amount=final_total,
+                order=order,
+                purpose="order_payment",
                 description=f"Wallet Payment for Order #{order.order_id}",
             )
 
@@ -350,7 +369,6 @@ def wallet_payment(request, order_id):
         return JsonResponse({"status": "failed", "message": str(e)}, status=500)
 
 #===================== RAZORPAY INTEGRATION ===============================
-@csrf_exempt
 @login_required(login_url="login")
 def create_razorpay_order(request, order_id):
 
@@ -358,16 +376,16 @@ def create_razorpay_order(request, order_id):
         return JsonResponse({"error": "POST request required"}, status=400)
 
     order = get_object_or_404(Order, id=order_id, user=request.user)
-
+    
     # Order must be pending
     if order.status != "pending":
         return JsonResponse({
             "status": "failed",
             "message": "Order already processed"
-        }, status=400)
+        }, status=404)
 
     # Final amount from session (preferred)
-    final_total = request.session.get("final_total")
+    final_total = order.final_amount
 
     if final_total is None:
         cart_items = CartItems.objects.filter(user=request.user).select_related("variant")
@@ -382,6 +400,7 @@ def create_razorpay_order(request, order_id):
         "currency": "INR",
         "receipt": str(order.id),
         "payment_capture": 1
+
     })
 
     # Create or update payment record
@@ -600,6 +619,11 @@ def place_order(request):
         session_discount = session_discount or discount_calc
 
     discount_amount = Decimal(str(session_discount)) if session_discount else (Decimal(subtotal) - final_amount)
+    
+    if payment_method == "cod" and final_amount >= 1000:
+        messages.error(request, "Cash on Delivery is not available for orders above ₹1000.")
+        print('final amount',final_amount)
+        return redirect("select_payment")
 
     try:
         with transaction.atomic():

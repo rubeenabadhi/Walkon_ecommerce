@@ -3,6 +3,9 @@
 {% block title %}Product Details - Walkon{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/product.css' %}">
+
+{% endblock %}
+{% block content %}
 <style>
 .star-rating-display .star {
     font-size: 1.4rem;
@@ -40,9 +43,6 @@
     .modal-backdrop { display: none !important; }
     #cartErrorMsg { font-size: 0.9rem; }
 </style>
-{% endblock %}
-{% block content %}
-
 <!-- Alert Box for Messages -->
 <div id="cartMessage" class="alert-custom alert alert-success d-none" role="alert"></div>
 <div id="cartErrorMsg" class="alert-custom alert alert-danger text-center " style="display:none;"></div>
@@ -219,14 +219,14 @@
   </div>
 
   <!-- Also Like Section -->
-  <h2 class="also-like-title mt-5">You May Also Like</h2>
-  <div class="row mt-3">
+  <h2 class="also-like-title mt-5 text-center">You May Also Like</h2>
+  <div class="row m-1">
     {% for related in products|slice:":3" %}
       <div class="col-md-4 also-like-item mb-4">
         <div class="card h-100 shadow-sm">
           <img src="{{ related.primary_image.url }}" 
                alt="{{ related.name }}" 
-               class="card-img-top img-fluid rounded"
+               class="card-img-top img-fluid rounded p-3"
                style="max-height: 250px; object-fit: contain; background-color: #f8f9fa;">
           <div class="card-body text-center">
             <p class="item-title fw-semibold mb-1">{{ related.name }}</p>
@@ -234,7 +234,7 @@
               {{ related.variants.first.color.name|default:"No Color" }}
             </p>
             <p class="item-price text-success fw-bold">
-              ₹{{ related.variants.first.price|default:"N/A" }}
+              ₹{{ related.variants.first.get_offer_price|default:"N/A" }}
             </p>
             <a href="{% url 'product_details' related.slug %}" 
                class="btn btn-outline-primary btn-sm mt-2">

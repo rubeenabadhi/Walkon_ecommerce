@@ -13,8 +13,15 @@ class Wallet(models.Model):
         return f"{self.user.username} - ₹{self.balance}"
     
 class WalletTransaction(models.Model):
+    PURPOSE_CHOICES = (
+        ('order_payment', 'Order Payment'),
+        ('refund', 'Refund'),
+        ('topup', 'Wallet Topup'),
+    )
+    purpose = models.CharField(max_length=20, choices=PURPOSE_CHOICES ,default='') #  field to specify the reason for the transaction
     wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    order = models.ForeignKey('order.Order', on_delete=models.SET_NULL, null=True, blank=True, related_name='wallet_transactions')  # link to order
     transaction_type = models.CharField(max_length=10)
     description = models.TextField(null=True, blank=True, default=None)
     created_at = models.DateTimeField(auto_now_add=True)

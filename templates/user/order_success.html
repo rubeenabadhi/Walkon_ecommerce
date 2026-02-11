@@ -2,11 +2,48 @@
 {% load static %}
 {% block title %}Thank You - WalkOn{% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/order.css' %}">
-{% endblock %}
-
 {% block content %}
+<style>
+    .thank-you-container {
+        background: linear-gradient(135deg, #ffffff, #e3f2fd);
+        border-radius: 20px;
+        padding: 3rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .thank-you-icon {
+        font-size: 4rem;
+        color: #28a745;
+        animation: popIn 0.5s ease-out;
+    }
+    .thank-you-title {
+        color: #1a73e8;
+        text-shadow: 0 2px 10px rgba(26, 115, 232, 0.2);
+    }
+    .thank-you-text {
+        font-size: 1.1rem;
+    }
+    .thank-you-btn {
+        transition: transform 0.2s ease;
+        font-weight: 400;
+        border-radius: 30px;
+        padding: 0.6rem 1.5rem;
+        font-size: 1rem;
+
+    }
+    .thank-you-btn:hover {
+        transform: translateY(-2px);
+    }   
+    @keyframes popIn {
+        0% {
+            transform: scale(0.5);
+            opacity: 0;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+</style>
 <div class="container my-5 py-5 text-center thank-you-container">
 
     <!-- Message -->
@@ -36,6 +73,7 @@
 
     <p class="thank-you-text">Order ID: {{ order.order_id }}</p>
     <p class="thank-you-text">Subtotal: ₹{{ subtotal|floatformat:2 }}</p>
+    <p class="thank-you-text">Delivery Charges: ₹{{ order.delivery_charge|floatformat:2 }}</p>
 
     {% if order.coupon %}
         <p class="thank-you-text">Coupon Applied: <strong>{{ order.coupon.code }}</strong></p>
@@ -56,8 +94,8 @@
 
     <!-- Buttons -->
     <div class="d-flex justify-content-center gap-3">
-        <a href="{% url 'orders' %}" class="btn btn-dark px-4 thank-you-btn">View Orders</a>
-        <a href="{% url 'all_products' %}" class="btn btn-outline-dark px-4 thank-you-btn">Continue Shopping</a>
+        <a href="{% url 'orders' %}" class="btn btn-dark px-4 thank-you-btn" style="background: #1a73e8;">View Orders</a>
+        <a href="{% url 'all_products' %}" class="btn btn-outline-dark px-4 thank-you-btn" style="background: #f8f9fa; border: 1px solid #1a73e8;">Continue Shopping</a>
     </div>
 </div>
 {% endblock %}

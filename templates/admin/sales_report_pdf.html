@@ -1,0 +1,53 @@
+{% load humanize%}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Sales Report {{ start_date }} to {{ end_date }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background: #0d6efd; color: white; }
+  </style>
+</head>
+<body>
+  <h1>Sales Report ({{ filter_type|title }})</h1>
+  <p>Period: {{ start_date }} to {{ end_date }}</p>
+
+  <div class="card">
+    <h4>Summary</h4>
+    <p>Total Orders: {{ total_orders }}</p>
+    <p>Total Sales: ₹{{ total_amount|floatformat:2 }}</p>
+    <p>Total Discount: ₹{{ total_discount|floatformat:2 }}</p>
+    <p>Coupons Used: {{ coupon_used }} (₹{{ coupon_discount|floatformat:2 }})</p>
+  </div>
+
+  <h4>Orders</h4>
+  <table>
+    <thead>
+      <tr>
+        <th>Order ID</th>
+        <th>Date</th>
+        <th>Customer</th>
+        <th>Amount</th>
+        <th>Discount</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for o in orders %}
+      <tr>
+        <td>{{ o.order_id }}</td>
+        <td>{{ o.order_date|date:"d M Y" }}</td>
+        <td>{{ o.user.username }}</td>
+        <td>₹{{ o.final_amount|floatformat:2|intcomma }}</td>
+        <td>₹{{ o.discount_amount|floatformat:2|intcomma }}</td>
+        <td>{{ o.get_status_display }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

@@ -1,12 +1,56 @@
 {% extends 'user/base.html' %}
 {% load static %}
 {% block title %}Select Payment Method - Walkon{% endblock %}
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/order.css' %}">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-{% endblock %}
-
+{% load math_filters %}
 {% block content %}
+<style>
+    .payment-container {
+        background: linear-gradient(135deg, #ffffff, #e3f2fd);
+        border-radius: 10px;
+    }
+
+    .payment-title {
+        color: #1a73e8;
+        font-weight: 500;
+        text-align: center;
+        font-size: clamp(1.8rem, 5vw, 2.2rem);
+    }
+
+    .payment-card {
+        border: 1px solid #cee7ff;
+        border-radius: 10px;
+        transition: box-shadow 0.3s ease;
+    }
+
+    .payment-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .continue-btn {
+        background: #1a73e8;
+        color: #ffffff;
+        border-radius: 10px;
+        padding: 0.5rem;
+        font-size: 1.1rem;
+    }
+
+    .continue-btn:hover {
+        background: #1669c1;
+        color: #ffffff;
+    }
+
+    .order-summary {
+        background: #f8f9fa;
+        border-radius: 10px;
+    }
+    .order-summary h3 {
+        color: #1a73e8;
+    }
+    .qty {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+</style>
 <div class="container my-5">
     <!-- Error Message with SweetAlert -->
     {% if messages %}
@@ -23,8 +67,8 @@
     <div class="row">
         <!-- Payment Options -->
         <div class="col-lg-8">
-            <div class="payment-container">
-                <h1 class="mb-4 fw-bold payment-title">Select Payment Method</h1>
+            <div class="payment-container p-4 shadow-sm rounded ">
+                <h1 class="mb-4 fw-bold payment-title text-uppercase">Select Payment Method</h1>
 
                 <!-- Payment Form -->
                 <form method="post" id="payment-form" action="{% url 'place_order' %}">
@@ -96,20 +140,20 @@
 
         <!-- Order Summary -->
         <div class="col-lg-4">
-            <div class="order-summary p-3">
-                <h3 class="fw-bold mb-3 text-primary">Order Summary</h3>
+            <div class="order-summary p-3 shadow-sm rounded " style="background: #d6e2ee; ">
+                <h3 class="fw-bold mb-3 text-center text-uppercase" >Order Summary</h3>
                 <small class="text-muted d-block mb-2">In Rupees</small>
 
                 {% for product in cart_items %}
                 <p class="qty mb-1">
-                    {{ product.quantity }} × ₹{{ product.variant.get_offer_price }}
-                    <span class="float-end fw-semibold">₹{{ product.item_total }}</span>
+                    {{ product.quantity }} × ₹{{ product.variant.get_offer_price }}  <span class="float-end"> 
+                    = ₹{{ product.quantity|mul:product.variant.get_offer_price|floatformat:2 }} </span>
                 </p>
                 {% endfor %}
 
                 <hr>
                 <p class="fw-semibold">Subtotal: <span class="float-end">₹{{ total_price }}</span></p>
-                <p class="text-success">Delivery Charges: <span class="float-end">Free</span></p>
+                <p class="text-success">Delivery Charges: <span class="float-end">₹{{ delivery_charge }}</span></p>
                 <!-- Coupon Section (separate form, not inside payment-form) -->
                 <div id="coupon-section">
                     {% if applied_coupon %}
@@ -139,11 +183,12 @@
         </div>
     </div>
 </div>
-
 <!-- Razorpay Checkout -->
+
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+    
     // Helper function to reset button state
     function resetButton() {
         const btn = $("#continueToShipping");
@@ -246,7 +291,7 @@
 
                 let options = {
                     "key": data.razorpay_key,
-                    "amount": data.amount * 100,
+
                     "currency": data.currency,
                     "name": "WalkOn",
                     "description": "Order Payment",

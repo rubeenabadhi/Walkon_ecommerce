@@ -54,7 +54,8 @@ class Order(models.Model):
     order_date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     coupon = models.ForeignKey(Coupon, null=True, blank=True, on_delete=models.SET_NULL,default = None)
-    total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00")) 
+    delivery_charge = models.DecimalField(max_digits=8, decimal_places=2, default=Decimal("0.00"))
     discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     final_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     unchanged_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
@@ -69,13 +70,14 @@ class Order(models.Model):
 
     class Meta:
         ordering = ["-order_date"]
+        indexes = [
+            models.Index(fields=["order_date", "status"]),
+        ]
 
     def __str__(self):
         return f"{self.order_id} - {self.user}"
     
-
-    
-
+    # Recalculate totals (after cancellation/return)
     def recalc_totals(self):
         # Skip if fully cancelled/returned
         

@@ -1,0 +1,156 @@
+/* Select Address Page - Modern Photo Effect Style */
+.address-container {
+  background: linear-gradient(135deg, #ffffff, #e3f2fd);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.address-title {
+  color: #1a73e8;
+  font-weight: 500;
+  letter-spacing: 1px;
+    text-transform: uppercase;
+    font-size: clamp(1.8rem, 5vw, 2.2rem);
+    text-align: center;
+}
+
+.option-card {
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+  position: relative;
+}
+
+.option-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(26, 115, 232, 0.15);
+  border-color: #1a73e8;
+}
+
+.option-card .edit-address {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.option-card .edit-address:hover {
+  background: #1a73e8;
+  color: white;
+  transform: scale(1.1);
+}
+
+.card-body {
+  padding: 1.25rem;
+}
+
+.form-check-input:checked {
+  background-color: #1a73e8;
+  border-color: #1a73e8;
+}
+
+.form-check-label {
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.form-check-input:checked + .form-check-label {
+  color: #1a73e8;
+  font-weight: 600;
+}
+
+.continue-btn {
+  background: linear-gradient(90deg, #1a73e8, #0d5bd9);
+  border: none;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(26, 115, 232, 0.3);
+}
+
+.continue-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(26, 115, 232, 0.4);
+  background: linear-gradient(90deg, #0d5bd9, #1a73e8);
+}
+
+.continue-btn:disabled {
+  background: #ccc;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* Address Modal Modern Look */
+#addressModal .modal-content {
+  border-radius: 20px;
+  border: none;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+  overflow: hidden;
+}
+
+#addressModal .modal-header {
+  background: linear-gradient(90deg, #1a73e8, #0d5bd9);
+  border-bottom: none;
+  color: white;
+}
+
+#addressModal .modal-title {
+  font-weight: 700;
+}
+
+#addressModal .form-label {
+  font-weight: 600;
+  color: #333;
+}
+
+#addressModal .form-control,
+#addressModal textarea {
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  padding: 0.75rem;
+  transition: all 0.2s;
+}
+
+#addressModal .form-control:focus {
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 0.25rem rgba(26, 115, 232, 0.25);
+}
+
+#addressModal .btn-dark,
+#addressModal .btn-outline-secondary {
+  border-radius: 10px;
+  padding: 0.6rem 1.5rem;
+  font-weight: 600;
+}
+
+.address-btn {
+  border-radius: 12px !important;
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .address-container {
+    padding: 1.5rem;
+  }
+  .continue-btn {
+    padding: 0.7rem;
+  }
+}

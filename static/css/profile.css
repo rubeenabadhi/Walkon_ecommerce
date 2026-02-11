@@ -108,7 +108,7 @@
 
 .btn-dark {
   background: var(--yellow-accent) !important;
-  color: #1a237e !important;
+  color: #f4f4f6 !important;
   border: none !important;
 }
 
@@ -135,7 +135,32 @@
 .profile-card h4 {
   color: var(--text-dark) !important;
 }
+    .refer-card {
+        background: linear-gradient(135deg, #ffffff, #e3f2fd);
+        border: none;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .refer-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+    }
 
+    .profile-info p {
+        font-size: 1rem;
+        margin-bottom: 0.9rem;
+        color: #444;
+    }
+    .profile-info strong {
+        color: #1a73e8;
+        font-weight: 600;
+    }
+
+    .btn-outline-primary:hover {
+        background: #1a73e8;
+        color: white;
+        border-color: #1a73e8;
+    }
 /* Responsive */
 @media (max-width: 768px) {
   .profile-card {

@@ -87,6 +87,7 @@ def wallet_payment_success(request):
                 wallet=wallet,
                 transaction_type="credit",
                 amount=Decimal(amount),
+                purpose="topup",
                 description=f"Added via Razorpay (Payment ID: {payment_id})"
             )
 
@@ -137,6 +138,7 @@ def admin_wallet_detail(request, wallet_id):
 
     context = {
         'wallet': wallet,
-        'transactions': transactions
+        'transactions': transactions,
+        'user': wallet.user,
     }
     return render(request, 'admin/wallet_details.html', context)
