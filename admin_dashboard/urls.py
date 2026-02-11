@@ -9,8 +9,6 @@ urlpatterns = [
     path('sales_chart_data/', views.sales_chart_data, name='admin_sales_chart_data'),
     path('admin/ledger-excel/',views.download_ledger_excel, name='ledger_excel'),
 
-
-
     # ----------------Admin sales report views
     path('sales-report/', views.sales_report_view, name='admin_sales_report'),
 ]

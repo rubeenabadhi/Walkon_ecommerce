@@ -23,14 +23,14 @@ from review.models import Review
 
 @login_required(login_url="login")
 def orders(request):
-    # 1️⃣ Search and filter parameters
+    #  Search and filter parameters
     q = request.GET.get('q', '').strip()
     status_filter = request.GET.get('status', '').strip()
 
-    # 2️⃣ Base queryset — all orders of current logged-in user
+    #  Base queryset — all orders of current logged-in user
     orders_qs = Order.objects.filter(user=request.user)
 
-    # 3️⃣ Apply search query if user typed anything
+    #  Apply search query if user typed anything
     if q:
         orders_qs = orders_qs.filter(
             Q(order_id__icontains=q) |
@@ -40,23 +40,23 @@ def orders(request):
             Q(payment_method__icontains=q)
         ).distinct()
 
-    # 4️⃣ Apply status filter if selected from dropdown
+    #  Apply status filter if selected from dropdown
     if status_filter:
         orders_qs = orders_qs.filter(status__iexact=status_filter)
 
-    # 5️⃣ Prefetch related objects to reduce DB hits (for performance)
+    #  Prefetch related objects to reduce DB hits (for performance)
     orders_qs = (
         orders_qs
         .prefetch_related('items__product_variant__product', 'payment')
         .order_by('-order_date')
     )
 
-    # 6️⃣ Pagination setup (4 orders per page)
+    # 6️ Pagination setup (4 orders per page)
     paginator = Paginator(orders_qs, 4)
     page_number = request.GET.get('page', 1)
     orders_page = paginator.get_page(page_number)
 
-    # 7️⃣ Totals across all orders (for summary display)
+    #  Totals across all orders (for summary display)
     totals = orders_qs.annotate(
         # Calculate total of each order's item = price × quantity
         item_total=F('items__price') * F('items__quantity')
@@ -73,12 +73,12 @@ def orders(request):
             filter=Q(items__is_cancelled=False)
         )
     )
-
-    # 8️⃣ Ensure default values if totals are None
+    #delivery charges are not included in total spent calculation
+    #  Ensure default values if totals are None
     total_spent = totals['total_spent'] or Decimal('0.00')
     total_products = totals['total_products'] or 0
 
-    # 9️⃣ Prepare context for template rendering
+    #  Prepare context for template rendering
     context = {
         'orders': orders_page,
         'addresses': Address.objects.filter(user=request.user),

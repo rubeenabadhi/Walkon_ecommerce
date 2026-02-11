@@ -64,7 +64,7 @@ def add_to_cart(request, slug):
     if quantity > available_for_user:
         return JsonResponse({"status": "error", "message": f"Not enough stock available. Only {available_for_user} left (considering your cart)."} )
 
-    max_allowed = min(available_for_user, 10)
+    max_allowed = min(available_for_user, 5)
     if quantity > max_allowed:
         return JsonResponse({"status": "error", "message": f"Cannot add more than {max_allowed} items."})
 
@@ -77,8 +77,8 @@ def add_to_cart(request, slug):
     )
     if not created:
         new_qty = cart_item.quantity + quantity
-        if new_qty > min(available_for_user, 10):
-            return JsonResponse({"status": "error", "message": f"Cannot exceed {min(available_for_user,10)} items in cart."})
+        if new_qty > min(available_for_user, 5):
+            return JsonResponse({"status": "error", "message": f"Cannot exceed {min(available_for_user,5)} items in cart."})
         cart_item.quantity = new_qty
         cart_item.save()
     else:
@@ -106,7 +106,7 @@ def update_cart(request, cart_item_id):
     action = request.POST.get("action")
     cart_item = get_object_or_404(CartItems, id=cart_item_id, user=request.user)
 
-    max_quantity = min(cart_item.product.stock, 10)
+    max_quantity = min(cart_item.product.stock, 5)
 
     if action == "increment":
         if cart_item.quantity < max_quantity:

@@ -124,36 +124,17 @@
   <ul class="dropdown-menu shadow-lg border-0 rounded-3 overflow-hidden mt-2 fade-in"
       aria-labelledby="categoryDropdown"
       style="min-width: 220px; border-top: 3px solid #1a73e8;">
+    {% for gender in genders %}
     
     <li>
-      <a class="dropdown-item d-flex align-items-center gap-3 py-3 px-4 hover-bg-light" href="{% url 'women_products' %}">
+      <a class="dropdown-item d-flex align-items-center gap-3 py-3 px-4 hover-bg-light" href="{% url 'products_by_gender' gender.label %}">
         <i class="bi bi-gender-female fs-4 text-pink"></i>
         <div>
-          <div class="fw-bold">Women</div>
-          <small class="text-muted">Elegant & Stylish Collection</small>
+          <div class="fw-bold">{{ gender.label }}</div>
         </div>
       </a>
     </li>
-
-    <li>
-      <a class="dropdown-item d-flex align-items-center gap-3 py-3 px-4 hover-bg-light" href="{% url 'men_products' %}">
-        <i class="bi bi-gender-male fs-4 text-primary"></i>
-        <div>
-          <div class="fw-bold">Men</div>
-          <small class="text-muted">Bold & Comfortable</small>
-        </div>
-      </a>
-    </li>
-
-    <li>
-      <a class="dropdown-item d-flex align-items-center gap-3 py-3 px-4 hover-bg-light" href="{% url 'kids_products' %}">
-        <i class="bi bi-stars fs-4 text-warning"></i>
-        <div>
-          <div class="fw-bold">Kids</div>
-          <small class="text-muted">Fun & Durable</small>
-        </div>
-      </a>
-    </li>
+    {% endfor %}
 
     <!-- Optional: Divider + All Categories link -->
     <li><hr class="dropdown-divider my-1"></li>

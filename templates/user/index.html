@@ -43,7 +43,7 @@
           <img src="{% static 'images/men_home.jpeg' %}" alt="Men's Shoes">
           <div class="category-overlay">
             <h3>Men's Collection</h3>
-            <a href="{% url 'men_products' %}" class="btn btn-primary">Explore Now</a>
+            <a href="{% url 'products_by_gender' 'Men' %}" class="btn btn-primary">Explore Now</a>
           </div>
         </div>
       </div>
@@ -52,7 +52,7 @@
           <img src="{% static 'images/women_home.jpeg' %}" alt="Women's Shoes">
           <div class="category-overlay">
             <h3>Women's Collection</h3>
-            <a href="{% url 'women_products' %}" class="btn btn-primary">Explore Now</a>
+            <a href="{% url 'products_by_gender' 'Women' %}" class="btn btn-primary">Explore Now</a>
           </div>
         </div>
       </div>
@@ -61,7 +61,7 @@
           <img src="{% static 'images/kid_home.jpeg' %}" alt="Kids' Shoes">
           <div class="category-overlay">
             <h3>Kids' Collection</h3>
-            <a href="{% url 'kids_products' %}" class="btn btn-primary">Explore Now</a>
+            <a href="{% url 'products_by_gender' 'Kids' %}" class="btn btn-primary">Explore Now</a>
           </div>
         </div>
       </div>

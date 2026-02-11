@@ -454,14 +454,45 @@ def ajax_delete_variant(request):
 
     return JsonResponse({"status": "invalid"})
 
+#====================stock update view========================
+@staff_member_required(login_url='admin_login')
+def stock_management(request):
+    query = request.GET.get('q', '')
+    status_filter = request.GET.get('status', 'all')
+
+    variants = Product.objects.all()
+    if query:
+        variants = variants.filter(
+            Q(product__name__icontains=query) 
+            
+        )
+  
+    if status_filter == 'low':
+        variants = variants.filter(stock__lte=5, stock__gt=0)
+    elif status_filter == 'out':
+        variants = variants.filter(stock=0)
+    elif status_filter == 'in':
+        variants = variants.filter(stock__gt=5)
+
+    context = {
+        'variants': variants.order_by('stock'),
+        'query': query,
+        'status_filter': status_filter,
+        'low_stock_count': Product.objects.filter(stock__lte=5, stock__gt=0).count(),
+        'out_stock_count': Product.objects.filter(stock=0).count(),
+        'total_variants': Product.objects.count(),
+    }
+    return render(request, 'admin/stock_management.html', context)
+
+# Create your views here.
+
+
 
 #============================================================================= USER VIEW==============================================================
 
-# Product Listing with Filters, Sorting, Pagination, Wishlist Integration
-def user_product_list(request):
-    products = Product.objects.all().distinct()
+#----------apply filters
+def apply_product_filters(request, products):
     filter_form = ProductFilterForm(request.GET or None)
-    genders = Gender.objects.all()
 
     if filter_form.is_valid():
         category = filter_form.cleaned_data.get("category")
@@ -473,13 +504,17 @@ def user_product_list(request):
 
         if category:
             products = products.filter(category=category)
+
         if brand:
             products = products.filter(brand=brand)
+
         if gender:
             products = products.filter(gender=gender)
-        if min_price:
+
+        if min_price is not None:
             products = products.filter(variants__price__gte=min_price)
-        if max_price:
+
+        if max_price is not None:
             products = products.filter(variants__price__lte=max_price)
 
         if sort_by == "price_low":
@@ -488,10 +523,18 @@ def user_product_list(request):
             products = products.order_by("-variants__price")
         elif sort_by == "latest":
             products = products.order_by("-created_at")
-        elif sort_by == "popular":
-            products = products.order_by("-views")
+        elif sort_by == "oldest":
+            products = products.order_by("created_at")
+
+    return products.distinct(), filter_form
 
 
+# Product Listing with Filters, Sorting, Pagination, Wishlist Integration
+def user_product_list(request):
+    products = Product.objects.all().distinct()
+    genders = Gender.objects.all()
+    # apply filters
+    products, filter_form = apply_product_filters(request, products)
     # wishlist
     wishlist_ids = []
     if request.user.is_authenticated:
@@ -499,7 +542,7 @@ def user_product_list(request):
             wishlist__user=request.user
         ).values_list("product_variant__product_id", flat=True)
 
-    products = products.order_by("id").distinct() 
+    products = products.distinct() 
     paginator = Paginator(products, 6)
     page_number = request.GET.get("page")
     products = paginator.get_page(page_number)
@@ -543,15 +586,7 @@ def product_sizes(request, product_id):
         return JsonResponse({"sizes": sizes})
     except Product.DoesNotExist:
         return JsonResponse({"sizes": []})
-#kids products
-def kids_products(request):
-    products = Product.objects.filter(gender__label='Kids')
-    categories = Category.objects.all()
 
-    Category_params = request.GET.get("category")
-    if Category_params:
-        products = products.filter(category__name__iexact=Category_params)
-    return render(request, 'user/kids.html', {'products': products, 'categories': categories})
 
 #new arrivals
 def new_arrivals(request):
@@ -559,30 +594,13 @@ def new_arrivals(request):
     
     return render(request, 'user/new_arrivals.html', {'products': products})
 
-# men shoes
-def men_products(request):
-    products = Product.objects.filter(gender__label='Men')
-    categories = Category.objects.all()
-
-    category_param = request.GET.get("category")  
-    if category_param:
-        products = products.filter(category__name__iexact=category_param)
-
-    return render(request, 'user/men.html', {
-        'products': products,
-        'categories': categories
-    })
-
-# -------------------wemen shoes
-def women_products(request):
-    products = Product.objects.filter(gender__label='Women')
-    categories = Category.objects.all()
-
-    category_param = request.GET.get("category")    
-    if category_param:
-        products = products.filter(category__name__iexact=category_param)    
-
-    return render(request, 'user/women.html', {
-        'products': products,
-        'categories': categories
-    })
+# products by gender with pagination
+def products_by_gender(request, gender_label):
+    gender = get_object_or_404(Gender, label=gender_label)
+    products = Product.objects.filter(gender=gender).order_by('-created_at')
+    # apply filters 
+    products, filter_form = apply_product_filters(request, products)
+    paginator = Paginator(products, 6)
+    page_number = request.GET.get('page')   
+    products = paginator.get_page(page_number)
+    return render(request, 'user/products_by_gender.html', {'products': products, 'gender': gender, 'filter_form': filter_form})    
