@@ -8,6 +8,7 @@ from django.db.models import Sum
 
 
 # Create your views here.
+
 def cart(request):
     if request.user.is_authenticated:
         cart_items = CartItems.objects.filter(user=request.user).select_related('product', 'variant')
@@ -82,7 +83,7 @@ def add_to_cart(request, slug):
         cart_item.quantity = new_qty
         cart_item.save()
     else:
-        print("✅ Added new item to cart.")
+        print(" Added new item to cart.")
 
     # Remove from wishlist if exists
     try:
@@ -135,7 +136,7 @@ def update_cart(request, cart_item_id):
     else:
         return JsonResponse({"status": "error", "message": "Invalid action."})
 
-    # ✅ Recalculate cart total (OFFER PRICE)
+    #  Recalculate cart total (OFFER PRICE)
     cart_items = CartItems.objects.filter(user=request.user)
     total_price = sum(
         i.variant.get_offer_price() * i.quantity

@@ -34,7 +34,7 @@
 {% block content %}
 <div class="container-fluid py-4 ">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold mb-0">Sales Report Dashboard</h2>
+    <h2 class="fw-semibold mb-3 text-uppercase text-center" style="font-weight: bold;">Sales Report Dashboard</h2>
     <div>
       <a href="?filter={{ filter_type }}&start_date={{ start_date }}&end_date={{ end_date }}&order_status={{ order_status_filter }}&download=pdf" class="btn btn-danger">
         <i class="bi bi-file-earmark-pdf"></i> PDF
@@ -109,7 +109,7 @@
   <!-- Summary Cards -->
   <div class="row g-4 mb-4" id="summaryCards">
     <div class="col-lg-3 col-md-6">
-      <div class="card report-card border-success shadow-sm h-100">
+      <div class="card report-card border-success shadow-sm h-100" style="border-width: 3px;">
         <div class="card-body text-center">
           <h6 class="text-success mb-1">Total Orders</h6>
           <h3 class="fw-bold">{{ total_orders }}</h3>
@@ -118,7 +118,7 @@
     </div>
 
     <div class="col-lg-3 col-md-6">
-      <div class="card report-card border-primary shadow-sm h-100">
+      <div class="card report-card border-primary shadow-sm h-100" style="border-width: 3px;">
         <div class="card-body text-center">
           <h6 class="text-primary mb-1">Total Sales</h6>
           <h3 class="fw-bold">₹{{ total_amount|floatformat:2|intcomma }}</h3>
@@ -127,7 +127,7 @@
     </div>
 
     <div class="col-lg-3 col-md-6">
-      <div class="card report-card border-warning shadow-sm h-100">
+      <div class="card report-card border-warning shadow-sm h-100" style="border-width: 3px;">
         <div class="card-body text-center">
           <h6 class="text-warning mb-1">Total Discount</h6>
           <h3 class="fw-bold">₹{{ total_discount|floatformat:2|intcomma }}</h3>
@@ -136,7 +136,7 @@
     </div>
 
     <div class="col-lg-3 col-md-6">
-      <div class="card report-card border-info shadow-sm h-100">
+      <div class="card report-card border-info shadow-sm h-100" style="border-width: 3px;">
         <div class="card-body text-center">
           <h6 class="text-info mb-1">Coupons Used</h6>
           <h3 class="fw-bold">{{ coupon_used }}</h3>
@@ -187,6 +187,42 @@
           </tbody>
         </table>
       </div>
+      <!--------pagination-->
+      <nav aria-label="Page navigation" class="p-3">
+        <ul class="pagination justify-content-center mb-0">
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?filter={{ filter_type }}&start_date={{ start_date }}&end_date={{ end_date }}&order_status={{ order_status_filter }}&page={{ page_obj.previous_page_number }}" aria-label="Previous">
+              <span aria-hidden="true">&laquo;</span>
+            </a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <span class="page-link" aria-hidden="true">&laquo;</span>
+          </li>
+          {% endif %}
+
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+              <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+              <li class="page-item"><a class="page-link" href="?filter={{ filter_type }}&start_date={{ start_date }}&end_date={{ end_date }}&order_status={{ order_status_filter }}&page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+          {% endfor %}
+
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?filter={{ filter_type }}&start_date={{ start_date }}&end_date={{ end_date }}&order_status={{ order_status_filter }}&page={{ page_obj.next_page_number }}" aria-label="Next">
+              <span aria-hidden="true">&raquo;</span>
+            </a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <span class="page-link" aria-hidden="true">&raquo;</span>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
     </div>
   </div>
 </div>
@@ -230,7 +266,8 @@
         summaryCards.innerHTML = doc.getElementById('summaryCards').innerHTML;
 
         // Update table body
-        ordersBody.innerHTML = doc.getElementById('ordersBody').innerHTML;
+        document.getElementById("ordersTableContainer").innerHTML =
+          doc.getElementById("ordersTableContainer").innerHTML;
 
         loading.classList.add('d-none');
       })

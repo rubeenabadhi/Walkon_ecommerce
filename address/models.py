@@ -1,4 +1,5 @@
 from django.db import models
+from django.forms import ValidationError
 from authentication.models import CustomUser
 
 
@@ -22,6 +23,33 @@ class Address(models.Model):
         return self.address
 
     class Meta:
-        verbose_name = 'Address'
-        verbose_name_plural = 'Addresses'
         ordering = ['created_at']  
+    def clean(self):
+        if self.full_name and len(self.full_name) < 3:
+            raise ValidationError("Full name must be at least 3 characters long.")
+        if self.full_name and len(self.full_name) > 30:
+            raise ValidationError("Full name must be at most 30 characters long.")
+        if self.phone_number and not self.phone_number.isdigit():
+            raise ValidationError("Phone number must contain only numbers.")
+        if self.phone_number and not self.phone_number.isdigit():
+            raise ValidationError("Phone number must contain only numbers.")
+        if self.phone_number and len(self.phone_number) < 10 and len(self.phone_number) > 15:
+            raise ValidationError("Phone number must be at least 10 digits long and at most 15 digits long.")
+        if self.pincode and not self.pincode.isdigit():
+            raise ValidationError("Pincode must contain only numbers.")
+        if self.pincode and len(self.pincode) < 6:
+            raise ValidationError("Pincode must be at least 6 digits long.")
+        if self.pincode and len(self.pincode) > 10:
+            raise ValidationError("Pincode must be at most 10 digits long.")
+        if self.city and len(self.city) < 3:
+            raise ValidationError("City must be at least 3 characters long.")
+        if self.city and len(self.city) > 20:
+            raise ValidationError("City must be at most 20 characters long.")
+        if self.state and len(self.state) < 3:
+            raise ValidationError("State must be at least 3 characters long.")
+        if self.state and len(self.state) > 20:
+            raise ValidationError("State must be at most 20 characters long.")
+        if self.country.lower() != 'india':
+            raise ValidationError("Country must be India.")
+        
+#================

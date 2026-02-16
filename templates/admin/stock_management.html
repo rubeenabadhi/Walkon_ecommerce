@@ -5,7 +5,7 @@
 
 {% block content %}
 <div class="container py-4">
-  <h2 class="mb-4 fw-bold">Stock Management</h2>
+  <h2 class="fw-semibold mb-3 text-uppercase text-center" style="font-weight: bold;">Stock Management</h2>
 
   <!-- Quick Stats -->
   <div class="row mb-4">
@@ -93,6 +93,8 @@
           </tbody>
         </table>
       </div>
+      <div class="card-footer d-flex justify-content-center">
+        {% include "admin/pagination.html" with page_obj=page_obj %}
     </div>
   </div>
 </div>

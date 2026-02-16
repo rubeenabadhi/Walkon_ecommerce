@@ -20,6 +20,7 @@ from offers.models import Coupon, UserCoupon
 from wallet.models import Wallet, WalletTransaction
 import json
 from .utils import calculate_final_amount
+from django.core.exceptions import ValidationError
 
 
 
@@ -52,7 +53,7 @@ def select_address(request):
 @login_required(login_url="login")
 def add_address_checkout(request):
     if request.method == "POST":
-        Address.objects.create(
+        address=Address(
             user=request.user,
             full_name=request.POST['full_name'],
             phone_number=request.POST['phone'],
@@ -64,19 +65,25 @@ def add_address_checkout(request):
             country=request.POST['country'],
             pincode=request.POST['pincode'],
         )
+    try:
+        address.full_clean()  # Validate the model fields
+        address.save()
         print("Address added successfully for user:", request.user)
         return JsonResponse({"status": "success", "message": "Address saved successfully!"})
-    return JsonResponse({"status": "error", "message": "Invalid request"}, status=400)
+    
+    except ValidationError as e:
+        print("Validation error:", e) #e means the error message from validation
+        return JsonResponse({"status": "error", "errors": e.message_dict}, status=400)
     
 #=======================================edit address view checkout page ==========================
 
 
 @login_required(login_url="login")
 def edit_address_checkout(request, address_id):
-    print("Editing Address ID:", address_id, request.user) # Debugging line
+    print("Editing Address ID:", address_id, request.user) # 
     if request.method == "POST":
         address = get_object_or_404(Address, id=address_id, user=request.user)
-        print("Editing Address ID:", address.user)  # Debugging line
+        print("Editing Address ID:", address.user)  
         if not address:
             messages.error(request, "Address not found.")
             return redirect("select_address")
@@ -103,12 +110,14 @@ def edit_address_checkout(request, address_id):
             not address.pincode
         ):
             return JsonResponse({"status": "error", "message": "All fields are required."}, status=400)
-
-        print("Address updated successfully.", address.full_name, address.street) 
-        address.save() 
-        
-        return JsonResponse({"status": "success", "message": "Address updated successfully!"})
     
+        try:
+            address.full_clean()  # Validate the model fields
+            address.save()
+            return JsonResponse({"status": "success", "message": "Address updated successfully!"})
+        except ValidationError as e:
+            print("Validation error:", e)
+            return JsonResponse({"status": "error", "errors": e.message_dict}, status=400)
     return JsonResponse({"status": "error", "message": "Invalid request method"}, status=400)
 
 #------------get delivery charge function------
@@ -429,7 +438,6 @@ def create_razorpay_order(request, order_id):
         "currency": "INR",
     })
 
-    # Verify Razorpay payment
 
 #==================== RAZORPAY PAYMENT VERIFICATION ===========================
 @csrf_exempt
@@ -569,7 +577,7 @@ def payment_failure(request):
     order_number = request.session.get('failed_order_number')
     failure_reason = request.session.get('payment_failure_reason', 'Payment failed. Please try again.')
 
-    # ✅ Safe session cleanup (avoid KeyError)
+    #  Safe session cleanup (avoid KeyError)
     request.session.pop('failed_order_number', None)
     request.session.pop('payment_failure_reason', None)
 

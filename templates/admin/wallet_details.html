@@ -79,6 +79,47 @@
           </tbody>
         </table>
       </div>
+      <!---------pagination-->
+      <nav aria-label="Page navigation example" class="p-3">
+        <ul class="pagination justify-content-center mb-0">
+          {% if transactions.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ transactions.previous_page_number }}" aria-label="Previous">
+              <span aria-hidden="true">&laquo;</span>
+            </a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <span class="page-link" aria-label="Previous">
+              <span aria-hidden="true">&laquo;</span>
+            </span>
+          </li>
+          {% endif %}
+
+          {% for num in transactions.paginator.page_range %}
+            {% if transactions.number == num %}
+              <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% else %}
+              <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+          {% endfor %}
+
+          {% if transactions.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ transactions.next_page_number }}" aria-label="Next">
+              <span aria-hidden="true">&raquo;</span>
+            </a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <span class="page-link" aria-label="Next">
+              <span aria-hidden="true">&raquo;</span>
+            </span>
+          </li>
+          {% endif %}
+   
+        </ul>
+      </nav>
     </div>
   </div>
 </div>

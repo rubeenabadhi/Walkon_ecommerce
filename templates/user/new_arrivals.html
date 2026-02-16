@@ -1,19 +1,81 @@
 {% extends "user/base.html" %}
 {% load static %}
-{% load widget_tweaks %}
-{% block title %}NEW ARRIVALS - WalkOn{% endblock %}
+{% load widget_tweaks %} <!-- For adding CSS classes to form fields -->
+
+{% block title %}KIDS SHOES - Walkon{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/productlist.css' %}">
 {% endblock %}
 {% block content %}
-<div class="container-fluid py-5">
 
-  <!-- Header Section -->
-  <div class="text-center mb-5">
-    <h2 class="fw-bold text-uppercase" style="font-family: var(--font-family-inter); font-size: 36px;">
-      NEW ARRIVALS
-    </h2>
-  </div>
+
+<div class="container py-4">
+    <!-- Header Section -->
+    <div class="text-center mb-4 header-section">
+        <h2 class="fw-bold text-primary">NEW ARRIVALS</h2>
+        <p class="text-muted mb-2">👟 Step up your shoe game or try a fresh pair. Explore all styles here.</p>
+        
+        <!-- Category Filter Buttons -->
+        <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
+            {% for categ in categories %}
+            <a href="?category={{ categ.name }}"
+               class="btn px-3 category-btn {% if request.GET.category == categ.name %}active{% else %}btn-outline-dark{% endif %} rounded-pill">
+               {{ categ.name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Mobile Filter Toggle Button -->
+        <div class="d-block d-md-none mb-3 text-center">
+            <button class="btn btn-outline-dark w-100 rounded-pill" type="button" data-bs-toggle="collapse"
+                data-bs-target="#filterSidebar" aria-expanded="false" aria-controls="filterSidebar">
+                Filters & Sort
+            </button>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="col-lg-3 col-md-4 collapse d-md-block mb-4 filter-sidebar" id="filterSidebar">
+            <div class="card p-3 shadow-lg rounded-4">
+                <form method="get" class="p-2 rounded">
+                    <h5 class="fw-bold mb-3 text-primary">Filters</h5>
+
+                    <!-- Category -->
+                    <div class="mb-3">
+                        <label for="id_category" class="form-label fw-semibold">Category</label>
+                        {{ filter_form.category|add_class:"form-select rounded-pill" }}
+                    </div>
+
+                    <!-- Brand -->
+                    <div class="mb-3">
+                        <label for="id_brand" class="form-label fw-semibold">Brand</label>
+                        {{ filter_form.brand|add_class:"form-select rounded-pill" }}
+                    </div>
+
+                    <!-- Price Range -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Price Range</label>
+                        <div class="d-flex gap-2">
+                            {{ filter_form.min_price|add_class:"form-control rounded-pill" }}
+                            {{ filter_form.max_price|add_class:"form-control rounded-pill" }}
+                        </div>
+                    </div>
+
+                    <!-- Sort By -->
+                    <div class="mb-3">
+                        <label for="id_sort_by" class="form-label fw-semibold">Sort By</label>
+                        {{ filter_form.sort_by|add_class:"form-select rounded-pill" }}
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-dark w-50 me-2 rounded-pill">Apply</button>
+                        <a href="{% url 'new_arrivals' %}" class="btn btn-outline-secondary w-50 rounded-pill">Clear</a>
+                    </div>
+                </form>
+            </div>
+        </div>
 
         <!-- Products Section -->
 <div class="col-lg-9 col-md-8">
@@ -58,7 +120,7 @@
                             {% if offer_price < variant.price %}
                             <span class="position-absolute top-2 start-1 m-4 badge bg-danger text-white px-2 py-1 fw-bold">
                             
-                {{ variant.get_offer_percentage }}% OFF
+                {{variant.get_offer_percentage }}% OFF
             </span>
                                 <p class="fw-bold mb-2" style="color:#2e7d32;">
                                     ₹{{ offer_price }}
@@ -112,60 +174,66 @@
     </div>
 </div>
 
+            <!-- Pagination -->    
+            <div class="d-flex justify-content-center mt-4">
+                {% if products.has_other_pages %}
+                <ul class="pagination">
+                    {% if products.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ products.previous_page_number }}">&laquo;</a>
+                    </li>
+                    {% endif %}
 
-  <!-- Pagination -->    
-  {% if products.has_other_pages %}
-  <div class="d-flex justify-content-center mt-4">
-    <ul class="pagination">
-      {% if products.has_previous %}
-        <li class="page-item">
-          <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ products.previous_page_number }}">&laquo;</a>
-        </li>
-      {% endif %}
+                    {% for page_num in products.paginator.page_range %}
+                    {% if products.number == page_num %}
+                    <li class="page-item active">
+                        <a class="page-link">{{ page_num }}</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ page_num }}">{{ page_num }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
 
-      {% for page_num in products.paginator.page_range %}
-        <li class="page-item {% if products.number == page_num %}active{% endif %}">
-          <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ page_num }}">{{ page_num }}</a>
-        </li>
-      {% endfor %}
-
-      {% if products.has_next %}
-        <li class="page-item">
-          <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ products.next_page_number }}">&raquo;</a>
-        </li>
-      {% endif %}
-    </ul>
-  </div>
-  {% endif %}
-
-</div>
-
-<!-- Size Modal -->
-<div class="modal fade" id="sizeModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Select Size</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <select class="form-select" id="modalSizeSelect">
-          <option value="">-- Select Size --</option>
-        </select>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-warning" id="confirmAddToCart">Add to Cart</button>
-      </div>
+                    {% if products.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ products.next_page_number }}">&raquo;</a>
+                    </li>
+                    {% endif %}
+                </ul>
+                {% endif %}
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 
-<!-- Scripts -->
+    <!-- Size Selection Modal -->
+    <div class="modal fade" id="sizeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Select Size</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <select class="form-select rounded-pill" id="modalSizeSelect">
+                        <option value="">-- Select Size --</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning rounded-pill" id="confirmAddToCart">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!---sweetalert-->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-  const addToCartBaseUrl = "{% url 'add_to_cart_from_wishlist' 9999 %}".replace("9999/", ""); 
-  const csrfToken = "{{ csrf_token }}";
+    const addToCartBaseUrl = "{% url 'add_to_cart_from_wishlist' 9999 %}".replace("9999/", "");
+    const csrfToken = "{{ csrf_token }}";
 </script>
-<script src="{% static 'js/addToCart.js' %}"></script>
 {% endblock %}

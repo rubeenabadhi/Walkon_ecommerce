@@ -1,0 +1,127 @@
+{% load static %}  <!-- optional, if you need any static files -->
+<style>
+  .breadcrumb {
+    background: transparent;
+    padding: 0.5rem 1rem;
+    margin-bottom: 1rem;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 0.9rem;
+  }
+  .breadcrumb-item + .breadcrumb-item::before {
+    content: ">";
+    padding: 0 0.5rem;
+    color: #6c757d;
+  }
+  .breadcrumb-item a {
+    color: #007bff;
+    text-decoration: none;
+  }
+  .breadcrumb-item a:hover {
+    text-decoration: underline;
+  } 
+    .breadcrumb-item.active {
+        color: #6c757d;
+    }
+    .about-hero {
+    background-image: url("{% static 'images/about_hero.jpg' %}");
+    background-size: cover;
+    background-position: center;
+    color: white;
+    min-height: 60vh;
+    display: flex;
+        
+    align-items: center;
+    text-align: center;
+    padding: 0 1rem;
+    }
+</style>
+<div class="container mt-4">
+<nav aria-label="breadcrumb" class="mt-3">
+    <ol class="breadcrumb bg-transparent p-0 mb-3">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+
+        <!-- Profile & Account Pages -->
+        {% if 'profile' in request.path or request.resolver_match.url_name == 'user_profile' %}
+            <li class="breadcrumb-item active">Profile</li>
+
+        {% elif 'edit_profile' in request.path or request.resolver_match.url_name == 'edit_profile' %}
+            <li class="breadcrumb-item"><a href="{% url 'user_profile' user.id %}">Profile</a></li>
+            <li class="breadcrumb-item active">Edit Profile</li>
+
+        {% elif 'change_password' in request.path or request.resolver_match.url_name == 'change_password' %}
+            <li class="breadcrumb-item"><a href="{% url 'user_profile' user.id %}">Profile</a></li>
+            <li class="breadcrumb-item active">Change Password</li>
+
+        {% elif 'address' in request.path or request.resolver_match.url_name in 'address_list add_address edit_address' %}
+            <li class="breadcrumb-item"><a href="{% url 'user_profile' user.id %}">Profile</a></li>
+            <li class="breadcrumb-item active">Addresses</li>
+
+        <!-- Shop & Product Pages -->
+        {% elif 'all_products' in request.path or request.resolver_match.url_name == 'all_products' %}
+            <li class="breadcrumb-item active">Shop</li>
+
+        {% elif 'product_details' in request.path or request.resolver_match.url_name == 'product_details' %}
+            <li class="breadcrumb-item"><a href="{% url 'all_products' %}">Shop</a></li>
+            <li class="breadcrumb-item active">Product Details</li>
+
+        {% elif 'products_by_gender' in request.path or 'category' in request.path %}
+            <li class="breadcrumb-item"><a href="{% url 'all_products' %}">Shop</a></li>
+            <li class="breadcrumb-item active">Category</li>
+
+        <!-- Cart & Checkout Flow -->
+        {% elif 'cart' in request.path or request.resolver_match.url_name == 'cart' %}
+            <li class="breadcrumb-item active">Cart</li>
+
+        {% elif 'select_address' in request.path or request.resolver_match.url_name == 'select_address' %}
+            <li class="breadcrumb-item"><a href="{% url 'cart' %}">Cart</a></li>
+            <li class="breadcrumb-item active">Select Address</li>
+
+        {% elif 'checkout' in request.path or request.resolver_match.url_name == 'checkout' %}
+            <li class="breadcrumb-item"><a href="{% url 'cart:cart' %}">Cart</a></li>
+            <li class="breadcrumb-item active"><a href="{% url 'select_address' %}">Select Address</a></li>
+            <li class="breadcrumb-item active">Checkout</li>
+
+        {% elif 'order-success' in request.path or 'thank_you' in request.path or request.resolver_match.url_name in 'order_success' %}
+            <li class="breadcrumb-item"><a href="{% url 'cart' %}">Cart</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'select_address' %}">Select Address</a></li>
+             <li class="breadcrumb-item"><a href="{% url 'checkout' %}">Checkout</a></li>
+            <li class="breadcrumb-item active">Order Success</li>
+
+        {% elif 'order-failure' in request.path or 'payment_failure' in request.path or request.resolver_match.url_name == 'payment_failure' %}
+            <li class="breadcrumb-item"><a href="{% url 'cart' %}">Cart</a></li>
+            <li class="breadcrumb-item active">Payment Failed</li>
+
+        <!-- Orders -->
+        {% elif 'order' in request.path or request.resolver_match.url_name == 'my_orders' %}
+            <li class="breadcrumb-item"><a href="{% url 'user_profile' user.id %}">Profile</a></li>
+            <li class="breadcrumb-item active">My Orders</li>
+
+        {% elif 'order-details' in request.path or request.resolver_match.url_name == 'order_details' %}
+            <li class="breadcrumb-item"><a href="{% url 'user_profile' user.id %}">Profile</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'my_orders' %}">My Orders</a></li>
+            <li class="breadcrumb-item active">Order Details</li>
+
+        <!-- wishlist -->
+        {% elif 'wishlist' in request.path %}
+            <li class="breadcrumb-item active">Wishlist</li>
+        <!-- Coupons & Refer -->
+        {% elif 'coupons' in request.path or 'my_coupons' in request.path %}
+            <li class="breadcrumb-item"><a href="{% url 'user_profile' user.id %}">Profile</a></li>
+            <li class="breadcrumb-item active">My Coupons</li>
+        <!-- Refer & Earn -->
+        {% elif 'refer' in request.path or 'refer_earn' in request.path %}
+            <li class="breadcrumb-item"><a href="{% url 'user_profile' user.id %}">Profile</a></li>
+            <li class="breadcrumb-item active">Refer & Earn</li>
+        <!-- Contact & About -->
+        {% elif 'contact_us' in request.path or request.resolver_match.url_name == 'contact_us' %}
+            <li class="breadcrumb-item active">Contact Us</li>
+
+        {% elif 'about_us' in request.path or request.resolver_match.url_name == 'about_us' %}
+            <li class="breadcrumb-item active">About Us</li>
+
+        {% endif %}
+    </ol>
+</nav>
+</div>

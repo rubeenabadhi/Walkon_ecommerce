@@ -32,7 +32,7 @@ $(document).on("click", ".add-to-cart, .add-to-cart-btn", function (e) {
         let sizeDropdown = $("#modalSizeSelect");
         sizeDropdown.empty().append('<option value="">-- Select Size --</option>');
 
-        // ✅ Load product sizes via AJAX
+        //  Load product sizes via AJAX
     $.getJSON(`/product/${productId}/sizes/`, function (res) {
         // Use Set to ensure unique sizes
         let seen = new Set();
@@ -60,7 +60,7 @@ $(document).on("click", "#confirmAddToCart", function () {
     let card = $("#sizeModal").data("card");
 
     if (!variantId) {
-        alert("⚠️ Please select a size.");
+        alert(" Please select a size.");
         return;
     }
 
@@ -68,26 +68,30 @@ $(document).on("click", "#confirmAddToCart", function () {
     addToCartAjax(variantId, card);
 });
 
-// ✅ Reusable AJAX Call
+// Reusable AJAX Call
 function addToCartAjax(variantId, card) {
     $.ajax({
-        url: `${addToCartBaseUrl}${variantId}/`, // ✅ works for wishlist & product pages
+        url: `${addToCartBaseUrl}${variantId}/`, //  works for wishlist & product pages
         type: "POST",
         headers: { "X-CSRFToken": csrfToken },
         success: function (response) {
             if (response.status === "success") {
-                alert(`✅ ${response.message}`);
+                if (response.cart_count!=undefined){
+                    $("#cart-count").text(response.cart_count);
+                }
+
+                alert(` ${response.message}`);
                 if (card && card.find(".size-select").length > 0) {
                     // Wishlist → remove product from wishlist card
                     card.fadeOut();
                 }
             } else {
-                alert(`❌ ${response.message}`);
+                alert(` ${response.message}`);
             }
         },
         error: function (xhr) {
             console.error(xhr.responseText);
-            alert("⚠️ Something went wrong while adding to cart.");
+            alert(" Something went wrong while adding to cart.");
         },
     });
 }
@@ -97,7 +101,7 @@ $(document).on("click", ".remove-wishlist", function(e){
     let card = $(this).closest(".col-6, .col-md-4, .col-lg-3");
 
     if (!variantId) {
-        alert("❌ Variant ID not found!");
+        alert(" Variant ID not found!");
         return;
     }
 
@@ -108,14 +112,20 @@ $(document).on("click", ".remove-wishlist", function(e){
         success: function(res){
             if(res.status === "success"){
                 card.fadeOut();
-                alert("✅ Removed from wishlist");
+                alert(" Removed from wishlist");
+
+                // updatewishlist count in navbar
+                if (res.wishlist_count != undefined) {
+                    $("#wishlist-count").text(res.wishlist_count);
+                }
+                
             } else {
-                alert(`❌ ${res.message || "Error removing from wishlist"}`);
+                alert(` ${res.message || "Error removing from wishlist"}`);
             }
         },
         error: function(xhr){
             console.error(xhr.responseText);
-            alert("❌ Error removing from wishlist");
+            alert(" Error removing from wishlist");
         }
     });
 });

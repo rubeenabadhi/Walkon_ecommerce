@@ -8,7 +8,7 @@
 <div class="container-fluid products-1 py-4">
     <!-- Header -->
     <div class="content-67 mb-4">
-      <h1 class="title-68 text-rgb-9-9-9 fw-bold fs-2">Products management</h1>
+      <h1 class="fw-semibold mb-3 text-uppercase text-center" style="font-weight: bold;">Products management</h1>
     </div>
 
     <!-- Search and Filters -->
@@ -38,6 +38,7 @@
       <table class="table table-striped align-middle">
         <thead class="table-dark">
           <tr>
+            <th scope="col">NO</th>
             <th scope="col">Product</th>
             <th scope="col">Product ID</th>
             <th scope="col">Price</th>
@@ -52,6 +53,7 @@
         <tbody>
           {% for product in products %}
           <tr id="row-{{ product.id }}" class="bg-light">
+            <td>{{ forloop.counter }}</td>
             <td>{{ product.name }}</td>
             <td class="text-rgb-59-51-137">{{ product.id }}</td>
     <td>
@@ -129,35 +131,41 @@
     </div>
 
     <!-- Pagination -->
-    <div class="d-flex justify-content-center mt-4">
-      {% if products.has_other_pages %}
-        <ul class="pagination">
-          {% if products.has_previous %}
-            <li class="page-item">
-              <a class="page-link" href="?q={{ request.GET.q }}&page={{ products.previous_page_number }}">&laquo;</a>
-            </li>
-          {% endif %}
-
-          {% for page_num in products.paginator.page_range %}
-            {% if products.number == page_num %}
-              <li class="page-item active">
-                <a class="page-link">{{ page_num }}</a>
-              </li>
-            {% else %}
-              <li class="page-item">
-                <a class="page-link" href="?q={{ request.GET.q }}&page={{ page_num }}">{{ page_num }}</a>
-              </li>
-            {% endif %}
-          {% endfor %}
-
-          {% if products.has_next %}
-            <li class="page-item">
-              <a class="page-link" href="?q={{ request.GET.q }}&page={{ products.next_page_number }}">&raquo;</a>
-            </li>
-          {% endif %}
-        </ul>
-      {% endif %}
-    </div>
+    <nav aria-label="Page navigation example" class="p-3">
+      <ul class="pagination justify-content-center mb-0">
+        {% if products.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ products.previous_page_number }}" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+          </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+          <span class="page-link" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+          </span>
+        </li>
+        {% endif %}
+        <li class="page-item disabled">
+          <span class="page-link">
+            Page {{ products.number }} of {{ products.paginator.num_pages }}
+          </span>
+        </li>
+        {% if products.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ products.next_page_number }}" aria-label="Next">
+            <span aria-hidden="true">&raquo;</span>
+          </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+          <span class="page-link" aria-label="Next">
+            <span aria-hidden="true">&raquo;</span>
+          </span>
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
 </div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 

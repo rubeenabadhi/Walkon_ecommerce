@@ -7,21 +7,19 @@ from .forms import *
 from order.models import Order
 
 # Create your views here.
-
-                                                                        #### Address Views ####
+#============================== Address Views ####
 @login_required(login_url="login")
 def address(request):
     addresses = Address.objects.filter(user=request.user).order_by("-id")
-    paginator = Paginator(addresses, 2)  # 2 addresses per page
-
+    paginator = Paginator(addresses, 4)  # 4 addresses per page
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
     return render(request, "user/address.html", {
         "page_obj": page_obj,
-        "addresses": page_obj,  # reuse in template loop
+        "addresses": page_obj, # for loop in template insted of page_obj 
     })
-                                                                 ###### add address #######
+######======================================= add address #######
 @login_required(login_url="login")
 def add_address(request):    
     if request.method == "POST":

@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 import random
+from django.forms import ValidationError
 from django.utils import timezone
 from django.conf import settings
 # Custom user model extending AbstractUser
@@ -23,11 +24,19 @@ class CustomUser(AbstractUser):
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']  #it is not required for CustomUser,it is for superuser creation
-    class Meta:
-        verbose_name = 'user'
-        verbose_name_plural = 'users'
 
     def __str__(self):
         return self.username
+    def clean(self):
+        if self.mobile_number and not self.mobile_number.isdigit():
+            raise ValidationError("Mobile number must contain only digits.")
+        if self.mobile_number and len(self.mobile_number) < 10:
+            raise ValidationError("Mobile number must be at least 10 digits long.")
+        if self.mobile_number and len(self.mobile_number) > 15:
+            raise ValidationError("Mobile number must be at most 15 digits long.")
+        if self.username and self.username.isalnum() == False:
+            raise ValidationError("Username must be alphanumeric.")
+        if self.username and len(self.username) < 3:
+            raise ValidationError("Username must be at least 3 characters long.")
     
     

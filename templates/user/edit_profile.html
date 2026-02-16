@@ -35,20 +35,35 @@
             <div class="card shadow-lg border-0 rounded-4 " style="background: var(--gradient-bg) ;">
                 <div class="card-body p-4 ">
                     <h4 class="mb-3 text-center fw-semibold">Your Details</h4>
+                    <!-- Form Non-field errors (general errors) -->
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+                        {{ form.non_field_errors }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endif %}
                     <form method="post" enctype="multipart/form-data" class="needs-validation">
-    {% csrf_token %}
+                             {% csrf_token %}
 
-    <!-- Username -->
-    <div class="mb-3">
-        {{ form.username.label_tag }}
-        {{ form.username }}
-    </div>
+                     <!-- Username -->
+                        <div class="mb-3">
+                            {{ form.username.label_tag }}
+                            {{ form.username }}
+                            <div class="invalid-feedback">
+                                {% if form.username.errors %}
+                                    {{ form.username.errors.0 }}
+                                {% else %}
+                                    Please enter a valid username.
+                                {% endif %}
+                            </div>
+                        </div>
 
     <!-- Email + Change Icon -->
     <div class="mb-3 d-flex align-items-center">
         <div class="flex-grow-1">
             {{ form.email.label_tag }}
             {{ form.email }}
+            
         </div>
         <a href="{% url 'change_email' %}" class="btn btn-outline-secondary ms-2 rounded-circle" title="Change Email">
             <i class="bi bi-pencil-square"></i> <!-- Bootstrap icon -->
@@ -59,6 +74,12 @@
     <div class="mb-3">
         {{ form.first_name.label_tag }}
         {{ form.first_name }}
+        <div class="invalid-feedback">
+            {% if form.first_name.errors %}
+                {{ form.first_name.errors.0 }}
+            {% else %}
+                Please enter a valid first name.
+            {% endif %}
     </div>
 
     <!-- Last Name -->
@@ -71,6 +92,12 @@
     <div class="mb-3">
         {{ form.mobile_number.label_tag }}
         {{ form.mobile_number }}
+        <div class="invalid-feedback">
+            {% if form.mobile_number.errors %}
+                {{ form.mobile_number.errors.0 }}
+            {% else %}
+                Please enter a valid mobile number.
+            {% endif %}
     </div>
 
     <!-- Profile Picture -->

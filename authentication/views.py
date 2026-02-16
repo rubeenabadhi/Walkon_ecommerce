@@ -1,3 +1,4 @@
+from ast import For, If
 import random, time
 from django.core.mail import send_mail
 from django.conf import settings
@@ -52,12 +53,12 @@ def signup(request):
         confirm_password = request.POST.get('password2')
         referrel_code = request.POST.get('referrel_code')
 
-        # ✅ Check passwords match
+        #  Check passwords match
         if password != confirm_password:
             messages.error(request, ' Passwords do not match.')
             return redirect('signup')
 
-        # ✅ Validate password with Django + custom validators
+        #  Validate password with Django + custom validators
         try:
             validate_password(password)
         except ValidationError as e:
@@ -65,18 +66,18 @@ def signup(request):
                 messages.error(request, error)
             return redirect('signup')
 
-        # ✅ Check duplicates
+        #  Check duplicates
         if CustomUser.objects.filter(email=email).exists():
-            messages.error(request, '⚠️ Email already exists.')
+            messages.error(request, ' Email already exists.')
             return redirect('signup')
         if CustomUser.objects.filter(username=username).exists():
-            messages.error(request, '⚠️ Username already exists.')
+            messages.error(request, ' Username already exists.')
             return redirect('signup')
         
-        # 🔢 Generate 6-digit OTP
+        #  Generate 6-digit OTP
         otp = random.randint(100000, 999999)
 
-        # 🗂️ Store temporarily in session
+        #  Store temporarily in session
         request.session['signup_email'] = email
         request.session['signup_username'] = username
         request.session['signup_password'] = password
@@ -84,16 +85,19 @@ def signup(request):
         request.session['signup_referrel_code'] = referrel_code
         request.session['otp_expiry'] = time.time() + 300  # 5 minutes expiry
 
-        # 📧 Send OTP email
+        #  Send OTP email
+        subject = "Your OTP Code for WalkOn Signup"
+        message = f"Hello {username},\n\nThank you for registering with WalkOn.\nYour One-Time Password (OTP) for account verification is:\n{otp}\n\nthis OTP is valid for 5 minutes. Please enter this code on the verification page to complete your registration.\nFor security reasons, do not share this code with anyone.\nBest regards,\nWalkOn Team"
+                  
         send_mail(
-            "Your OTP Code",
-            f"Your OTP is {otp}. It is valid for 5 minutes.",
+            subject,
+            message,
             settings.DEFAULT_FROM_EMAIL,
             [email],
             fail_silently=False,
         )
 
-        messages.success(request, f'✅ OTP sent to {email}.')
+        messages.success(request, f' OTP sent to {email}.')
 
         return redirect('verify_otp')
     # If GET request, just render signup page
@@ -174,11 +178,12 @@ def resend_otp(request):
     if email:
         otp = random.randint(100000, 999999)
         request.session['signup_otp'] = str(otp)
-        request.session['otp_expiry'] = time.time() + 60  # 60 sec validity
-
+        request.session['otp_expiry'] = time.time() + 300  # 5 minute validity
+        subject = "Your OTP Code for WalkOn Signup - Resend"
+        message = f"Hello,\n\nYou requested a new OTP for your WalkOn signup process.\nYour new One-Time Password (OTP) is:\n{otp}\n\nThis OTP is valid for 5 minutes. Please enter this code on the verification page to complete your registration.\nIf you did not request this, please ignore this email.\nBest regards,\nWalkOn Team"
         send_mail(
-            "Your OTP Code",
-            f"Your OTP is {otp}. It is valid for 1 minute.",
+            subject,
+            message,
             settings.DEFAULT_FROM_EMAIL,
             [email],
             fail_silently=False,
@@ -223,10 +228,13 @@ def forgot_password_request(request):
             otp = random.randint(100000, 999999)
             request.session['reset_email'] = email
             request.session['reset_otp'] = str(otp)
+            request.session['otp_expiry'] = time.time() + 300  # OTP valid for 5 minutes
+            subject = "Your OTP for WalkOn Password Reset"
+            message = f"Hello,\n\nYou requested a password reset for your WalkOn account.\nYour One-Time Password (OTP) for password reset is:\n{otp}\n\nThis OTP is valid for 5 minutes. Please enter this code on the reset password page to complete your password reset.\nIf you did not request this, please ignore this email.\nBest regards,\nWalkOn Team"
 
             send_mail(
-                'Password Reset OTP',
-                f'Your OTP is {otp}',
+                subject,
+                message,
                 settings.DEFAULT_FROM_EMAIL,
                 [email],
                 fail_silently=False
@@ -250,12 +258,12 @@ def reset_password(request):
         new_password = request.POST.get('new_password')
         confirm_password = request.POST.get('confirm_password')
 
-        # ✅ Check password match
+        #  Check password match
         if new_password != confirm_password:
-            messages.error(request, '⚠️ Passwords do not match.')
+            messages.error(request, ' Passwords do not match.')
             return redirect('reset_password')
 
-        # ✅ Validate password (with custom + Django validators)
+        #  Validate password (with custom + Django validators)
         try:
             validate_password(new_password)
         except ValidationError as e:
@@ -263,19 +271,19 @@ def reset_password(request):
                 messages.error(request, error)
             return redirect('reset_password')
 
-        # ✅ Get user from session
+        #  Get user from session
         email = request.session.get('reset_email')
         try:
             user = CustomUser.objects.get(email=email)
             user.set_password(new_password)
             user.save()
-            print("✅ Password reset successfully")
+            print(" Password reset successfully")
 
-            messages.success(request, '✅ Password reset successfully. Please login with your new password.')
+            messages.success(request, ' Password reset successfully. Please login with your new password.')
             return redirect('login')
 
         except CustomUser.DoesNotExist:
-            messages.error(request, '❌ User not found. Please try again.')
+            messages.error(request, ' User not found. Please try again.')
 
     return render(request, 'user/reset_password.html')
 
@@ -303,6 +311,8 @@ def edit_profile(request):
             form.save()
             messages.success(request, "Profile updated successfully.")
             return redirect("user_profile", user.id)
+        else:
+            messages.error(request, "Please correct the errors below.")
     else:
         form = EditProfileForm(instance=user)
 
@@ -324,18 +334,29 @@ def request_email_change(request):
 
         # save otp + email in session
         request.session["email_otp"] = otp
-        request.session["pending_email"] = new_email
+        request.session["pending_email"] = new_email  # Store the new email in session to use during verification
+        request.session["otp_expiry"] = time.time() + 300  # 5 minute validity
+        subject = "Your OTP for WalkOn Email Change Request"
+        message = f"Hello,\n\nYou requested to change your email for your WalkOn account.\nYour One-Time Password (OTP) for email change verification is:\n{otp}\n\nThis OTP is valid for 5 minutes. Please enter this code on the verification page to complete your email change.\nIf you did not request this, please ignore this email.\nBest regards,\nWalkOn Team"
 
         # send OTP to new email
         send_mail(
-            subject="Verify your new email",
-            message=f"Your OTP code is {otp}",
+            subject=subject,
+            message=message,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[new_email],
+            recipient_list=[request.user.email],  # Send to current email for security
             fail_silently=False,
         )
 
-        messages.info(request, f"OTP has been sent to {new_email}.")
+        send_mail(
+            "Email Change Requested for WalkOn Account",
+            f"Hello,\n\nAn email change request was made for your WalkOn account to the email address: {new_email}.\nIf you made this request, please check your current email for the OTP to confirm the change.\nIf not, you can safely ignore this email.\nBest regards,\nWalkOn Team",
+            settings.DEFAULT_FROM_EMAIL,
+            [new_email],
+            fail_silently=False,
+        )
+
+        messages.info(request, f"OTP has been sent to {request.user.email}.")
         return redirect("verify_email_change_otp")
 
     return render(request, "user/request_email_change.html")
@@ -353,7 +374,7 @@ def verify_email_otp(request):
             messages.error(request, "No OTP session found. Please request again.")
             return redirect("request_email_change")
 
-        # ✅ Always compare as string
+        #  Always compare as string
         if str(entered_otp) == str(saved_otp):
             from django.contrib.auth import get_user_model
             User = get_user_model()
@@ -364,6 +385,13 @@ def verify_email_otp(request):
 
             user.email = new_email
             user.save()
+            send_mail(
+                "Email Changed Successfully for WalkOn Account",
+                f"Hello,\n\nYour email has been successfully changed to {new_email}.\nIf you did not make this change, please contact support immediately.\nBest regards,\nWalkOn Team",
+                settings.DEFAULT_FROM_EMAIL,
+                [new_email],
+                fail_silently=False,
+            )
 
             # Clear session
             request.session.pop("email_otp", None)
@@ -387,12 +415,15 @@ def resend_email_change_otp(request):
 
     otp = str(random.randint(100000, 999999))
     request.session["email_otp"] = otp
+    request.session["otp_expiry"] = time.time() + 300  # 5 minute validity
+    subject = "Your OTP for WalkOn Email Change Request - Resend"
+    message = f"Hello,\n\nYou requested to change your email for your WalkOn account.\nYour new One-Time Password (OTP) for email change verification is:\n{otp}\n\nThis OTP is valid for 5 minutes. Please enter this code on the verification page to complete your email change.\nIf you did not request this, please ignore this email.\nBest regards,\nWalkOn Team"
 
     send_mail(
-        "Resend Email Change OTP",
-        f"Your new OTP is {otp}",
-        settings.DEFAULT_FROM_EMAIL,
-        [new_email],
+        subject=subject,
+        message=message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[request.user.email],  # Send to current email for security
         fail_silently=False,
     )
 
@@ -410,17 +441,17 @@ def change_password(request):
 
         user = request.user  # logged-in user
 
-        # 🔑 Check old password
+        #  Check old password
         if not user.check_password(old_password):
-            messages.error(request, '❌ Old password is incorrect')
+            messages.error(request, ' Old password is incorrect')
             return redirect('change_password')
 
-        # ⚠️ Check new passwords match
+        #  Check new passwords match
         if new_password != confirm_password:
-            messages.error(request, '⚠️ New passwords do not match')
+            messages.error(request, ' New passwords do not match')
             return redirect('change_password')
 
-        # ✅ Run Django + custom password validators
+        #  Run Django + custom password validators
         try:
             validate_password(new_password, user)
         except ValidationError as e:
@@ -428,15 +459,15 @@ def change_password(request):
                 messages.error(request, error)
             return redirect('change_password')
 
-        # 🔄 Update password
+        #  Update password
         user.set_password(new_password)
         user.save()
         print("Password changed successfully")
 
-        # ✅ Keep user logged in
+        #  Keep user logged in
         update_session_auth_hash(request, user)
 
-        messages.success(request, '✅ Password changed successfully!')
+        messages.success(request, ' Password changed successfully!')
         return redirect('user_profile', user.id)
 
     return render(request, 'user/change_password.html')
@@ -477,7 +508,7 @@ def logout_view(request):
 # Admin User Management
 
 
-@staff_member_required
+@staff_member_required(login_url="admin_login")
 def admin_user_management(request):
     if not request.user.is_staff:
         messages.error(request, "You do not have permission to access this page.")
@@ -507,8 +538,8 @@ def admin_user_management(request):
     }
     return render(request, "admin/user_management.html", context)
 # active or inactive user 
-@staff_member_required
-@require_POST
+@staff_member_required(login_url="admin_login")
+@require_POST # Only allow POST requests for this view
 def toggle_user_status(request, user_id):
     if request.method == "POST":
         user = get_object_or_404(CustomUser, id=user_id)

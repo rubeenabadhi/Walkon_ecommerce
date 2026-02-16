@@ -117,10 +117,16 @@
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Full Name</label>
                             <input type="text" name="full_name" id="full_name" class="form-control" required>
+                            <div class="invalid-feedback text-danger small mt-1">
+                                <!-- Error message will be injected here by JavaScript -->
+                                </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Phone</label>
                             <input type="text" name="phone" id="phone" class="form-control" required>
+                            <div class="invalid-feedback text-danger small mt-1">
+                                <!-- Error message will be injected here by JavaScript -->
+                                </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Address</label>
@@ -129,30 +135,42 @@
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Street</label>
                             <input type="text" name="street" id="street" class="form-control" required>
+                            <div class="invalid-feedback text-danger small mt-1">
+                                </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-semibold">City</label>
                                 <input type="text" name="city" id="city" class="form-control" required>
+                                <div class="invalid-feedback text-danger small mt-1">
+                                </div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">State</label>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold">State</label>
                                 <input type="text" name="state" id="state" class="form-control" required>
+                                <div class="invalid-feedback text-danger small mt-1">
+                                </div>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-semibold">District</label>
                                 <input type="text" name="district" id="district" class="form-control">
+                                <div class="invalid-feedback text-danger small mt-1">
+                                </div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-semibold">Pincode</label>
                                 <input type="text" name="pincode" id="pincode" class="form-control" required>
+                                <div class="invalid-feedback text-danger small mt-1">
+                                </div>
                             </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Country</label>
                             <input type="text" name="country" id="country" class="form-control" required>
+                            <div class="invalid-feedback text-danger small mt-1">
+                            </div>
                         </div>
                     </div>
 
@@ -170,117 +188,179 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    document.getElementById("continueToShipping").addEventListener("click", function(e) {
+document.getElementById("continueToShipping").addEventListener("click", function(e) {
+    e.preventDefault();
+
+    const selectedAddress = document.querySelector('input[name="selected_address"]:checked');
+
+    if (!selectedAddress) {
+        Swal.fire({
+            icon: 'error',
+            text: 'Please select an address before continuing!',
+            background: '#f8d7da',
+            confirmButtonColor: '#2193b0',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+
+    document.getElementById("selectAddressForm").submit();
+});
+
+
+$(document).ready(function() {
+
+    // ================= ADD ADDRESS =================
+    $(".add-address").on("click", function() {
+        $("#modalTitle").text("Add New Address");
+        $("#modalSubmit").text("Save");
+        $("#addressForm").attr("action", $(this).data("action"));
+        $("#addressForm")[0].reset();
+
+        $(".form-control").removeClass("is-invalid");
+        $(".invalid-feedback").text("");
+    });
+
+
+    // ================= EDIT ADDRESS =================
+    $(".edit-address").on("click", function() {
+        $("#modalTitle").text("Edit Address");
+        $("#modalSubmit").text("Update");
+        $("#addressForm").attr("action", $(this).data("action"));
+
+        $("#full_name").val($(this).data("full_name"));
+        $("#phone").val($(this).data("phone"));
+        $("#address").val($(this).data("address"));
+        $("#street").val($(this).data("street"));
+        $("#city").val($(this).data("city"));
+        $("#state").val($(this).data("state"));
+        $("#district").val($(this).data("district"));
+        $("#pincode").val($(this).data("pincode"));
+        $("#country").val($(this).data("country"));
+
+        $(".form-control").removeClass("is-invalid");
+        $(".invalid-feedback").text("");
+    });
+
+
+    // ================= SUBMIT FORM AJAX =================
+    $("#addressForm").on("submit", function(e) {
         e.preventDefault();
 
-        // Selected address checking
-        const selectedAddress = document.querySelector('input[name="selected_address"]:checked');
+        const form = $(this);
+        const url = form.attr("action");
+        const data = form.serialize();
 
-        if (!selectedAddress) {
-            Swal.fire({
-                icon: 'error',
-                text: 'Please select an address before continuing!',
-                background: '#f8d7da',
-                confirmButtonColor: '#2193b0',
-                confirmButtonText: 'OK',
-                customClass: {
-                    popup: 'rounded-3',
-                    confirmButton: 'btn btn-primary rounded-pill'
-                }
-            });
-            return;
-        }
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: data,
 
-        // Submit the form
-        document.getElementById("selectAddressForm").submit();
-    });
+            success: function(response) {
 
-    $(document).ready(function() {
-        // Add New Address
-        $(".add-address").on("click", function() {
-            $("#modalTitle").text("Add New Address");
-            $("#modalSubmit").text("Save");
-            $("#addressForm").attr("action", $(this).data("action"));
-            $("#addressForm")[0].reset(); // Clear old values
-        });
+                $(".form-control").removeClass("is-invalid");
+                $(".invalid-feedback").text("");
 
-        // Edit Address
-        $(".edit-address").on("click", function() {
-            $("#modalTitle").text("Edit Address");
-            $("#modalSubmit").text("Update");
-            $("#addressForm").attr("action", $(this).data("action"));
+                if (response.status === 'success') {
 
-            // Fill fields
-            $("#full_name").val($(this).data("full_name"));
-            $("#phone").val($(this).data("phone"));
-            $("#address").val($(this).data("address"));
-            $("#street").val($(this).data("street"));
-            $("#city").val($(this).data("city"));
-            $("#state").val($(this).data("state"));
-            $("#district").val($(this).data("district"));
-            $("#pincode").val($(this).data("pincode"));
-            $("#country").val($(this).data("country"));
-        });
+                    Swal.fire({
+                        icon: 'success',
+                        text: response.message || 'Address saved successfully!',
+                        background: '#e3f2fd',
+                        confirmButtonColor: '#2193b0',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        location.reload();
+                    });
 
-        // Handle address form submission with AJAX
-        $("#addressForm").on("submit", function(e) {
-            e.preventDefault();
-            const form = $(this);
-            const url = form.attr("action");
-            const data = form.serialize();
+                } else if (response.errors) {
 
-            $.ajax({
-                url: url,
-                type: 'POST',
-                data: data,
-                success: function(response) {
-                    console.log("AJAX Response:", response);
+                    handleValidationErrors(response.errors);
 
-                    if (response.status === 'success') {
-                        Swal.fire({
-                            icon: 'success',
-                            text: response.message || 'Address saved successfully!',
-                            background: '#e3f2fd',
-                            confirmButtonColor: '#2193b0',
-                            confirmButtonText: 'OK',
-                            customClass: {
-                                popup: 'rounded-3',
-                                confirmButton: 'btn btn-primary rounded-pill'
-                            }
-                        }).then(() => {
-                            location.reload(); // Refresh to update address list
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            text: response.message || 'Failed to save address.',
-                            background: '#f8d7da',
-                            confirmButtonColor: '#2193b0',
-                            confirmButtonText: 'OK',
-                            customClass: {
-                                popup: 'rounded-3',
-                                confirmButton: 'btn btn-primary rounded-pill'
-                            }
-                        });
-                    }
-                },
-                error: function() {
+                } else {
+
                     Swal.fire({
                         icon: 'error',
-                        text: 'Something went wrong.',
+                        text: response.message || 'Failed to save address.',
                         background: '#f8d7da',
                         confirmButtonColor: '#2193b0',
-                        confirmButtonText: 'OK',
-                        customClass: {
-                            popup: 'rounded-3',
-                            confirmButton: 'btn btn-primary rounded-pill'
-                        }
+                        confirmButtonText: 'OK'
                     });
                 }
-            });
+            },
+
+            error: function(xhr) {
+
+                $(".form-control").removeClass("is-invalid");
+                $(".invalid-feedback").text("");
+
+                if (xhr.responseJSON) {
+
+                    // If backend sends validation errors
+                    if (xhr.responseJSON.errors) {
+                        handleValidationErrors(xhr.responseJSON.errors);
+                        return;
+                    }
+
+                    // If backend sends message
+                    if (xhr.responseJSON.message) {
+                        Swal.fire({
+                            icon: 'error',
+                            text: xhr.responseJSON.message,
+                            background: '#f8d7da',
+                            confirmButtonColor: '#2193b0',
+                            confirmButtonText: 'OK'
+                        });
+                        return;
+                    }
+                }
+
+                // Fallback error
+                Swal.fire({
+                    icon: 'error',
+                    text: 'Something went wrong.',
+                    background: '#f8d7da',
+                    confirmButtonColor: '#2193b0',
+                    confirmButtonText: 'OK'
+                });
+            }
         });
     });
+
+
+    // ================= COMMON VALIDATION HANDLER =================
+    function handleValidationErrors(errors) {
+
+        for (let field in errors) {
+
+            // 🔥 Handle __all__ (non-field errors)
+            if (field === "__all__") {
+                Swal.fire({
+                    icon: 'error',
+                    text: errors[field][0],
+                    background: '#f8d7da',
+                    confirmButtonColor: '#2193b0',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+
+            let input = $(`[name="${field}"]`);
+
+            if (input.length) {
+                input.addClass("is-invalid");
+
+                input.closest(".mb-3, .col-md-6")
+                     .find(".invalid-feedback")
+                     .text(errors[field][0]);
+            }
+        }
+    }
+
+});
 </script>
+
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
 {% endblock %}

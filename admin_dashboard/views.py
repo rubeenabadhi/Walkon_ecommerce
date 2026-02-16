@@ -13,6 +13,7 @@ from io import BytesIO
 from django.shortcuts import render
 from django.db.models import Sum
 from django.contrib.admin.views.decorators import staff_member_required
+from django.core.paginator import Paginator
 from urllib3 import request
 from django.views.decorators.cache import never_cache
 from xhtml2pdf import pisa
@@ -311,6 +312,10 @@ def sales_report_view(request):
     print("STATUS:", status_filter)
     print("COUNT:", orders.count())
 
+    paginator = Paginator(orders.order_by('-order_date'), 15)  # 15 orders per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
 
     context = {
         'filter_type': filter_type,
@@ -322,7 +327,8 @@ def sales_report_view(request):
         'total_discount': total_discount,
         'coupon_used': coupon_used,
         'coupon_discount': coupon_discount,
-        'orders': orders.order_by('-order_date')[:50],
+        'orders': page_obj,  # pass paginated orders to template
+        'page_obj': page_obj,
     }
 
     # 2. AJAX Partial Update (filter apply without reload)

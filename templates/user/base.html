@@ -162,7 +162,7 @@
       <div class="d-flex align-items-center gap-3">
         <a href="{% url 'wishlist' %}" class="text-dark fs-5 position-relative">
           <i class="bi bi-heart"></i>
-          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ count_wishlist }}</span>
+          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger " id="wishlist-count">{{ count_wishlist }}</span>
         </a>
         {% if user.is_authenticated %}
         <a href="{% url 'user_profile' user.id %}" class="text-dark fs-5">
@@ -171,12 +171,14 @@
         {% endif %}
         <a href="{% url 'cart:cart' %}" class="text-dark fs-5 position-relative">
           <i class="bi bi-cart3"></i>
-          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ cart_count }}</span>
+          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-count" id="cart-count">{{ cart_count }}</span>
         </a>
       </div>
     </div>
   </div>
 </nav>
+<!-- brud crumbs-->
+{% include 'user/breadcrumbs.html' %}
 
 {% block content %}{% endblock %}
 
@@ -246,6 +248,9 @@ $(document).on("click", ".wishlist-btn", function (e) {
         },
         success: function (res) {
             // Update the icon based on response
+            if(res.wishlist_count !== undefined){
+                $("#wishlist-count").text(res.wishlist_count); // Update wishlist count in navbar
+            }
             if (res.in_wishlist) {
                 icon.removeClass("bi-heart text-dark")
                     .addClass("bi-heart-fill text-danger"); // Filled red heart
@@ -256,7 +261,6 @@ $(document).on("click", ".wishlist-btn", function (e) {
         }
     });
 });
-{% block extra_js %} 
 // Safer URLs for cart update/remove
 const updateCartBaseUrl = "{% url 'cart:update_cart' 0 %}".replace("0/", ""); 
 const removeCartBaseUrl = "{% url 'cart:remove_from_cart' 0 %}".replace("0/", "");
@@ -320,7 +324,8 @@ $(document).ready(function() {
 });
 
 </script>
+<script src="{% static 'js/addToCart.js' %}"></script>
+{% block extra_js %}
 {% endblock %}
-
 </body>
 </html>

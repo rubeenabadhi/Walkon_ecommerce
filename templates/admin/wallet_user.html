@@ -56,15 +56,46 @@
   </div>
 
   <!-- Pagination -->
-  <div class="d-flex justify-content-center mt-3 gap-2 flex-wrap">
-    {% if page_obj.has_previous %}
-      <a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}" class="btn btn-outline-primary">Previous</a>
-    {% endif %}
-    {% if page_obj.has_next %}
-      <a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}" class="btn btn-outline-primary">Next</a>
-    {% endif %}
-    <span class="text-muted ms-2">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-  </div>
+       <nav aria-label="Page navigation example" class="p-3">
+        <ul class="pagination justify-content-center mb-0">
+          {% if wallets.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ wallets.previous_page_number }}" aria-label="Previous">
+              <span aria-hidden="true">&laquo;</span>
+            </a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <span class="page-link" aria-label="Previous">
+              <span aria-hidden="true">&laquo;</span>
+            </span>
+          </li>
+          {% endif %}
+
+          {% for num in wallets.paginator.page_range %}
+            {% if wallets.number == num %}
+              <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% else %}
+              <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+          {% endfor %}
+
+          {% if wallets.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ wallets.next_page_number }}" aria-label="Next">
+              <span aria-hidden="true">&raquo;</span>
+            </a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <span class="page-link" aria-label="Next">
+              <span aria-hidden="true">&raquo;</span>
+            </span>
+          </li>
+          {% endif %}
+   
+        </ul>
+      </nav>
 </div>
 
 <!-- Responsive Styles -->

@@ -1,32 +1,105 @@
 {% extends 'user/base.html' %}
 {% load static %}
+
 {% block title %}Payment Failed - WalkOn{% endblock %}
 
 {% block content %}
 <style>
     .payment-failure-content {
         max-width: 600px;
-        background-color: #aeaef7;
-        border: 1px solid #a6d1f9;  
+        background: linear-gradient(135deg, #ffffff, #afe9f5);
+        border: 1px solid #a6d1f9;
         color: #250d0fff;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+        margin: 0 auto;
     }
+
+    .payment-failure-content img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 0 auto 1.5rem;
+    }
+
     .payment-failure-content h2 {
         color: #381317ff;
+        font-size: clamp(1.6rem, 5vw, 2.2rem);
+        margin-bottom: 1rem;
+    }
+
+    .payment-failure-content p {
+        font-size: clamp(1rem, 3.5vw, 1.1rem);
+        margin-bottom: 1.5rem;
+        color: #444;
+    }
+
+    .payment-failure-content .btn {
+        font-size: clamp(0.9rem, 3vw, 1rem);
+        padding: 0.6rem 1.5rem;
+        border-radius: 50px;
+        min-width: 160px;
+        transition: all 0.3s ease;
+    }
+
+    .payment-failure-content .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .btn-group-responsive {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: center;
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 768px) {
+        .payment-failure-content {
+            padding: 1.5rem;
+            margin: 1rem;
+        }
+        .btn-group-responsive .btn {
+            flex: 1 1 45%;
+            min-width: auto;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .payment-failure-content {
+            padding: 1rem;
+            margin: 0.5rem;
+        }
+        .btn-group-responsive {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .btn-group-responsive .btn {
+            width: 100%;
+        }
     }
 </style>
-<div class="container text-center my-5">
-    <div class="payment-failure-content d-inline-block p-4 rounded-3 shadow-sm text-center mx-auto w-50 bg-light p-5 text-center rounded-3">
 
+<div class="container text-center my-5">
+    <div class="payment-failure-content mx-auto">
+        <img src="{% static 'images/payment_failed.png' %}" alt="Payment Failed" class="mb-4" />
         
-    <img src="{% static 'images/payment_failed.png' %}" alt="Payment Failed" width="150">
-    <h2 class="mt-4 text-danger">Payment Failed</h2>
-    <p>{{ failure_reason }}</p>
-    <a href="{% url 'select_payment' %}" class="btn btn-primary mx-2">Retry Payment</a>
-   
-    <a href="{% url 'order_details' order_number %}" class="btn btn-secondary mx-2">View Order</a>
-   </div>
+        <h2 class="mt-4 text-danger">Payment Failed</h2>
+        
+        <p>{{ failure_reason }}</p>
+
+        <div class="btn-group-responsive mt-4">
+            <a href="{% url 'select_payment' %}" class="btn btn-primary mx-2">
+                Retry Payment
+            </a>
+            
+            <a href="{% url 'order_details' order_number %}" class="btn btn-secondary mx-2">
+                View Order
+            </a>
+        </div>
+    </div>
 </div>
+
 {% endblock %}

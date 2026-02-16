@@ -25,6 +25,7 @@
     <table class="table table-striped align-middle ">
       <thead class="table-dark ">
         <tr>
+          <th scope="col">No</th>
           <th scope="col">User</th>
           <th scope="col">Product</th>
           <th scope="col">Rating</th>
@@ -34,17 +35,22 @@
         </tr>
       </thead>
       <tbody>
-        {% for review in reviews %}
+        {% for review in page_obj %}
         <tr>
+          <td>{{ forloop.counter }}</td>
           <td>{{ review.user.username }}</td>
           <td>{{ review.product.name }}</td>
           <td>{{ review.rating }}</td>
           <td>{{ review.comment }}</td>
           <td>{{ review.created_at|date:"d-m-Y H:i" }}</td>
           <td>
-            <a href="{% url 'delete_review' review.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this review?');">
-              <i class="bi bi-trash"></i>
-            </a>
+           <!-- Delete button with confirmation -->
+           <form method="post" action="{% url 'delete_review' review.id %}" onsubmit="return confirm('Are you sure you want to delete this review?');">
+              {% csrf_token %}
+            <button type="submit" class="btn btn-danger btn-sm">
+               <i class="bi bi-trash" title="Delete Review"></i> 
+            </button>
+          </form>
           </td>
         </tr>
         {% empty %}
@@ -55,25 +61,42 @@
       </tbody>
     </table>
   </div>
-  <!-- Pagination -->
-  <div class="d-flex justify-content-center mt-4">
-    {% if reviews.has_other_pages %}
-      <ul class="pagination">
-        {% if reviews.has_previous %}
-          <li class="page-item"><a class="page-link" href="?page={{ reviews.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a></li>
+  <!-- Pagination with filter-->
+  <nav aria-label="Page navigation example" class="p-3">
+    <ul class="pagination justify-content-center mb-0">
+      {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="Previous">
+          <span aria-hidden="true">&laquo;</span>
+        </a>
+      </li>
+      {% else %}
+      <li class="page-item disabled">
+        <span class="page-link" aria-hidden="true">&laquo;</span>
+      </li>
+      {% endif %}
+      
+      {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+          <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% else %}
+          <li class="page-item"><a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a></li>
         {% endif %}
-        {% for page in reviews.paginator.page_range %}
-          {% if page == reviews.number %}
-            <li class="page-item active"><a class="page-link" href="#">{{ page }}</a></li>
-          {% else %}
-            <li class="page-item"><a class="page-link" href="?page={{ page }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ page }}</a></li>
-          {% endif %}
-        {% endfor %}
-        {% if reviews.has_next %}
-          <li class="page-item"><a class="page-link" href="?page={{ reviews.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a></li>
-        {% endif %}
-      </ul>
-    {% endif %}
-  </div>
+      {% endfor %}
+      
+      {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="Next">
+          <span aria-hidden="true">&raquo;</span>
+        </a>
+      </li>
+      {% else %}
+      <li class="page-item disabled">
+        <span class="page-link" aria-hidden="true">&raquo;</span>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+
 </div>
 {% endblock %}

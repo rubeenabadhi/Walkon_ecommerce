@@ -87,17 +87,20 @@ def admin_review(request):
         reviews = reviews.filter(Q(user__username__icontains=search_query) | Q(product__name__icontains=search_query))
 
     #pagination
-    paginator = Paginator(reviews, 15)
+    paginator = Paginator(reviews, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    return render(request, 'admin/view_reviews.html', {'reviews': reviews})
+    return render(request, 'admin/view_reviews.html', { 'page_obj': page_obj, 'search_query': search_query})
 
 #--------------------DELETE REVIEW JA and AJAX---------------------
 
 @staff_member_required(login_url="admin_login")
 def delete_review(request, review_id):
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Invalid request method."})
     review = get_object_or_404(Review, id=review_id)
     review.delete()
+    messages.success(request, "Review deleted successfully.")
     return redirect('admin_review')
 

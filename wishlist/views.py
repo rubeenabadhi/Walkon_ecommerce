@@ -7,6 +7,20 @@ from product.models import Product, ProductVariant
 from cart.models import CartItems
 
 # -------------------
+# counter for wishlist,cart in navbar
+def wishlist_cart_counts(request):
+    if request.user.is_authenticated:
+        wishlist, _ = Wishlist.objects.get_or_create(user=request.user)
+        count_wishlist = wishlist.items.count()
+        cart_count = CartItems.objects.filter(user=request.user).count()
+        return {
+            "count_wishlist": count_wishlist,
+            "cart_count": cart_count
+        }
+    return {
+        "count_wishlist": 0,
+        "cart_count": 0
+    }
 # Toggle Wishlist (Ajax)
 # -------------------
 @login_required
@@ -26,13 +40,15 @@ def toggle_wishlist(request, product_id):
         wishlist=wishlist,
         product_variant=variant
     )
-
+    
     if not created:
         item.delete()
-        return JsonResponse({"status": "removed", "in_wishlist": False})
+        wishlist_count = wishlist.items.count()
+        return JsonResponse({"status": "removed", "in_wishlist": False, "wishlist_count": wishlist_count})
 
-    print("✅ Added to wishlist:", variant)  # Debug log
-    return JsonResponse({"status": "added", "in_wishlist": True})
+    print(" Added to wishlist:", variant)  # Debug log
+    wishlist_count= wishlist.items.count()
+    return JsonResponse({"status": "added", "in_wishlist": True, "wishlist_count": wishlist_count})
 # -------------------
 # Wishlist Page
 # -------------------
@@ -63,7 +79,7 @@ def wishlist_view(request):
 @login_required
 @require_POST
 def add_to_wishlist(request, variant_id):
-    wishlist, _ = Wishlist.objects.get_or_create(user=request.user)
+    wishlist, _ = Wishlist.objects.get_or_create(user=request.user) # Get or create wishlist for the user
     variant = get_object_or_404(ProductVariant, id=variant_id)
     WishlistItem.objects.get_or_create(wishlist=wishlist, product_variant=variant)
     return JsonResponse({"status": "added"})
@@ -72,7 +88,7 @@ def add_to_wishlist(request, variant_id):
 # -------------------
 # Remove specific variant from wishlist
 # -------------------
-@login_required
+@login_required('')
 @require_POST
 def remove_from_wishlist(request, item_id):
     wishlist_item = get_object_or_404(WishlistItem, id=item_id, wishlist__user=request.user)
@@ -85,17 +101,17 @@ def remove_from_wishlist(request, item_id):
 @login_required
 @require_POST
 def add_to_cart_from_wishlist(request, variant_id):
-    # ✅ Get selected variant directly
+    #  Get selected variant directly
     variant = get_object_or_404(ProductVariant, id=variant_id)
     product = variant.product
 
-    # ✅ Remove any wishlist item that matches this product for the user
+    # Remove any wishlist item that matches this product for the user
     WishlistItem.objects.filter(
         wishlist__user=request.user,
         product_variant__product=product
     ).delete()
 
-    # ✅ Add to cart
+    #  Add to cart
     cart_item, created = CartItems.objects.get_or_create(
         user=request.user,
         product=product,
@@ -108,9 +124,9 @@ def add_to_cart_from_wishlist(request, variant_id):
         cart_item.save()
 
     cart_count = CartItems.objects.filter(user=request.user).count()
-    print(f"✅ Moved {product.name} (Size {variant.size.label}) to cart.")
+    print(f" Moved {product.name} (Size {variant.size.label}) to cart.")
     return JsonResponse({
         "status": "success",
-        "message": f"✅ {product.name} (Size {variant.size.label}) added to cart successfully!",
+        "message": f" {product.name} (Size {variant.size.label}) added to cart successfully!",
         "cart_count": cart_count
     })

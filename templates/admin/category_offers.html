@@ -79,15 +79,7 @@
   </div>
 
   <!-- Pagination -->
-  <div class="d-flex justify-content-center align-items-center mt-3 gap-2 flex-wrap">
-    {% if page_obj.has_previous %}
-      <a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&status={{ request.GET.status }}" class="btn btn-outline-primary">Previous</a>
-    {% endif %}
-    {% if page_obj.has_next %}
-      <a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&status={{ request.GET.status }}" class="btn btn-outline-primary">Next</a>
-    {% endif %}
-    <span class="text-muted ms-2">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-  </div>
+ {% include "admin/pagination.html" with page_obj=page_obj %}
 
   <!-- Add/Edit Category Offer Modal -->
   <div class="modal fade " id="categoryOfferModal" tabindex="-1">

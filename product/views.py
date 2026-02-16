@@ -9,13 +9,11 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q, Min, Avg, Count, Sum, Max
+from django.db.models import Q
 from django.db.models.functions import Coalesce # Import the Coalesce function for NULL handling
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
-from django.forms.models import modelform_factory
-from django.db import transaction
 import cloudinary
+
 
 
 
@@ -115,7 +113,7 @@ def add_product(request):
         brand_id = request.POST.get("brand")
         gender_id = request.POST.get("gender")
         price = request.POST.get("price")
-        stock = int(request.POST.get("stock", 0))   # ✅ stock comes before product create
+        stock = int(request.POST.get("stock", 0))   #  stock comes before product create
         is_available = True if request.POST.get("is_available") == "on" else False
         is_active = True if request.POST.get("is_active") == "on" else False    
 
@@ -128,7 +126,7 @@ def add_product(request):
             ])
             primary_image_url = upload_result['secure_url']
 
-        # ✅ Create Product with stock at product-level
+        #  Create Product with stock at product-level
         product = Product.objects.create(
             name=name,
             description=description,
@@ -555,7 +553,7 @@ def user_product_list(request):
     })
 
 
-
+# Product Detail View
 def product_detail(request, slug):
     product = get_object_or_404(Product, slug=slug)
 
@@ -591,8 +589,13 @@ def product_sizes(request, product_id):
 #new arrivals
 def new_arrivals(request):
     products = Product.objects.all().order_by('-created_at')  # Fetch latest 8 products
-    
-    return render(request, 'user/new_arrivals.html', {'products': products})
+    # apply filters
+    products, filter_form = apply_product_filters(request, products)
+
+    paginator= Paginator(products, 6)
+    page_number = request.GET.get('page')
+    products = paginator.get_page(page_number)
+    return render(request, 'user/new_arrivals.html', {'products': products, 'filter_form': filter_form})
 
 # products by gender with pagination
 def products_by_gender(request, gender_label):

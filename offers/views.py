@@ -76,10 +76,14 @@ def admin_coupons(request):
 def users_used_coupons(request, coupon_id):
     coupon = get_object_or_404(Coupon, id=coupon_id)
     user_coupons = UserCoupon.objects.filter(coupon=coupon).select_related('user')
+    paginator = Paginator(user_coupons, 10)  # 10 per page
+    page_number = request.GET.get('page', 10) #1 means 
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'coupon': coupon,
-        'user_coupons': user_coupons,
+        'user_coupons': page_obj,
+        'page_obj': page_obj,
     }
     return render(request, 'admin/coupon_users.html', context)
 
@@ -352,7 +356,7 @@ def available_coupons(request):
     if not request.user.is_authenticated:
         return redirect("login")
 
-    now = timezone.localtime(timezone.now())  # ✅ converts UTC → local timezone
+    now = timezone.localtime(timezone.now())  #  converts UTC → local timezone
 
     coupons = Coupon.objects.filter(active=True, valid_from__lte=now, valid_to__gte=now)
 
@@ -474,18 +478,21 @@ def refer_earn(request):
 
 def my_referrals(request):
     user = request.user
-    referred_users = []
+    referred_users = [] # Initialize referred_users to an empty list in case the referral record doesn't exist
 
     try:
-        referral = Referral.objects.get(referrer=user)
-        # Only call .all() if referral exists
-        referred_users = referral.referred_users.all()
+        referral = Referral.objects.get(referrer=user) #get referral record for current user
+        referred_users = referral.referred_users.all() # get all users referred by current user through the referral record
     except Referral.DoesNotExist:
         # User has no referral record yet
         referred_users = []
+    paginator=Paginator(referred_users,10)
+    page_number=request.GET.get('page')
+    page_obj=paginator.get_page(page_number)
 
     context = {
-        'referred_users': referred_users
+        'referred_users': page_obj,
+         'page_obj': page_obj,
     }
     return render(request, 'user/my_referrals.html', context)
 

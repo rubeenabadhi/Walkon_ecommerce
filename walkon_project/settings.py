@@ -68,8 +68,7 @@ INSTALLED_APPS = [
     'address',
     'wallet',
     'wishlist',
-    'django_bootstrap_breadcrumbs',
-    "widget_tweaks",
+    "widget_tweaks",# for customizing form widgets in templates
     "grappelli",
     "django_extensions",
     "pages",

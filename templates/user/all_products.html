@@ -5,10 +5,10 @@
 {% block title %}All Products - Walkon{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/productlist.css' %}">
-
-
 {% endblock %}
-
+{% block breadcrumbs %}
+<li class="breadcrumb-item active" aria-current="page">All Products</li>
+{% endblock %}
 {% block content %}
 <div class="container my-5">
     <!-- Header Section -->
@@ -239,5 +239,4 @@
     const addToCartBaseUrl = "{% url 'add_to_cart_from_wishlist' 9999 %}".replace("9999/", "");   
     const csrfToken = "{{ csrf_token }}";
 </script>
-<script src="{% static 'js/addToCart.js' %}"></script>
 {% endblock %}

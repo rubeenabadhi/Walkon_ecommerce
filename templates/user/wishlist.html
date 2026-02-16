@@ -101,27 +101,44 @@
 <!-- jQuery + Scripts -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-  const addToCartBaseUrl = "{% url 'add_to_cart_from_wishlist' 9999 %}".replace("9999/", "");  
-  const removeFromWishlistBaseUrl = "{% url 'remove_from_wishlist' 9999 %}".replace("9999/", "");  
-  const csrfToken = "{{ csrf_token }}";
-$(document).on("click", ".remove-wishlist", function () {
-  const btn = $(this)
-  const id = btn.data("id")
+const addToCartBaseUrl = "{% url 'add_to_cart_from_wishlist' 9999 %}".replace("9999/", "");
+const removeFromWishlistBaseUrl = "{% url 'remove_from_wishlist' 9999 %}".replace("9999/", "");
+const csrfToken = "{{ csrf_token }}";
+
+$(document).on("click", ".remove-wishlist", function (e) {
+  e.preventDefault();
+
+  const btn = $(this);
+
+  // Prevent double click
+  if (btn.prop("disabled")) return;
+
+  btn.prop("disabled", true);
+
+  const id = btn.data("id");
 
   $.ajax({
     url: removeFromWishlistBaseUrl + id + "/",
     method: "POST",
     headers: { "X-CSRFToken": csrfToken },
-    success: function () {
+
+    success: function (response) {
+      alert("Removed from wishlist");
       btn.closest(".col-6").fadeOut(300, function () {
-        $(this).remove()
+        $(this).remove();
+
         if ($(".wishlist-card").length === 0) {
-          location.reload()
+          location.reload();
         }
-      })
+      });
+    },  
+
+    error: function (xhr, status, error) {
+      alert("Error removing item from wishlist. Please try again.");
+      btn.prop("disabled", false);
     }
-  })
-})
+  });
+});
 </script>
-<script src="{% static 'js/addToCart.js' %}"></script>
+
 {% endblock %}

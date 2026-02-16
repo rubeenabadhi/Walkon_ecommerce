@@ -6,7 +6,7 @@
 <div class="container-fluid py-4">
   <!-- Page Title -->
   <div class="mb-4">
-    <h2 class="fw-semibold">Refer & Earn Users</h2>
+    <h2 class="fw-semibold mb-3 text-uppercase text-center" style="font-weight: bold;">Refer & Earn Users</h2>
   </div>
 
   <!-- Search & Filters -->
@@ -60,15 +60,7 @@
   </div>
 
   <!-- Pagination -->
-  <div class="d-flex justify-content-center mt-3 gap-2 flex-wrap">
-    {% if page_obj.has_previous %}
-      <a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&status={{ status_filter }}" class="btn btn-outline-primary">Previous</a>
-    {% endif %}
-    {% if page_obj.has_next %}
-      <a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&status={{ status_filter }}" class="btn btn-outline-primary">Next</a>
-    {% endif %}
-    <span class="text-muted ms-2">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-  </div>
+ {% include "admin/pagination.html" with page_obj=page_obj %}
 </div>
 
 <!-- Responsive Styles -->

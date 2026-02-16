@@ -424,8 +424,8 @@ def admin_orders(request):
     # --- prefetch related to avoid extra queries and order by date ---
     orders = orders_qs.prefetch_related('items__product_variant__product').order_by('-order_date')
     # --- pagination ---
-    paginator = Paginator(orders, 20)   # 5 per page (change as needed)
-    page_number = request.GET.get('page', 1)
+    paginator = Paginator(orders, 20)   # 20 per page (change as needed)
+    page_number = request.GET.get('page')
     orders_page = paginator.get_page(page_number)
     # --- context ---
     context = {
@@ -556,6 +556,9 @@ def admin_return_requests_list(request):
             "order_item",
             "requested_by"
             ).filter(status="requested").order_by("-id")
+    paginator=Paginator(return_requests, 20)
+    page_number = request.GET.get('page')
+    return_requests = paginator.get_page(page_number)
 
     print(return_requests)    
     # render to a template with approve/reject buttons

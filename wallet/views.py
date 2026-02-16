@@ -22,10 +22,15 @@ def wallet(request):
     wallet, created = Wallet.objects.get_or_create(user=request.user)
     transactions = WalletTransaction.objects.filter(wallet=wallet).order_by('-created_at')
 
+    paginator=Paginator(transactions,10)
+    page_number=request.GET.get('page')
+    page_obj=paginator.get_page(page_number)
+
     
     context = {
         'wallet': wallet,
-        'transactions': transactions
+        'transactions': page_obj,
+        'page_obj': page_obj
     }
     return render(request, "user/wallet.html", context)
 
@@ -136,9 +141,13 @@ def admin_wallet_detail(request, wallet_id):
     wallet = get_object_or_404(Wallet, id=wallet_id)
     transactions = WalletTransaction.objects.filter(wallet=wallet).order_by('-created_at')
 
+    paginator = Paginator(transactions, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     context = {
         'wallet': wallet,
-        'transactions': transactions,
+        'transactions': page_obj,
         'user': wallet.user,
     }
     return render(request, 'admin/wallet_details.html', context)
