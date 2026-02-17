@@ -23,10 +23,34 @@ class CouponForm(ModelForm):
 
     def clean_discount_value(self):
         value = self.cleaned_data.get('discount_value')
+        discount_type = self.cleaned_data.get('discount_type')
+        
+        if value is None:
+            raise forms.ValidationError("This field is required.")
         if value <= 0:
             raise forms.ValidationError("Discount value must be greater than 0")
+        if discount_type == 'percentage':
+            if value > 100:
+                raise forms.ValidationError("Percentage discount cannot be greater than 100.")
+            if value <= 0:
+                raise forms.ValidationError("Percentage discount must be greater than 0.")
+            
+        if discount_type == 'fixed':
+            if value <= 0:
+                min_amount = self.cleaned_data.get('min_order_amount', 0)
+                raise forms.ValidationError("Fixed discount must be greater than 0.")
+            if value > min_amount:
+                raise forms.ValidationError("Fixed discount cannot be greater than minimum order amount.")
         return value
-    
+    def clean_usage_limit(self):
+        usage_limit = self.cleaned_data.get('usage_limit')
+        if usage_limit is None:
+            raise forms.ValidationError("This field is required.")
+        if usage_limit <= 0:
+            raise forms.ValidationError("Usage limit must be greater than 0.")
+        if usage_limit > 2:
+            raise forms.ValidationError("Usage limit cannot be greater than 2.")
+        return usage_limit
     
 
     def clean(self):

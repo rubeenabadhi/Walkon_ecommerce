@@ -14,8 +14,6 @@ class CartItems(models.Model):
 
     class Meta:
         unique_together = ['user', 'product', 'variant']
-        verbose_name = "Cart"
-        verbose_name_plural = "Carts"
 
     def __str__(self):
         return f"{self.user.username} - {self.product.name}"

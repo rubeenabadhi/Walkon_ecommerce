@@ -164,11 +164,19 @@
                             </div>
 
                             <!-- Add to Cart Button -->
-                            <button class="btn btn-dark btn-sm px-3 py-1 add-to-cart-btn rounded-pill" type="button"
-                                    data-product-id="{{ product.id }}"
-                                    data-variant-id="{{ product.variants.first.id }}">
-                                <i class="bi bi-cart-plus"></i> Add to Cart
+                         <button class="btn btn-dark btn-sm px-3 py-1 add-to-cart-btn rounded-pill" 
+                                type="button"
+                                data-product-id="{{ product.id }}"
+                        data-variant-id="{{ product.variants.first.id }}"
+                        {% if not product.is_available %}disabled{% endif %}>
+                    <i class="bi bi-cart-plus"></i> 
+                    {% if product.is_available %}
+                    Add to Cart
+                     {% else %}
+                        Out of Stock
+                                    {% endif %}
                             </button>
+
                         </div>
                     </div>
                 </div>

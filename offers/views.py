@@ -12,18 +12,19 @@ from django.template.loader import render_to_string
 from django.core.paginator import Paginator
 from decimal import Decimal
 from django.views.decorators.http import require_POST
+from django.utils import timezone
+from django.utils.dateparse import parse_date
+
 
 # Create your views here.
 
 #==================================================================ADMIN COUPON MANAGEMENT========================================================
 #=================================================================================================================================================
 #----------- to display all coupons in admin panel-------------
-from django.core.paginator import Paginator
-from django.utils.dateparse import parse_date
 
 @login_required(login_url='admin_login')
 def admin_coupons(request):
-    # Auto-update coupon active status based on current date
+    # Auto update coupon active status based on current date
     today = timezone.now().date()
     Coupon.objects.filter(valid_to__lt=today, active=True).update(active=False) #bulk update
     Coupon.objects.filter(valid_to__gte=today, active=False).update(active=True)
@@ -329,7 +330,6 @@ def delete_category_offer(request, pk):
     return redirect('admin_category_offers')
 
 #=====get best offer====
-from django.utils import timezone
 
 
 def get_best_offer(product):

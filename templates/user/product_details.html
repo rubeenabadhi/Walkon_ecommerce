@@ -107,7 +107,14 @@
       <p class="product-category fw-semibold">Category: {{ product.category.name }}</p>
       <p class="product-gender">{{ product.gender.label|default:product.gender }}</p>
       <p class="product-brand fw-semibold">Brand: {{ product.brand.name }}</p>
-      <p class="product-stock">Available Stock: {{product.stock}}</p>
+      <p class="product-stock">Available Stock:
+         {% for v in product.variants.all %}
+           {% if v.stock > 0 %}
+             <span class="badge bg-info">{{ v.size.label }}</span>
+             <span class="badge bg-success">{{ v.stock }}</span>
+           {% endif %}
+         {% endfor %}
+      </p>
      {% with v=variants.first %}
   {% if v %}
     {% with offer=v.get_offer_price %}
@@ -156,7 +163,7 @@
     {% endfor %}
 </div>
       <div class="d-flex gap-3 mb-4">
-        {% if product.is_available and product.stock > 0  %}
+        {% if product.is_available  %}
           {% if product.id in wishlist_ids %}
             <button class="btn btn-danger btn-wishlist"
                     data-url="{% url 'toggle_wishlist' product.id %}"
@@ -331,6 +338,8 @@ $("#addToCartForm").on("submit", function(e){
                 $("#cartCount").text(response.cart_count);
                 errorMsg.style.display = "none";
                 alert(response.message);
+
+                location.reload();
             } else {
                 errorMsg.innerText = response.message;
                 errorMsg.style.display = "block";
@@ -362,10 +371,12 @@ $("#addToCartForm").on("submit", function(e){
                         button.classList.remove('btn-outline-danger');
                         button.classList.add('btn-danger');
                         button.innerHTML = "❤️ In Wishlist";
+                        location.reload();
                     } else if (response.status === "removed") {
                         button.classList.remove('btn-danger');
                         button.classList.add('btn-outline-danger');
-                        button.innerHTML = "♡ Add to Wishlist";
+                        button.innerHTML = "Add to Wishlist";
+                        location.reload();
                     }
                 },
                 error: function() {

@@ -132,7 +132,7 @@ class Order(models.Model):
             item.cancelled_at = timezone.now()
             item.save(update_fields=['is_cancelled', 'cancel_reason', 'cancelled_at'])
         # Restock product
-            product = item.product_variant.product
+            product = item.product_variant
             product.stock = F("stock") + item.quantity
             product.save(update_fields=["stock"])
 
@@ -207,7 +207,7 @@ class Order(models.Model):
 
             # Restock item
             variant = item.product_variant
-            product = variant.product
+            product = variant
             product.stock = models.F("stock") + item.quantity
             product.save(update_fields=["stock"])
 
@@ -276,7 +276,7 @@ class OrderItem(models.Model):
         self.save()
 
         # Restock
-        product = self.product_variant.product
+        product = self.product_variant
         product.stock = models.F("stock") + self.quantity
         product.save(update_fields=["stock"])
 
@@ -298,7 +298,7 @@ class OrderItem(models.Model):
         self.returned_at = timezone.now()
         self.save(update_fields=["is_returned", "return_reason", "returned_at"])
 
-        product = self.product_variant.product
+        product = self.product_variant
         product.stock = models.F("stock") + self.quantity
         product.save(update_fields=["stock"])
 

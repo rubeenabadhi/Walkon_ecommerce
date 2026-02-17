@@ -1,9 +1,7 @@
 {% extends 'user/base.html' %}
 {% load static %}
 {% block title %}Order Details - WalkOn{% endblock %}
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/order.css' %}">
-{% endblock %}
+
 {% block content %}
 <div class="container my-4">
     <div class="row">
@@ -63,7 +61,7 @@
             </div>
 
             <!-- ORDER ITEMS -->
-            <div class="card order-card shadow-sm mb-3 p-3">
+            <div class="card order-card shadow-sm mb-3 p-3" style="background: linear-gradient(135deg, #ffffff, #afe9f5);">
                 <h5 class="fw-bold mb-2 text-primary">Order Items</h5>
 
                 {% for item in order.items.all %}
@@ -342,7 +340,7 @@
                                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
 
                                 <div class="mb-3">
-                                    <label class="form-label">Reason (optional)</label>
+                                    <label class="form-label">Reason (mandatory)</label>
                                     <textarea class="form-control" name="reason" rows="3"></textarea>
                                 </div>
 
@@ -357,6 +355,7 @@
         </div>
     </div>
 </div>
+
 {% block extra_js %}
 <script>
 // This single script handles ALL review modals — works for 1 or 100 items

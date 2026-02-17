@@ -29,5 +29,5 @@ class EditProfileForm(forms.ModelForm):
             }),
             'profile_picture': forms.FileInput(attrs={
                 'class': 'form-control form-control-lg border-0 bg-light shadow-sm rounded-3'
-            }),
+            }),  
         }

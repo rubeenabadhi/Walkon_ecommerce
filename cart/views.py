@@ -50,7 +50,7 @@ def add_to_cart(request, slug):
     if not product.is_active:
         return JsonResponse({"status": "error", "message": "This product is not available."})
 
-    product_stock = product.stock or 0
+    product_stock = variant.stock or 0
     if product_stock <= 0:
         return JsonResponse({"status": "error", "message": "This product is out of stock."})
 
@@ -105,11 +105,15 @@ def update_cart(request, cart_item_id):
         return JsonResponse({"status": "error", "message": "Invalid request method."})
 
     action = request.POST.get("action")
-    cart_item = get_object_or_404(CartItems, id=cart_item_id, user=request.user)
+    try:
+        cart_item = CartItems.objects.get(id=cart_item_id, user=request.user)
+    except CartItems.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "Item not found."})
 
-    max_quantity = min(cart_item.product.stock, 5)
+    deleted = False
 
     if action == "increment":
+        max_quantity = min(cart_item.variant.stock, 5)
         if cart_item.quantity < max_quantity:
             cart_item.quantity += 1
             cart_item.save()
@@ -122,36 +126,33 @@ def update_cart(request, cart_item_id):
             cart_item.save()
         else:
             cart_item.delete()
-            return JsonResponse({
-                "status": "success",
-                "message": "Item removed from cart.",
-                "cart_count": CartItems.objects.filter(user=request.user).count(),
-                "total_price": float(
-                    sum(
-                        i.variant.get_offer_price() * i.quantity
-                        for i in CartItems.objects.filter(user=request.user)
-                    )
-                )
-            })
+            deleted = True
+
     else:
         return JsonResponse({"status": "error", "message": "Invalid action."})
 
-    #  Recalculate cart total (OFFER PRICE)
-    cart_items = CartItems.objects.filter(user=request.user)
+    # Recalculate totals
+    remaining_items = CartItems.objects.filter(user=request.user)
     total_price = sum(
-        i.variant.get_offer_price() * i.quantity
-        for i in cart_items
+        float(i.variant.get_offer_price() * i.quantity)
+        for i in remaining_items
     )
 
-    return JsonResponse({
+    response_data = {
         "status": "success",
-        "message": "Cart updated.",
-        "quantity": cart_item.quantity,
-        "item_total": float(cart_item.variant.get_offer_price() * cart_item.quantity),
-        "total_price": float(total_price),
-        "cart_count": cart_items.count()
-    })
+        "total_price": total_price,
+        "cart_count": remaining_items.count(),
+        "deleted": deleted,
+    }
 
+    if not deleted:
+        response_data.update({
+            "quantity": cart_item.quantity,
+            "item_total": float(cart_item.variant.get_offer_price() * cart_item.quantity),
+            "item_id": cart_item.id,  # just in case
+        })
+
+    return JsonResponse(response_data)
 
 @login_required(login_url='login')
 def remove_from_cart(request, cart_item_id):

@@ -73,7 +73,7 @@ def admin_dashboard(request):
         .values("product_variant__product__name")
         .annotate(
             total_quantity=Sum("quantity"),
-            total_revenue=Sum("price")  # അല്ലെങ്കിൽ discounted_price / final_price ഉപയോഗിക്കാം
+            total_revenue=Sum("price")  # this is revenue from this product (price * quantity) summed across all orders
         )
         .order_by("-total_quantity")[:10]
     )

@@ -15,7 +15,7 @@ $(document).on("click", ".add-to-cart, .add-to-cart-btn", function (e) {
         variantId = sizeSelect.val();
 
         if (!variantId) {
-            alert("⚠️ Please select a size before adding to cart.");
+            alert(" Please select a size before adding to cart.");
             return;
         }
 

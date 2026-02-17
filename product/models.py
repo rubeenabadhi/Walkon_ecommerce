@@ -15,9 +15,6 @@ class Gender(models.Model):
     description = models.TextField(blank=True)  # Optional description field
     updated_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        verbose_name = "Gender"
-        verbose_name_plural = "Genders"
 
     def __str__(self):
         return self.label
@@ -26,10 +23,6 @@ class Brand(models.Model):
     name = models.CharField(max_length=100)
     slug = models.SlugField(max_length=150, unique=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = "Brand"
-        verbose_name_plural = "Brands"
 
     def __str__(self):
         return self.name
@@ -45,9 +38,6 @@ class Category(models.Model):
     slug = models.SlugField(max_length=150, unique=True,blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        verbose_name = "Category"
-        verbose_name_plural = "Categories"
 
     def __str__(self):
         return self.name
@@ -62,10 +52,7 @@ class Size(models.Model):
     label = models.CharField(max_length=50)
     updated_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        verbose_name = "Size"
-        verbose_name_plural = "Sizes"
-
+    
     def __str__(self):
         return self.label
 
@@ -74,9 +61,7 @@ class Color(models.Model):
     hex_code = models.CharField(max_length=7)  # e.g., #FFFFFF
     updated_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        verbose_name = "Color"
-        verbose_name_plural = "Colors"
+    
 
     def __str__(self):
         return f"{self.name} ({self.hex_code})"
@@ -91,17 +76,12 @@ class Product(models.Model):
     slug = models.SlugField(max_length=250, unique=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='products')
     brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, related_name='products')
-    stock = models.PositiveIntegerField(default=0)
     added_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='added_products')
     gender = models.ForeignKey(Gender, on_delete=models.SET_NULL, null=True, related_name='products')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     #offers
     
-
-    class Meta:
-        verbose_name = "Product"
-        verbose_name_plural = "Products"
 
     def __str__(self):
         return self.name
@@ -131,12 +111,12 @@ class ProductVariant(models.Model):
     size = models.ForeignKey(Size, on_delete=models.SET_NULL, null=True, related_name='variants')
     color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, related_name='variants')
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    stock = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_deleted = models.BooleanField(default=False)  # Soft delete
 
     class Meta:
-        verbose_name = "Product Variant"
-        verbose_name_plural = "Product Variants"
         unique_together = ('product', 'size', 'color') # Ensure unique combination of product, size, and color
 
     def __str__(self):
@@ -151,7 +131,7 @@ class ProductVariant(models.Model):
 
     # Product-level offer
         product_offer = ProductOffer.objects.filter(
-            product=self.product,  # ✅ should be self.product, not self
+            product=self.product,  # Filter offers for the specific product
             active=True,
             valid_from__lte=now,
             valid_to__gte=now
@@ -215,10 +195,6 @@ class Image(models.Model):
     alt_text = models.CharField(max_length=255, blank=True)  # Optional alt text for the image
     uploaded_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = "Image"
-        verbose_name_plural = "Images"
 
     def __str__(self):
         if self.variant:

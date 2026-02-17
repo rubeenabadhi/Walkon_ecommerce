@@ -197,6 +197,7 @@ def select_payment(request):
         "final_total": final_total.quantize(Decimal('0.01')),   # Grand Total (discounted)
         "discount": discount.quantize(Decimal('0.01')),
         "wallet_balance": wallet.balance,
+        "available_coupons": Coupon.objects.filter(active=True)
     }
 
     return render(request, "user/select_payment.html", context)
@@ -279,12 +280,12 @@ def wallet_payment(request, order_id):
                         price=ci.variant.get_offer_price(),
                     )
                     # STOCK REDUCE
-                    product = ci.variant.product
-                    print("DEBUG: Before Stock:", product.stock)
-                    product.stock = F("stock") - ci.quantity
-                    product.save(update_fields=["stock"])
-                    product.refresh_from_db()
-                    print("DEBUG: After Stock:", product.stock)
+                    variant = ci.variant
+                    print("DEBUG: Before Stock:", variant.stock)
+                    variant.stock = F("stock") - ci.quantity
+                    variant.save(update_fields=["stock"])
+                    variant.refresh_from_db()
+                    print("DEBUG: After Stock:", variant.stock)
                 else:
                     # if item already exists
                     print("DEBUG: OrderItem already exists → Skipped")
@@ -524,9 +525,10 @@ def verify_razorpay_payment(request):
                     )
 
                 # Reduce stock
-                product = ci.variant.product
-                product.stock = F("stock") - ci.quantity
-                product.save(update_fields=["stock"])
+                variant = ci.variant
+                print("DEBUG: Before Stock:", variant.stock)
+                variant.stock = F("stock") - ci.quantity
+                variant.save(update_fields=["stock"])
 
             # Clear cart
             cart_items.delete()
@@ -668,9 +670,10 @@ def place_order(request):
                     price=ci.variant.get_offer_price(),
                 )
 
-                product = ci.variant.product
-                product.stock = F('stock') - ci.quantity
-                product.save(update_fields=['stock'])
+                variant = ci.variant
+                print("DEBUG: Before Stock:", variant.stock)    
+                variant.stock = F('stock') - ci.quantity
+                variant.save(update_fields=['stock'])
 
             # Clear cart
             cart_items.delete()

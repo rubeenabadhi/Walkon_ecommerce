@@ -1,3 +1,4 @@
+    
     // Helper functions
     function resetButton() {
         const btn = $("#continueToShipping");
@@ -44,20 +45,21 @@
                                 Coupon <strong>"${response.applied_coupon.code}"</strong> applied
                                 <span class="float-end">-₹${response.discount}</span>
                             </div>
-                            <form method="post" action="{% url 'remove_coupon' %}" id="removeCouponForm">
-                                {% csrf_token %}
+                            <form method="post" action="${removeCouponUrl}" id="removeCouponForm">
+                                <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
                                 <button type="submit" class="btn btn-sm btn-danger w-100 mt-2">Remove Coupon</button>
                             </form>
                         `);
                     } else {
                         $("#coupon-section").html(`
                             <form method="post" action="{% url 'apply_coupon' %}" id="applyCouponForm" class="d-flex gap-2 mt-3">
-                                {% csrf_token %}
+                                <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
                                 <input type="text" name="coupon_code" placeholder="Enter coupon code" class="form-control" required>
                                 <button type="submit" class="btn btn-sm btn-dark">Apply</button>
                             </form>
                         `);
                     }
+                    location.reload();
                 } else {
                     alert(response.message || "Failed to apply coupon.");
                 }
@@ -156,7 +158,7 @@
                                 method: "POST",
                                 headers: { "X-CSRFToken": csrftoken }
                             }).then(() => {
-                                window.location.href = "{% url 'payment_failure' %}";
+                                window.location.href = "/checkout/payment-failed/";
                             });
                         }
                     }
@@ -172,7 +174,11 @@
                         headers: { "X-CSRFToken": csrftoken }
                     }).then(() => {
                         window.location.href = "/checkout/payment-failed/";
+                    }).catch(err => {
+                        console.error("Failure save error:", err);
+                        window.location.href = "/checkout/payment-failed/";
                     });
+
                 });
 
                 rzp1.open();

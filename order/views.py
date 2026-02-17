@@ -256,7 +256,7 @@ def cancel_item(request, item_id):
             item.cancelled_at = timezone.now()
             item.save()
 
-            product = item.product_variant.product
+            product = item.product_variant
             product.stock = F("stock") + item.quantity
             product.save(update_fields=["stock"])
 
@@ -499,7 +499,7 @@ def admin_order_action(request, order_number):
                 item.save(update_fields=['is_returned', 'admin_refunded', 'returned_at'])
 
                 # Restock product
-                product = item.product_variant.product
+                product = item.product_variant
                 product.stock = F("stock") + item.quantity
                 product.save(update_fields=["stock"])
 
@@ -603,7 +603,7 @@ def admin_process_return(request, request_id):
                 item.save()
 
                 # Restock
-                product = item.product_variant.product
+                product = item.product_variant
                 product.stock = F("stock") + item.quantity
                 product.save(update_fields=["stock"])
 
@@ -616,7 +616,7 @@ def admin_process_return(request, request_id):
                     item.save()
 
                     # Restock
-                    product = item.product_variant.product
+                    product = item.product_variant
                     product.stock = F("stock") + item.quantity
                     product.save(update_fields=["stock"])
 

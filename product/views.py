@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.db.models.functions import Coalesce # Import the Coalesce function for NULL handling
 from django.core.paginator import Paginator
 import cloudinary
@@ -113,7 +113,6 @@ def add_product(request):
         brand_id = request.POST.get("brand")
         gender_id = request.POST.get("gender")
         price = request.POST.get("price")
-        stock = int(request.POST.get("stock", 0))   #  stock comes before product create
         is_available = True if request.POST.get("is_available") == "on" else False
         is_active = True if request.POST.get("is_active") == "on" else False    
 
@@ -123,7 +122,7 @@ def add_product(request):
         if primary_image:
             upload_result = cloudinary.uploader.upload(primary_image, transformation=[
                 {"width": 300, "height": 300, "crop": "fill", "gravity": "auto"}
-            ])
+            ]) # means to automatically crop the image to fit within 300x300 while keeping the main subject in focus
             primary_image_url = upload_result['secure_url']
 
         #  Create Product with stock at product-level
@@ -133,7 +132,6 @@ def add_product(request):
             category_id=category_id,
             brand_id=brand_id,
             gender_id=gender_id,
-            stock=stock,
             is_available=is_available,
             is_active=is_active,
             added_by=request.user,
@@ -154,14 +152,16 @@ def add_product(request):
         size_ids = request.POST.getlist("sizes")
         color_ids = request.POST.getlist("colors")
 
-        # Create variants (no stock, only price + attributes)
+        # Create variants 
         for size_id in size_ids:
+            stock=int(request.POST.get(f"stock_{size_id}", 0))   # stock comes from the form for each variant
             for color_id in color_ids:
                 variant = ProductVariant.objects.create(
                     product=product,
                     size_id=size_id,
                     color_id=color_id,
-                    price=price
+                    price=price,
+                    stock=stock
                 )
 
                 # Variant-specific images (optional)
@@ -169,7 +169,7 @@ def add_product(request):
                 for vimg in variant_images:
                     if vimg:
                         upload_result = cloudinary.uploader.upload(vimg, transformation=[
-                            {"width": 300, "height": 300, "crop": "fill", "gravity": "auto"}
+                            {"width": 500, "height": 500, "crop": "fill", "gravity": "auto"}
                         ])
                         Image.objects.create(product=product, variant=variant, image=upload_result['secure_url'])
 
@@ -187,21 +187,46 @@ def add_product(request):
 #--------------------------------------- view to list all products
 @staff_member_required
 def product_list(request):
-    products = (
-        Product.objects
-        .all()
-        .order_by('-created_at')
-        .prefetch_related('variants')
-    )
+
+    products = Product.objects.all().order_by('-created_at').prefetch_related('variants')
+
+    search_query = request.GET.get('search', '')
+    selected_category = request.GET.get('category', '')
+    selected_status = request.GET.get('status', '')
+
+    # Search
+    if search_query:
+        products = products.filter(
+            Q(name__icontains=search_query) |
+            Q(category__name__icontains=search_query) |
+            Q(brand__name__icontains=search_query) |
+            Q(gender__label__icontains=search_query)
+        )
+
+    # Category Filter
+    if selected_category:
+        products = products.filter(category_id=selected_category)
+
+    # Status Filter
+    if selected_status == "available":
+        products = products.filter(is_active=True)
+
+    elif selected_status == "unavailable":
+        products = products.filter(is_active=False)
 
     paginator = Paginator(products, 10)
     page_number = request.GET.get('page')
     products = paginator.get_page(page_number)
 
-    return render(request, 'admin/products.html', {
-        'products': products
-    })
+    categories = Category.objects.all()
 
+    return render(request, 'admin/products.html', {
+        'products': products,
+        'search_query': search_query,
+        'categories': categories,
+        'selected_category': selected_category,
+        'selected_status': selected_status,
+    })
 #--------------------------------------- Product Detail View
 @staff_member_required
 def product_view(request, slug):
@@ -241,7 +266,7 @@ def edit_product(request, slug=None):
         is_available = True if request.POST.get("is_available") == "on" else False
         is_active = True if request.POST.get("is_active") == "on" else False
         price = request.POST.get("price")
-        stock = request.POST.get("stock")
+        
 
         # --- Create or update product ---
         if product:
@@ -255,7 +280,6 @@ def edit_product(request, slug=None):
             product.gender_id = gender_id
             product.is_available = is_available
             product.is_active = is_active
-            product.stock = int(stock) if stock else product.stock
             product.slug = slugify(name)
             product.save()
         else:
@@ -266,7 +290,6 @@ def edit_product(request, slug=None):
                 brand=brand_id,
                 gender=gender_id,
                 is_available=is_available,
-                stock=int(stock) if stock else 0,
                 slug=slugify(name),
             )
             if request.FILES.get("primary_image"):
@@ -285,7 +308,7 @@ def edit_product(request, slug=None):
             if img:
                 Image.objects.create(product=product, image=img)
 
-        # --- Handle variants (only price, no stock here) ---
+        # --- Handle variants  ---
         size_ids = request.POST.getlist("sizes")
         color_ids = request.POST.getlist("colors")
 
@@ -298,15 +321,18 @@ def edit_product(request, slug=None):
 
             # Create or update variants
             for size_id in size_ids:
+                stock=int(request.POST.get(f"stock_{size_id}", 0)) 
                 for color_id in color_ids:
                     variant, created = ProductVariant.objects.get_or_create(
                         product=product,
                         size_id=size_id,
                         color_id=color_id,
-                        defaults={'price': float(price)},
+                        defaults={'price': float(price), 'stock': int(stock) if stock else 0},
+                        
                     )
                     if not created:
                         variant.price = float(price)
+                        variant.stock = int(stock) if stock else 0
                         variant.save()
 
         messages.success(request, f"{'Product updated' if slug else 'New product added'} successfully!")
@@ -332,29 +358,13 @@ def delete_product(request, slug):
         product = get_object_or_404(Product, slug=slug)
         
         # delete product + variants
-        product.delete()
-        print(f"Product {product.name} and all its variants have been deleted")
+        product.is_deleted = True
+        product.save()
+        print(f"Product {product.name} marked as deleted.")
         
         return JsonResponse({"success": True, "message": "Product and all variants deleted successfully!"})
     return JsonResponse({"success": False, "message": "Invalid request!"}, status=400)
 
-
-#=========================================stock update view==============================
-@login_required(login_url="admin_login")
-@csrf_exempt
-def update_stock(request):
-    if request.method == "POST" and request.headers.get("x-requested-with") == "XMLHttpRequest":
-        product_id = request.POST.get("product_id")
-        stock = request.POST.get("stock")
-        try:
-            stock = int(stock)
-            product = Product.objects.get(id=product_id)
-            product.stock = stock
-            product.save()
-            return JsonResponse({"success": True})
-        except Exception as e:
-            return JsonResponse({"success": False, "error": str(e)})
-    return JsonResponse({"success": False, "error": "Invalid request"})
 
 #--------------------------------- view for admin all master data management(size,color,category,gender,brand)
 @staff_member_required(login_url="admin_login")
@@ -457,12 +467,11 @@ def ajax_delete_variant(request):
 def stock_management(request):
     query = request.GET.get('q', '')
     status_filter = request.GET.get('status', 'all')
-
-    variants = Product.objects.all()
+    
+    variants = ProductVariant.objects.all()
     if query:
         variants = variants.filter(
-            Q(product__name__icontains=query) 
-            
+            Q(product__name__icontains=query)
         )
   
     if status_filter == 'low':
@@ -476,15 +485,11 @@ def stock_management(request):
         'variants': variants.order_by('stock'),
         'query': query,
         'status_filter': status_filter,
-        'low_stock_count': Product.objects.filter(stock__lte=5, stock__gt=0).count(),
-        'out_stock_count': Product.objects.filter(stock=0).count(),
-        'total_variants': Product.objects.count(),
+        'low_stock_count': variants.filter(stock__lte=5, stock__gt=0).count(),
+        'out_stock_count': variants.filter(stock=0).count(),
+        'total_variants': variants.count(),
     }
     return render(request, 'admin/stock_management.html', context)
-
-# Create your views here.
-
-
 
 #============================================================================= USER VIEW==============================================================
 
@@ -529,7 +534,9 @@ def apply_product_filters(request, products):
 
 # Product Listing with Filters, Sorting, Pagination, Wishlist Integration
 def user_product_list(request):
-    products = Product.objects.all().distinct()
+
+    products = Product.objects.all().order_by('id').prefetch_related('variants')
+
     genders = Gender.objects.all()
     # apply filters
     products, filter_form = apply_product_filters(request, products)
@@ -541,7 +548,7 @@ def user_product_list(request):
         ).values_list("product_variant__product_id", flat=True)
 
     products = products.distinct() 
-    paginator = Paginator(products, 6)
+    paginator = Paginator(products, 6)  # Show 6 products per page
     page_number = request.GET.get("page")
     products = paginator.get_page(page_number)
 

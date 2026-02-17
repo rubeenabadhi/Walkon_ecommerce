@@ -23,13 +23,15 @@ class Coupon(models.Model):
 
     def __str__(self):
         return self.code
+    
+    
     #discount_type if percentage convert to fixed
     def get_discounted_price(self, price):
         if self.discount_type == 'percentage':
             return price * (1 - self.discount_value / 100)
         else:
             return price - self.discount_value
-        
+    
     
     
 # Coupon usage by User

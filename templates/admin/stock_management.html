@@ -57,6 +57,7 @@
           <thead class="table-dark">
             <tr>
               <th>Product</th>
+              <th>Variant</th>
               <th>Stock</th>
               <th>Status</th>
               <th>Actions</th>
@@ -65,7 +66,10 @@
           <tbody>
             {% for v in variants %}
             <tr {% if v.stock == 0 %}class="table-danger"{% elif v.stock <= 5 %}class="table-warning"{% endif %}>
-              <td>{{ v.name }}</td>
+              <td>{{ v.product.name }}</td>
+              <td>
+                {% if v.size %}<span class="badge bg-info text-dark">{{ v.size.label }}</span>{% endif %}
+              </td>
               <td class="fw-bold">{{ v.stock }}</td>
               <td>
                 {% if v.stock == 0 %}
@@ -77,7 +81,7 @@
                 {% endif %}
               </td>
             
-                <td class="fw-bold stock-cell" data-product-id="{{ v.id }}">
+                <td class="fw-bold stock-cell" data-variant-id="{{ v.id }}">
   
   <input type="number" class="stock-input form-control d-none" value="{{ v.stock }}" min="0" style="width: 80px;">
     <span class="stock-display"></span>
@@ -113,11 +117,11 @@
     document.querySelectorAll('.save-stock').forEach(btn => {
       btn.addEventListener('click', function () {
         const cell = this.closest('.stock-cell');
-        const productId = cell.dataset.productId;
+        const variantId = cell.dataset.variantId;
         const newStock = cell.querySelector('.stock-input').value;
 
-        if (!productId) {
-          alert('Product ID missing! Check data-product-id.');
+        if (!variantId) {
+          alert('Variant ID missing! Check data-variant-id.');
           return;
         }
 
@@ -128,7 +132,7 @@
             'X-CSRFToken': '{{ csrf_token }}',
             'X-Requested-With': 'XMLHttpRequest'
           },
-          body: `product_id=${productId}&stock=${newStock}`
+          body: `variant_id=${variantId}&stock=${newStock}`
         })
         .then(response => response.json())
         .then(data => {

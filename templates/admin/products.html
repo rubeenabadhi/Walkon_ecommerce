@@ -12,27 +12,63 @@
     </div>
 
     <!-- Search and Filters -->
-    <div class="row mb-4 align-items-center">
-      <div class="col-md-6">
-        <div class="searchbox-256 input-group">
-          <span class="input-group-text bg-white border-end-0">
-            <i class="bi bi-search"></i>
-          </span>
-          <input type="text" class="form-control border-start-0 text-rgb-170-170-170" placeholder="Search here">
-        </div>
-      </div>
-      <div class="col-md-6 d-flex align-items-center justify-content-md-end gap-3">
-        <span class="text-263 text-rgb-159-155-155">Filters</span>
-        <div class="chip-261 border rounded-pill px-3 py-2">Filter</div>
-        <div class="icgridview-265 d-flex align-items-center gap-2 bg-black text-white rounded px-3 py-2">
-            <a href="{% url 'add_product' %}" class="text-white d-flex align-items-center">
-              <span class="text-267">New</span>
-              <i class="bi bi-plus-circle"></i>
-            </a>
-        </div>
-      </div>
+<form method="get">
+  <div class="row mb-4 align-items-end g-2">
+
+    <div class="col-md-3">
+      <input type="text" name="search" value="{{ search_query }}"
+             class="form-control" placeholder="Search...">
     </div>
 
+    <div class="col-md-2">
+      <select name="category" class="form-select">
+        <option value="">All Categories</option>
+        {% for category in categories %}
+        <option value="{{ category.id }}"
+          {% if category.id|stringformat:"s" == selected_category %}selected{% endif %}>
+          {{ category.name }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-2">
+      <select name="status" class="form-select">
+        <option value="">All Statuses</option>
+        <option value="available"
+          {% if selected_status == "available" %}selected{% endif %}>
+          Available
+        </option>
+        <option value="unavailable"
+          {% if selected_status == "unavailable" %}selected{% endif %}>
+          Unavailable
+        </option>
+      </select>
+    </div>
+
+    <div class="col-md-2 d-grid">
+      <button type="submit" class="btn btn-primary">
+        Filter
+      </button>
+    </div>
+
+    <div class="col-md-1 d-grid">
+      <a href="{% url 'products' %}" class="btn btn-secondary">
+        Reset
+      </a>
+    </div>
+
+    <div class="col-md-2 text-end">
+      <a href="{% url 'add_product' %}" class="btn btn-dark w-100">
+        <i class="bi bi-plus-lg"></i> New
+      </a>
+    </div>
+
+  </div>
+</form>
+
+
+      
     <!-- Product Table -->
     <div class="table-responsive p-3" style="border: 1px solid #dee2e6; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
       <table class="table table-striped align-middle">
@@ -45,7 +81,6 @@
             
             <th scope="col">Added on</th>
             <th scope="col">Category</th>
-            <th scope="col">Stock</th>
             <th scope="col">Status</th>
             <th scope="col">Actions</th>
           </tr>
@@ -80,18 +115,14 @@
 
             <td>{{ product.created_at|date:"d-m-Y" }}</td>
             <td>{{ product.category }}</td>
-            <td>
-  <input type="number" 
-         value="{{ product.stock }}" 
-         class="form-control form-control-sm stock-input" 
-         data-product-id="{{ product.id }}" 
-         style="width:70px;">
-  <span class="text-success stock-update-msg" style="display:none; font-size:0.8rem;">Updated!</span>
-</td>
 
             <td>
               <div class="d-flex justify-content-center align-items-center gap-2 px-3 py-1 bg-success-subtle border border-success rounded">
-                <span class="text-rgb-0-135-103">{{ product.is_available }}</span>
+                {% if product.is_available %}
+                <span class="text-success bg-success-subtle" >Available</span>
+                {% else %}
+                <span class="text-danger bg-danger-subtle">Unavailable</span>
+                {% endif %}
               </div>
             </td>
             <td>
@@ -199,51 +230,6 @@
         }
     });
   });
-
-$(document).ready(function(){
-    $('.stock-input').on('change', function(){
-        let input = $(this);
-        let productId = input.data('product-id');
-        let stockValue = input.val();
-        let msgSpan = input.siblings('.stock-update-msg');
-
-        $.ajax({
-            url: "{% url 'update_stock' %}",  // new AJAX view URL
-            method: "POST",
-            headers: { "X-CSRFToken": getCookie("csrftoken") },
-            data: { product_id: productId, stock: stockValue },
-            success: function(response){
-                if(response.success){
-                    msgSpan.fadeIn().delay(1000).fadeOut();
-                } else {
-                    alert("Failed to update stock!");
-                }
-            },
-            error: function(xhr){
-                console.log(xhr.responseText);
-                alert("Error updating stock.");
-            }
-        });
-    });
-
-    // CSRF Helper
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            let cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                let cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-});
-
-
 
   // CSRF Helper
   function getCookie(name) {
