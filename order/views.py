@@ -97,7 +97,17 @@ def orders(request):
 def order_detail(request, order_number):
     order = get_object_or_404(Order, order_id=order_number, user=request.user)
     order_items = order.items.select_related('product_variant__product')
+    # Refresh order items
+    for item in order.items.all():
+        item.refresh_from_db()
+        try:
+            item.user_review = item.product_variant.product.reviews.get(user=request.user)
+        except Review.DoesNotExist:
+            item.user_review = None
 
+    requested_item_ids = set(
+        ReturnRequest.objects.filter(order_item__order=order,status="requested").values_list('order_item', flat=True)
+    )
     # Collect products that already have reviews
     reviewed_products = set(
         Review.objects.filter(user=request.user).values_list('product_id', flat=True)
@@ -105,7 +115,7 @@ def order_detail(request, order_number):
 
     review_form = ReviewForm()
 
-    # 🔥 Correct: Create a dictionary of existing reviews for each product
+    #Create a dictionary of existing reviews for each product
     existing_reviews = {}
 
     for item in order.items.all():
@@ -115,7 +125,8 @@ def order_detail(request, order_number):
             product=product
         ).first()
 
-        existing_reviews[product.id] = existing_review  # <-- store it properly
+        existing_reviews[product.id] = existing_review  # Add the existing review to the dictionary
+        
 
     context = {
         'order': order,
@@ -123,6 +134,7 @@ def order_detail(request, order_number):
         'reviewed_products': reviewed_products,
         'review_form': review_form,
         'existing_reviews': existing_reviews,   
+        'requested_item_ids': requested_item_ids
     }
 
     return render(request, 'user/order_details.html', context)

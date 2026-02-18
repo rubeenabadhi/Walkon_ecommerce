@@ -27,7 +27,7 @@
             </div>
 
             <!-- Order Summary -->
-            <div class="card summary-card shadow-sm mb-3 p-3" style="border-left: 6px solid #1a73e8; ">
+            <div class="card summary-card shadow-sm mb-3 p-3" style="border-left: 6px solid #1a73e8; border-radius: 8px; background: linear-gradient(135deg, #ffffff, #e3f2fd); ">
                 <p class="mb-1 fs-5">
                     <span class="fw-sm-bold">Status:</span>
                     <span class="
@@ -106,9 +106,13 @@
                             </button>
                         {% endif %}
                     
-                    {% elif order.status == "delivered" or order.status == "partially_returned" %}
-
-                        {% if not item.is_returned %}
+                    {% elif order.status == "delivered" or order.status == "partially_returned"  %}
+                       {% if item.id in requested_item_ids %}
+                            <span class="badge bg-warning text-dark">Return Requested</span>
+                        
+                            {% elif item.is_cancelled %}
+                            
+                        {% elif not item.is_returned %}
                             <button class="btn btn-sm btn-danger"
                                     data-bs-toggle="modal"
                                     data-bs-target="#returnItemModal{{ item.id }}">
@@ -116,19 +120,23 @@
                             </button>
                         {% elif item.is_returned %}
                             <span class="badge bg-success">Returned</span>
-                        {% elif item.is_return_requested %}
-                            <span class="badge bg-warning text-dark">Return Requested</span>
                         
                         {% endif %}
                         <!-- REVIEW BUTTON -->
+                        {% if not item.is_cancelled and not item.is_returned%}
                         {% if item.product_variant.product.id in reviewed_products %}
                             <span class="badge bg-success">Reviewed</span>
+                            <!-- view review button     -->
+                            
                         {% else %}
+                        
                             <button class="btn btn-sm btn-primary"
                                     data-bs-toggle="modal"
                                     data-bs-target="#reviewModal{{ item.id }}">
                                 Review
                             </button>
+
+                        {% endif %}
                         {% endif %}
                     {% endif %}
                 </div>
@@ -229,6 +237,7 @@
         </div>
     </div>
 </div>
+
                 {% endfor %}
             </div>
 

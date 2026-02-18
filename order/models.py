@@ -250,7 +250,7 @@ class OrderItem(models.Model):
     cancel_reason = models.TextField(null=True, blank=True)
     cancelled_at = models.DateTimeField(null=True, blank=True)
 
-    is_returned_requested = models.BooleanField(default=False)
+    is_returned_requested = models.BooleanField(default=False, blank=True, null=True)
 
     is_returned = models.BooleanField(default=False)
     return_reason = models.TextField(null=True, blank=True)
@@ -313,6 +313,11 @@ class OrderItem(models.Model):
     @property
     def variant(self):
         return self.product_variant
+    
+    @property
+    def is_returned_requested(self):
+        return ReturnRequest.objects.filter(order_item=self,status="requested").exists()
+
 #====================order return request=====================
 
 class ReturnRequest(models.Model):
@@ -347,6 +352,7 @@ class ReturnRequest(models.Model):
 
     def __str__(self):
         return f"ReturnRequest {self.id} - {self.request_type} - {self.status}"
+
 # ===================== ORDER TRACKING =====================
 class OrderTracking(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

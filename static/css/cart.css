@@ -1,19 +1,5 @@
 
-    @font-face {
-        font-family: 'Volkhov';
-        src: url("{% static 'fonts/volkhov.woff2' %}") format('woff2'),
-             url("{% static 'fonts/volkhov.woff' %}") format('woff');
-        font-weight: normal;
-        font-style: normal;
-    }
 
-    @font-face {
-        font-family: 'Outfit';
-        src: url("{% static 'fonts/outfit.woff2' %}") format('woff2'),
-             url("{% static 'fonts/outfit.woff' %}") format('woff');
-        font-weight: normal;
-        font-style: normal;
-    }
 
     :root {
         --font-family-inter: 'Inter', sans-serif;

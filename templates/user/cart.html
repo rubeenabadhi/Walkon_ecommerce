@@ -36,7 +36,7 @@
                            {% endif %}
                           </p>
                           <p class="item-subtotal text-primary fw-bold">
-                            Subtotal: ₹<span id="item_subtotal-{{ item.id }}">{{ item.quantity|mul:item.variant.get_offer_price|floatformat:2 }}</span>   
+                            <span id="item_subtotal-{{ item.id }}"></span>   
                             </p>                 
                         </div>
                     <div class="col-md-4">
@@ -107,7 +107,6 @@ $(document).ready(function(){
                             $("#summary-quantity-" + itemId).text("0");
                             $("#summary-subtotal-" + itemId).text("0.00");
                             $(".continue-btn").addClass("disabled");
-                            location.reload();
 
                         }
                         
@@ -129,8 +128,11 @@ $(document).ready(function(){
 
                     //  Update Grand Total
                     $("#grand-total").text(response.total_price.toFixed(2));
-                    location.reload();
 
+                    // Update Continue Button
+                    if (response.quantity > 0) {
+                        $(".continue-btn").removeClass("disabled");
+                    }
                 } else {
                     alert(response.message);
                 }
@@ -152,6 +154,13 @@ $(document).ready(function(){
         let itemId = $(this).data("item-id");
         updateCart(itemId, "decrement");
     });
+
+    // Remove Item
+    $(".remove-item").click(function(){
+        let itemId = $(this).data("item-id");
+        updateCart(itemId, "remove");
+    });
+    loaodCart();
 
 });
 </script>

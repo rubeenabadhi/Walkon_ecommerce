@@ -140,7 +140,7 @@ def update_cart(request, cart_item_id):
 
     response_data = {
         "status": "success",
-        "total_price": total_price,
+        "total_price": float(total_price),
         "cart_count": remaining_items.count(),
         "deleted": deleted,
     }
