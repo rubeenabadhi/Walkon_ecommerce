@@ -108,7 +108,7 @@
       <p class="product-gender">{{ product.gender.label|default:product.gender }}</p>
       <p class="product-brand fw-semibold">Brand: {{ product.brand.name }}</p>
       <p class="product-stock">Available Stock:
-         {% for v in product.variants.all %}
+         {% for v in product.variants.all  %}
            {% if v.stock > 0 %}
              <span class="badge bg-info">{{ v.size.label }}</span>
              <span class="badge bg-success">{{ v.stock }}</span>

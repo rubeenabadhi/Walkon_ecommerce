@@ -220,7 +220,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-  // Navbar scroll effect
+  // Navbar scroll effect to change the color of the navbar when scrolling down
   $(window).scroll(function(){
     if($(this).scrollTop() > 50){
         $('.navbar').addClass('scrolled');
@@ -261,9 +261,8 @@ $(document).on("click", ".wishlist-btn", function (e) {
         }
     });
 });
-// Safer URLs for cart update/remove
+// Safer URLs for cart update
 const updateCartBaseUrl = "{% url 'cart:update_cart' 0 %}".replace("0/", ""); 
-const removeCartBaseUrl = "{% url 'cart:remove_from_cart' 0 %}".replace("0/", "");
 
 $(document).ready(function() {
 
@@ -302,30 +301,12 @@ $(document).ready(function() {
     });
 
     // Remove Item from Cart
-    $('.remove-item').on('click', function() {
-        const itemId = $(this).data('item-id');              // Get item ID
-
-        $.ajax({
-            url: removeCartBaseUrl + itemId + "/",           // Construct remove URL
-            type: 'POST',
-            data: { csrfmiddlewaretoken: '{{ csrf_token }}' }, // CSRF token
-            success: function(response) {
-                if (response.status === 'success') {
-                    $("#cart-item-" + itemId).remove();     // Remove item row
-                    $("#grand-total").text(response.total_price); // Update total
-                    $(".cart-count").text(response.cart_count);   // Update cart count
-                } else {
-                    alert(response.message);                 // Alert if error
-                }
-            }
-        });
-    });
-
 });
 
 </script>
 <script src="{% static 'js/addToCart.js' %}"></script>
 {% block extra_js %}
+
 {% endblock %}
 </body>
 </html>

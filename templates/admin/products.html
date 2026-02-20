@@ -220,6 +220,7 @@
         success: function(response) {
             if (response.success) {
                 $(`#${rowId}`).fadeOut(400, function() { $(this).remove(); });
+                alert("Product deleted successfully!");
             } else {
                 alert("Failed: " + response.message);
             }

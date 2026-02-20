@@ -80,6 +80,7 @@ class Product(models.Model):
     gender = models.ForeignKey(Gender, on_delete=models.SET_NULL, null=True, related_name='products')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_deleted = models.BooleanField(default=False, blank=True, null=True)
     #offers
     
 

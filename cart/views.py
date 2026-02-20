@@ -127,6 +127,9 @@ def update_cart(request, cart_item_id):
         else:
             cart_item.delete()
             deleted = True
+    elif action == "remove":
+        cart_item.delete()
+        deleted = True
 
     else:
         return JsonResponse({"status": "error", "message": "Invalid action."})
@@ -154,14 +157,4 @@ def update_cart(request, cart_item_id):
 
     return JsonResponse(response_data)
 
-@login_required(login_url='login')
-def remove_from_cart(request, cart_item_id):
-    if request.method == "POST":
-        cart_item = get_object_or_404(CartItems, id=cart_item_id, user=request.user)
-        cart_item.delete()
-        return JsonResponse({
-            "status": "success",
-            "message": "Item removed from cart.",
-            "cart_count": CartItems.objects.filter(user=request.user).count()
-        })
-    return JsonResponse({"status": "error", "message": "Invalid request method."})
+

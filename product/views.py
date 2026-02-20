@@ -185,10 +185,10 @@ def add_product(request):
     return render(request, "admin/add_product.html", context)
 
 #--------------------------------------- view to list all products
-@staff_member_required
+@staff_member_required(login_url="admin_login")
 def product_list(request):
 
-    products = Product.objects.all().order_by('-created_at').prefetch_related('variants')
+    products = Product.objects.exclude(is_deleted=True).order_by('-created_at').prefetch_related('variants')
 
     search_query = request.GET.get('search', '')
     selected_category = request.GET.get('category', '')
@@ -465,15 +465,58 @@ def ajax_delete_variant(request):
 #====================stock update view========================
 @staff_member_required(login_url='admin_login')
 def stock_management(request):
+
+    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+
+        variant_id = request.POST.get('variant_id')
+        stock = request.POST.get('stock')
+
+        if not variant_id or stock is None:
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid request.'
+            })
+
+        try:
+            variant = ProductVariant.objects.filter(
+                id=variant_id,
+                product__is_deleted=False
+            ).first()
+
+            if not variant:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Variant not found.'
+                })
+
+            variant.stock = int(stock)
+            variant.save()
+
+            return JsonResponse({
+                'success': True
+            })
+
+        except ValueError:
+            return JsonResponse({
+                'success': False,
+                'error': 'Stock must be a number.'
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+
+    # -------- GET PART --------
     query = request.GET.get('q', '')
     status_filter = request.GET.get('status', 'all')
-    
-    variants = ProductVariant.objects.all()
+
+    variants = ProductVariant.objects.exclude(product__is_deleted=True)
+
     if query:
-        variants = variants.filter(
-            Q(product__name__icontains=query)
-        )
-  
+        variants = variants.filter(product__name__icontains=query)
+
     if status_filter == 'low':
         variants = variants.filter(stock__lte=5, stock__gt=0)
     elif status_filter == 'out':
@@ -489,6 +532,7 @@ def stock_management(request):
         'out_stock_count': variants.filter(stock=0).count(),
         'total_variants': variants.count(),
     }
+
     return render(request, 'admin/stock_management.html', context)
 
 #============================================================================= USER VIEW==============================================================
@@ -535,7 +579,7 @@ def apply_product_filters(request, products):
 # Product Listing with Filters, Sorting, Pagination, Wishlist Integration
 def user_product_list(request):
 
-    products = Product.objects.all().order_by('id').prefetch_related('variants')
+    products = Product.objects.exclude(is_deleted=True).order_by('created_at').prefetch_related('variants')
 
     genders = Gender.objects.all()
     # apply filters

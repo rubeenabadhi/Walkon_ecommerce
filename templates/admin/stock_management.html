@@ -84,9 +84,9 @@
                 <td class="fw-bold stock-cell" data-variant-id="{{ v.id }}">
   
   <input type="number" class="stock-input form-control d-none" value="{{ v.stock }}" min="0" style="width: 80px;">
-    <span class="stock-display"></span>
-    <button class="btn btn-sm btn-primary edit-stock ms-2">Edit</button>
-    <button class="btn btn-sm btn-success save-stock ms-2 d-none">Save</button>
+    <span class="stock-display" ></span>
+    <button class="btn btn-sm btn-primary edit-stock ms-2" data-variant-id="{{ v.id }}">Edit</button>
+    <button class="btn btn-sm btn-success save-stock ms-2 d-none" data-variant-id="{{ v.id }}">Save</button>
  
 </td>
             
@@ -102,6 +102,7 @@
     </div>
   </div>
 </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.edit-stock').forEach(btn => {
@@ -125,14 +126,14 @@
           return;
         }
 
-        fetch("{% url 'update_stock' %}", {
+        fetch("{% url 'stock_management' %}", {
           method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             'X-CSRFToken': '{{ csrf_token }}',
             'X-Requested-With': 'XMLHttpRequest'
           },
-          body: `variant_id=${variantId}&stock=${newStock}`
+          body: `variant_id=${variantId}&stock=${newStock}` // means variant_id=variantId&stock=newStock 
         })
         .then(response => response.json())
         .then(data => {
@@ -143,9 +144,8 @@
             cell.querySelector('.save-stock').classList.add('d-none');
             cell.querySelector('.edit-stock').classList.remove('d-none');
             alert('Stock updated successfully!');
-            location.reload();  // ← FULL PAGE REFRESH on success
           } else {
-            alert('Error: ' + (data.error || 'Unknown error'));
+            alert('Error: ' + (data.error || 'Unknown error')); // data.error from backend
           }
         })
         .catch(error => {
