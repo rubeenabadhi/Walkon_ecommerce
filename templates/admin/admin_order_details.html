@@ -122,6 +122,12 @@
 
 
           <hr>
+          {% if order.delivery_charge > 0 %}
+          <div class="d-flex justify-content-between text-danger">
+            <div>Delivery Charge</div>
+            <div>₹{{ order.delivery_charge }}</div>
+          </div>
+          {% endif %}
 
           {% if order.coupon %}
           <div class="d-flex justify-content-between text-danger">
@@ -129,8 +135,9 @@
             <div>- ₹{{ order.discount_amount }}</div>
           </div>
           {% endif %}
+           
         
-          <!--------unchanged final amount-->
+          <!-------- final amount-->
           
           <div class="d-flex justify-content-between fs-5 fw-bold mt-2">
             <div>Grand Total</div>

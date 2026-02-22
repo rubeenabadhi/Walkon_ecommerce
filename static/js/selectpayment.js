@@ -190,6 +190,7 @@
             });
         } 
         else if (method === "wallet") {
+            console.log("ORDER ID:", order_id);
             fetch(`/checkout/wallet-payment/${order_id}/`, {
                 method: "POST",
                 headers: {

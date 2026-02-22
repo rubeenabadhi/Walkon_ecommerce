@@ -28,7 +28,7 @@ def orders(request):
     status_filter = request.GET.get('status', '').strip()
 
     #  Base queryset — all orders of current logged-in user
-    orders_qs = Order.objects.filter(user=request.user)
+    orders_qs = Order.objects.filter(user=request.user).exclude(payment_method="pending")
 
     #  Apply search query if user typed anything
     if q:
@@ -420,7 +420,7 @@ def admin_orders(request):
     q = request.GET.get('q', '').strip()            # search box
     status_filter = request.GET.get('status', '').strip()  # optional: filter by status 
     # --- base queryset: all orders ---
-    orders_qs = Order.objects.all()
+    orders_qs = Order.objects.all().exclude(payment_method="pending")
     # --- apply search if provided (order_id, product name, status) ---
     if q:
         orders_qs = orders_qs.filter(

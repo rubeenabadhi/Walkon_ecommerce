@@ -120,10 +120,7 @@
 
                         <!-- Product Details -->
                         <div class="card-body text-center">
-                            <h6 class="card-title fw-bold text-truncate">{{ product.name|default:"No Name" }}</h6>
-                            <p class="card-text small text-white">{{ product.category|default:"No Category" }}</p>
-                            <p class="card-text small text-white"><i class="bi bi-tags-fill me-1"></i>{{ product.brand|default:"No Brand" }}</p>
-                            <p class="card-text small text-white "><i class="bi bi-people-fill me-1"></i>{{ product.gender|default:"No Gender" }}</p>
+                             <h6 class="card-title text-truncate">{{ product.name|upper|default:"No Name" }}</h6>
                             {% with variant=product.variants.first %}
                                 {% if variant %}
                                     {% with offer_price=variant.get_offer_price %}
@@ -155,6 +152,10 @@
                                 {% endif %}
                             {% endwith %}
 
+                            <p class="card-text small text-white">{{ product.category|default:"No Category" }}&nbsp;
+                            <i class="bi bi-tags-fill me-1"></i>{{ product.brand|default:"No Brand" }}&nbsp;
+                            <i class="bi bi-people-fill me-1"></i>{{ product.gender|default:"No Gender" }}</p>
+                            
                             <!-- Rating -->
                             <div class="mb-2">
                                 <p style="font-size:0.85rem; color:#ff9800; font-weight:600; margin:4px 0;">
@@ -164,7 +165,7 @@
                             </div>
 
                             <!-- Add to Cart Button -->
-                         <button class="btn btn-dark btn-sm px-3 py-1 add-to-cart-btn rounded-pill" 
+                         <button class="btn btn-dark w-50 mx-auto  btn-sm px-3 py-1 add-to-cart-btn rounded-pill"  
                                 type="button"
                                 data-product-id="{{ product.id }}"
                         data-variant-id="{{ product.variants.first.id }}"
@@ -244,7 +245,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    const addToCartBaseUrl = "{% url 'add_to_cart_from_wishlist' 9999 %}".replace("9999/", "");   
+    const addToCartBaseUrl = "{% url 'move_to_cart' 9999 %}".replace("9999/", "");   
     const csrfToken = "{{ csrf_token }}";
 </script>
 {% endblock %}

@@ -220,89 +220,48 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-  // Navbar scroll effect to change the color of the navbar when scrolling down
-  $(window).scroll(function(){
+// Navbar becomes solid/opaque when scrolling down
+$(window).scroll(function(){
     if($(this).scrollTop() > 50){
         $('.navbar').addClass('scrolled');
     } else {
         $('.navbar').removeClass('scrolled');
     }
-  });
-  
- // Wishlist Button Click Handler
-$(document).on("click", ".wishlist-btn", function (e) {
-    e.preventDefault();  // Prevent default button behavior (page reload)
+});
 
-    let btn = $(this);               // Store the clicked button element
-    let icon = btn.find("i");        // Find the <i> icon inside the button
-    let url = btn.data("url");       // Get the URL from data-url attribute
-    let variantId = btn.data("variant-id"); // Get the variant ID from data-variant-id
+// Wishlist toggle (heart icon) – used on product/list/detail pages
+$(document).on("click", ".wishlist-btn", function(e) {
+    e.preventDefault();
+    
+    let btn   = $(this);
+    let icon  = btn.find("i");
+    let url   = btn.data("url");
+    let variantId = btn.data("variant-id");
 
-    // AJAX POST request to toggle wishlist
     $.ajax({
-        url: url,                    // Endpoint for wishlist toggle
-        type: "POST",                // POST request
+        url: url,
+        type: "POST",
         data: {
-            csrfmiddlewaretoken: "{{ csrf_token }}", // Django CSRF token
-            variant_id: variantId                       // Send variant ID
+            csrfmiddlewaretoken: "{{ csrf_token }}",
+            variant_id: variantId
         },
-        success: function (res) {
-            // Update the icon based on response
-            if(res.wishlist_count !== undefined){
-                $("#wishlist-count").text(res.wishlist_count); // Update wishlist count in navbar
+        success: function(res) {
+            if (res.wishlist_count !== undefined) {
+                $("#wishlist-count").text(res.wishlist_count);
             }
             if (res.in_wishlist) {
                 icon.removeClass("bi-heart text-dark")
-                    .addClass("bi-heart-fill text-danger"); // Filled red heart
+                    .addClass("bi-heart-fill text-danger");
             } else {
                 icon.removeClass("bi-heart-fill text-danger")
-                    .addClass("bi-heart text-dark");       // Outline heart
+                    .addClass("bi-heart text-dark");
             }
+        },
+        error: function() {
+            alert("Something went wrong while updating wishlist.");
         }
     });
 });
-// Safer URLs for cart update
-const updateCartBaseUrl = "{% url 'cart:update_cart' 0 %}".replace("0/", ""); 
-
-$(document).ready(function() {
-
-    // Increment / Decrement Quantity
-    $('.increment, .decrement').on('click', function() {
-        const itemId = $(this).data('item-id');                 // Get item ID from button
-        const action = $(this).hasClass('increment') ? 'increment' : 'decrement'; // Determine action
-
-        $.ajax({
-            url: updateCartBaseUrl + itemId + "/",             // Construct URL
-            type: 'POST',
-            data: { 
-                action: action, 
-                csrfmiddlewaretoken: '{{ csrf_token }}'       // CSRF token
-            },
-            success: function(response) {
-                if (response.status === 'success') {
-                    if (response.message === 'Item removed from cart.') {
-                        $("#cart-item-" + itemId).remove();   // Remove row if item removed
-                    } else {
-                        // Update quantity, price, and totals
-                        $("#quantity-" + itemId).text(response.quantity);
-                        $("#control-quantity-" + itemId).text(response.quantity);
-                        $("#price-" + itemId).text(response.item_total);
-                        $("#grand-total").text(response.total_price);
-                        $(".cart-count").text(response.cart_count);
-                    }
-                } else {
-                    alert(response.message);                  // Alert if error
-                }
-            },
-            error: function() {
-                alert('Something went wrong.');               // Alert if AJAX fails
-            }
-        });
-    });
-
-    // Remove Item from Cart
-});
-
 </script>
 <script src="{% static 'js/addToCart.js' %}"></script>
 {% block extra_js %}

@@ -233,7 +233,7 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    const addToCartBaseUrl = "{% url 'add_to_cart_from_wishlist' 9999 %}".replace("9999/", "");
+    const addToCartBaseUrl = "{% url 'move_to_cart' 9999 %}".replace("9999/", "");
     const csrfToken = "{{ csrf_token }}";
 </script>
 {% endblock %}

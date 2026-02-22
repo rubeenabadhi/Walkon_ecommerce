@@ -36,7 +36,9 @@ from order.models import Order, OrderItem
 from wallet.models import WalletTransaction
 from checkout.models import Payment
 from django.template.loader import render_to_string
+import logging
 
+logger = logging.getLogger(__name__)
 
 @never_cache
 @staff_member_required(login_url="admin_login")

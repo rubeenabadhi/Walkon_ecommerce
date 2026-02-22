@@ -142,7 +142,7 @@
                         </div>
                     </div>
 
-                    <button type="submit" id="continueToShipping" class="btn continue-btn w-100 mt-3 fw-semibold shadow-sm">
+                    <button type="submit" id="continueToShipping" class="btn continue-btn w-100  mt-3  fw-semibold shadow-sm" style="background-color: #1c8bf3; color: white; ">
                         Continue to Shipping
                     </button>
                 </form>
@@ -151,36 +151,25 @@
 
         <!-- Order Summary -->
         <div class="col-lg-4">
-            <div class="order-summary p-3 shadow-sm rounded " style="background: #d6e2ee; ">
+            <div class="order-summary p-3 shadow-sm rounded " style="background: #white; ">
                 <h3 class="fw-bold mb-3 text-center text-uppercase" >Order Summary</h3>
-                <small class="text-muted d-block mb-2">In Rupees</small>
-
-                {% for product in cart_items %}
-                <p class="qty mb-1">
-                    {{ product.quantity }} × ₹{{ product.variant.get_offer_price }}  <span class="float-end"> 
-                    = ₹{{ product.quantity|mul:product.variant.get_offer_price|floatformat:2 }} </span>
-                </p>
-                {% endfor %}
-
-                <hr>
-                <p class="fw-semibold">Subtotal: <span class="float-end">₹{{ total_price }}</span></p>
+                
+                <p class="fw-semibold">Total: <span class="float-end">₹{{ total_price }}</span></p>
                 <p class="text-success">Delivery Charges: <span class="float-end">₹{{ delivery_charge }}</span></p>
                 <!-- Coupon Section (separate form, not inside payment-form) -->
                 <div id="coupon-section">
-                    <h6 class="fw-bold mt-4 mb-2">Available Coupons</h6>
-                    {% if available_coupons  %}
                     
-                    <ul class="list-group mb-3">
+                    {% if available_coupons and coupon.usage_limit > 0 %}
+                    <h6 class="fw-semibold mt-4 mb-2">Available Coupons</h6>
+                    <ul class="list-group list-group-flush mb-3 shadow-sm rounded ">
                         {% for coupon in available_coupons %}
-                        {% if coupon.min_order_amount <= total_price %}
-                        <li onclick="document.querySelector('input[name=coupon_code]').value='{{ coupon.code }}'" style="cursor:pointer;">
-                            <strong>{{ coupon.code }}</strong> - {% if coupon.discount_type == 'percentage' %}{{ coupon.discount_value }}%{% else %}₹{{ coupon.discount_value }}{% endif %} off on orders above ₹{{ coupon.min_order_amount }}
+                        {% if coupon.min_order_amount <= total_price  %}
+                        <li class="list-group-item" onclick="document.querySelector('input[name=coupon_code]').value='{{ coupon.code }}'" style="cursor:pointer;">
+                            <strong>{{ coupon.code }}</strong> - {% if coupon.discount_type == 'percentage' %}{{ coupon.discount_value|floatformat }}% off{% else %}₹{{ coupon.discount_value }}off{% endif %}
                         </li>
                         {% endif %}
                         {% endfor %}
                     </ul>
-                    {% else %}
-                    <p class="text-muted">No coupons available at the moment.</p>
                     {% endif %}
                     {% if applied_coupon %}
                     <div class="alert alert-success p-2 mt-2">

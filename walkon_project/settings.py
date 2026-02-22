@@ -257,3 +257,54 @@ REFERRAL_AMOUNT = 100
 #time
 TIME_ZONE = 'Asia/Kolkata'
 USE_TZ = True
+
+# logging for admin and user logs,it is used to store logs in a file
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+
+    'formatters': {
+        'detailed': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+
+    'handlers': {
+
+        # Admin log file
+        'admin_file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs/admin.log'),
+            'maxBytes': 1024 * 1024 * 5,
+            'backupCount': 5,
+            'formatter': 'detailed',
+        },
+
+        # User log file
+        'user_file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs/user.log'),
+            'maxBytes': 1024 * 1024 * 5,
+            'backupCount': 5,
+            'formatter': 'detailed',
+        },
+    },
+
+    'loggers': {
+
+        # Admin logger
+        'admin_logger': {
+            'handlers': ['admin_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+
+        # User logger
+        'user_logger': {
+            'handlers': ['user_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    }
+}

@@ -187,6 +187,13 @@ def select_payment(request):
         order.save(update_fields=['total_amount', 'discount_amount', 'final_amount', 'coupon', 'delivery_charge'])
 
     wallet, _ = Wallet.objects.get_or_create(user=request.user)
+    now = timezone.localtime(timezone.now())
+    coupons = Coupon.objects.filter(active=True, valid_from__lte=now, valid_to__gte=now)
+    available = []
+    for coupon in coupons:
+        user_coupon = UserCoupon.objects.filter(user=request.user, coupon=coupon).first() #get usage record
+        if not user_coupon or user_coupon.used_count < coupon.usage_limit: # means can still use it 
+            available.append(coupon)
 
     context = {
         "cart_items": cart_items,
@@ -197,7 +204,7 @@ def select_payment(request):
         "final_total": final_total.quantize(Decimal('0.01')),   # Grand Total (discounted)
         "discount": discount.quantize(Decimal('0.01')),
         "wallet_balance": wallet.balance,
-        "available_coupons": Coupon.objects.filter(active=True)
+        "available_coupons": available
     }
 
     return render(request, "user/select_payment.html", context)
@@ -337,9 +344,11 @@ def wallet_payment(request, order_id):
                 order.state = address.state
                 order.district = address.district
                 order.country = address.country
-                order.pincode = address.pincode          
-
+                order.pincode = address.pincode 
+            delivery_charge = get_delivery_charge(order.state)
+            order.delivery_charge = delivery_charge
             order.save()
+            print("DEBUG: Delivery Address:", )
 
             # -------------------------------
             # COUPON USAGE
@@ -629,6 +638,7 @@ def place_order(request):
         session_discount = session_discount or discount_calc
 
     discount_amount = Decimal(str(session_discount)) if session_discount else (Decimal(subtotal) - final_amount)
+    delivery_charge=get_delivery_charge(address.state)
     
     if payment_method == "cod" and final_amount >= 1000:
         messages.error(request, "Cash on Delivery is not available for orders above ₹1000.")
@@ -637,16 +647,14 @@ def place_order(request):
 
     try:
         with transaction.atomic():
-
-            # -------------------------------
-            #  ALWAYS CREATE NEW ORDER 🔥
-            # -------------------------------
+            # Create order and order items 
             order = Order.objects.create(
                 user=request.user,
                 address=address,
                 payment_method=payment_method,
                 total_amount=Decimal(subtotal).quantize(Decimal('0.01')),
                 discount_amount=Decimal(discount_amount).quantize(Decimal('0.01')),
+                delivery_charge=delivery_charge,
                 final_amount=final_amount,
                 status="pending",
 
@@ -707,8 +715,11 @@ def place_order(request):
                     paid_amount=Decimal('0.00'),
                     payment_gateway="COD"
                 )
+    
+
 
         return redirect("order_success", order_id=order.order_id)
+    
 
     except Exception as e:
         print("Order creation error:", str(e))

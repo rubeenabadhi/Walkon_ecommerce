@@ -5,11 +5,16 @@ from django.core.paginator import Paginator
 from .models import *
 from .forms import *
 from order.models import Order
+import logging
 
-# Create your views here.
+admin_logger = logging.getLogger('admin_logger')
+user_logger = logging.getLogger('user_logger')
+
+# ===========================================================================USER VIEW===============================================
 #============================== Address Views ####
 @login_required(login_url="login")
 def address(request):
+    user_logger.info(f"User {request.user.username} accessed the address page.")
     addresses = Address.objects.filter(user=request.user).order_by("-id")
     paginator = Paginator(addresses, 4)  # 4 addresses per page
     page_number = request.GET.get("page")
@@ -28,6 +33,7 @@ def add_address(request):
             address = form.save(commit=False)
             address.user = request.user # Set the user field to the logged-in user
             address.save()
+            user_logger.info(f"User {request.user.username} added an address.")
             messages.success(request, "Address added successfully.")
             return redirect("address")
         else:
@@ -45,6 +51,8 @@ def edit_address(request, address_id):
         form = AddressForm(request.POST, instance=address)
         if form.is_valid():
             form.save()
+            user_logger.info(f"User {request.user.username} edited an address.")
+            messages.success(request, "Address updated successfully.")
             return redirect("address")
     else:
         form = AddressForm(instance=address)
@@ -55,11 +63,10 @@ def edit_address(request, address_id):
 def delete_address(request, address_id):
     address = get_object_or_404(Address, id=address_id, user=request.user)
 
-    # Unlink the address from existing orders (keep snapshot intact)
-    Order.objects.filter(address=address).update(address=None)
-
+    Order.objects.filter(address=address).update(address=None) # means address will be null in order model
     # Now delete the address safely
     address.delete()
+    user_logger.info(f"User {request.user.username} deleted an address.")
     messages.success(request, "Address deleted successfully.")
     return redirect("address")
 

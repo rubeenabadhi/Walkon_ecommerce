@@ -148,7 +148,7 @@
                     <td class="text-center">
                       <div class="rank-badge">{{ forloop.counter }}</div>
                     </td>
-                    <td class="fw-bold">{{ product.product_variant__product__name }}</td>
+                    <td class="fw-bold" title="{{ product.product_variant__product__name }}">{{ product.product_variant__product__name|truncatechars:30|capfirst }}</td>
                     <td class="text-center">{{ product.total_quantity }}</td>
                     <td class="text-end revenue-text">₹{{ product.total_revenue|floatformat:2|intcomma }}</td>
                   </tr>

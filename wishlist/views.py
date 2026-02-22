@@ -100,7 +100,7 @@ def remove_from_wishlist(request, item_id):
 # -------------------
 @login_required
 @require_POST
-def add_to_cart_from_wishlist(request, variant_id):
+def move_to_cart(request, variant_id):
     #  Get selected variant directly
     variant = get_object_or_404(ProductVariant, id=variant_id)
     product = variant.product

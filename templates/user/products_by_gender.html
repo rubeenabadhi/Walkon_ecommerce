@@ -140,11 +140,9 @@
                     {% endif %}
                     {% endwith %}
 
-                    <p class="card-text small text-white">{{ product.category|default:"No Category" }}</p>
-                    <p class="card-text small text-white">
-                        <i class="bi bi-tags-fill me-1"></i>{{ product.brand|default:"No Brand" }}
-                    </p>
-                    <p class="card-text small text-white">
+                    <p class="card-text small text-white">{{ product.category|default:"No Category" }} &nbsp;
+                        <i class="bi bi-tags-fill me-1"></i>{{ product.brand|default:"No Brand" }}&nbsp;
+                    
                         <i class="bi bi-people-fill me-1"></i>{{ product.gender|default:"No Gender" }}
                     </p>
 
@@ -159,7 +157,7 @@
                     </div>
 
                     <!-- Add to Cart -->
-                    <button class="btn btn-warning btn-sm px-3 py-1 add-to-cart-btn rounded-pill"
+                    <button class="btn btn-warning btn-sm px-3 w-50 mx-auto py-1 add-to-cart-btn rounded-pill"
                             type="button"
                             data-product-id="{{ product.id }}"
                             data-variant-id="{{ product.variants.first.id }}">
@@ -233,7 +231,7 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    const addToCartBaseUrl = "{% url 'add_to_cart_from_wishlist' 9999 %}".replace("9999/", "");
+    const addToCartBaseUrl = "{% url 'move_to_cart' 9999 %}".replace("9999/", "");
     const csrfToken = "{{ csrf_token }}";
 </script>
 {% endblock %}

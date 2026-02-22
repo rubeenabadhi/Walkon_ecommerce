@@ -55,7 +55,7 @@ def add_to_cart(request, slug):
         return JsonResponse({"status": "error", "message": "This product is out of stock."})
 
     # How much of this product the CURRENT user already has in cart
-    existing_user_qty = CartItems.objects.filter(user=request.user, product=product).aggregate(total=Sum('quantity'))['total'] or 0
+    existing_user_qty = CartItems.objects.filter(user=request.user, variant=variant).aggregate(total=Sum('quantity'))['total'] or 0
 
     # available for this user to add (product-level stock minus what user already has)
     available_for_user = product_stock - existing_user_qty

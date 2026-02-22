@@ -40,7 +40,7 @@
     color: #555;
   }
   .filter-sidebar .card {
-    background: linear-gradient(135deg, #ffffff, #afe9f5);
+    background: linear-gradient(135deg, #ffffff, #dff2f6);
     border: none;
   }
   .filter-sidebar .btn-dark {
@@ -72,7 +72,7 @@
     color: white;
   }
   .product-card {
-    background: linear-gradient(135deg, #6dd5ed, #2193b0);
+    background: white;
     color: white;
     transition: all 0.3s ease-in-out;
   }
@@ -80,13 +80,7 @@
     transform: translateY(-5px);
     box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3) !important;
   }
-  .add-to-cart-btn {
-    background: #ffeb3b;
-    color: #333;
-    border: none;
-    transition: all 0.3s;
-    font-size: clamp(0.8rem, 2.5vw, 0.9rem);
-  }
+  
   .add-to-cart-btn:hover {
     background: #ffd700 !important;
     transform: scale(1.05);
@@ -353,10 +347,10 @@
         }
     }
 
-.product-card,
-.card {
+.product-card
+ {
     /* Very light blue-white gradient → subtle & clean look */
-    background: linear-gradient(135deg, #ffffff, #afe9f5) !important;
+    background:white!important;
     border: 1px solid #e3f0ff !important;          /* very light blue border */
     border-radius: 12px !important;
     box-shadow: 0 3px 10px rgba(33, 150, 243, 0.08) !important;  /* subtle blue shadow */
@@ -373,7 +367,7 @@
 
 /* Image – clean white/light bg behind */
 .card-img-top {
-    height: 180px !important;
+    height: 300px !important;
     object-fit: contain !important;
     padding: 14px !important;
     background: #fafcff !important;                /* almost white with tiny blue hint */
@@ -420,13 +414,13 @@
 }
 
 .add-to-cart-btn {
-    background: #2563eb !important;
+    background: #03c6ed !important;
     color: white !important;
     border: none !important;
 }
 
 .add-to-cart-btn:hover {
-    background: #1d4ed8 !important;
+    background: #2193b0 !important;
 }
 
 /* Wishlist heart button – subtle improvement */
