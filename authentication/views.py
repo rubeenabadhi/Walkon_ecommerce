@@ -1,4 +1,3 @@
-from ast import For, If
 import random, time
 from django.core.mail import send_mail
 from django.conf import settings
@@ -22,9 +21,11 @@ from django.core.exceptions import ValidationError
 from product.models import Product
 from offers.models import Referral
 from wallet.models import Wallet, WalletTransaction
-from offers.models import ProductOffer
 from django.views.decorators.csrf import csrf_protect
+import logging
 
+user_logger = logging.getLogger('user_logger')
+admin_logger=logging.getLogger('admin_logger')
 #user-defined views for signup and OTP verification,home view
 #=====================HOME VIEW===============================================
 def home(request):
@@ -63,6 +64,7 @@ def signup(request):
             validate_password(password)
         except ValidationError as e:
             for error in e.messages:
+                user_logger.error(error) # for logging errors in user_logger 
                 messages.error(request, error)
             return redirect('signup')
 
@@ -96,7 +98,7 @@ def signup(request):
             [email],
             fail_silently=False,
         )
-
+        user_logger.info(f'OTP sent to {email}.')
         messages.success(request, f' OTP sent to {email}.')
 
         return redirect('verify_otp')
@@ -135,20 +137,20 @@ def verify_otp_view(request):
             )
 
             user.is_active = True
-            print("user created")
+            user_logger.info(f'Account created for {user.username}')
             user.save()
             # Create referral code
             if referrel_code:
                 try:
                     ref=Referral.objects.get(referral_code=referrel_code)
                     ref.referred_users.add(user)
-                    print(f"Added {user.username} as referred user")
+                    user_logger.info(f"Added {user.username} as referred user")
                     ref.save()
 
                 # Add referral amount to referrer's wallet
                     wallet = Wallet.objects.get(user=ref.referrer)
                     wallet.balance += settings.REFERRAL_AMOUNT
-                    print("wallet updated",wallet.balance)
+                    user_logger.info("wallet updated",wallet.balance)
                     wallet.save()
 
                 # create a wallet transaction
@@ -158,7 +160,7 @@ def verify_otp_view(request):
                         transaction_type="credit",
                         description=f"Referral bonus added for {user.username}"
                     )
-                    print("wallet transaction created",wallet.balance)
+                    user_logger.info("wallet transaction created",wallet.balance)
 
                 except Referral.DoesNotExist:
                     pass
@@ -209,6 +211,7 @@ def user_login(request):
         if user is not None:
             if user.is_active and not user.is_staff and not user.is_superuser:
                 auth.login(request, user)
+                user_logger.info(f"User {user.username} logged in.")
                 return redirect('home')
             else:
                 messages.error(request, "Only normal users can log in here.")
@@ -277,8 +280,7 @@ def reset_password(request):
             user = CustomUser.objects.get(email=email)
             user.set_password(new_password)
             user.save()
-            print(" Password reset successfully")
-
+            user_logger.info(" Password reset successfully")
             messages.success(request, ' Password reset successfully. Please login with your new password.')
             return redirect('login')
 
@@ -310,6 +312,7 @@ def edit_profile(request):
         if form.is_valid():
             form.save()
             messages.success(request, "Profile updated successfully.")
+            user_logger.info(f"User {user.username} updated profile.")
             return redirect("user_profile", user.id)
         else:
             messages.error(request, "Please correct the errors below.")
@@ -375,11 +378,12 @@ def verify_email_otp(request):
             return redirect("request_email_change")
 
         #  Always compare as string
-        if str(entered_otp) == str(saved_otp):
+        if str(entered_otp) == str(saved_otp): # for security reason
             from django.contrib.auth import get_user_model
             User = get_user_model()
 
             if User.objects.filter(email=new_email).exclude(id=user.id).exists():
+                user_logger.warning(f"User {user.username} attempted to change email to {new_email}, but it is already in use.")
                 messages.error(request, "This email is already registered. Please use another one.")
                 return redirect("verify_email_change_otp")
 
@@ -398,6 +402,7 @@ def verify_email_otp(request):
             request.session.pop("pending_email", None)
 
             messages.success(request, "Your email has been updated successfully.")
+            user_logger.info(f"User {user.username} updated email to {new_email} successfully.")
             return redirect("user_profile", user.id)
         else:
             messages.error(request, "Invalid OTP. Please try again.")
@@ -456,13 +461,14 @@ def change_password(request):
             validate_password(new_password, user)
         except ValidationError as e:
             for error in e.messages:
+                user_logger.error(error)
                 messages.error(request, error)
             return redirect('change_password')
 
         #  Update password
         user.set_password(new_password)
         user.save()
-        print("Password changed successfully")
+        user_logger.info(f'Password changed successfully for user: {user.username}')
 
         #  Keep user logged in
         update_session_auth_hash(request, user)
@@ -483,7 +489,7 @@ def admin_login(request):
         if user is not None:
             login(request, user)
             if user.is_staff:  # Check if admin/staff
-                print("Admin logged in")
+                admin_logger.info("Admin logged in")
                 return redirect('dashboard')  # Django admin dashboard
             else:
                 return redirect('home')  # Your normal user homepage
@@ -545,5 +551,6 @@ def toggle_user_status(request, user_id):
         user = get_object_or_404(CustomUser, id=user_id)
         user.is_active = not user.is_active
         user.save()
+        admin_logger.info(f"User {user.username} status changed to {user.is_active}")
         return JsonResponse({"success": True, "is_active": user.is_active})
     return JsonResponse({"success": False, "error": "Invalid request"})

@@ -13,6 +13,10 @@ from django.db.models import Q, Sum
 from django.db.models.functions import Coalesce # Import the Coalesce function for NULL handling
 from django.core.paginator import Paginator
 import cloudinary
+import logging
+
+admin_logger=logging.getLogger('admin_logger')
+user_logger=logging.getLogger('user_logger')
 
 
 
@@ -58,7 +62,7 @@ def add_category(request):
         form = CategoryForm(request.POST)
         if form.is_valid():
             form.save()
-            print("Category added successfully")
+            admin_logger.info("Category added successfully")
             messages.success(request, "Category added successfully!")
             return redirect('add_category')
         else:
@@ -75,7 +79,7 @@ def add_size(request):
         form= SizeForm(request.POST)
         if form.is_valid():
             form.save()
-            print("Size added successfully")
+            admin_logger.info("Size added successfully")
             messages.success(request,'Size added successfully!')
             return redirect('add_size')
         else:
@@ -90,14 +94,13 @@ def add_color(request):
     if request.method == 'POST':
         form = ColorForm(request.POST)
         if form.is_valid():
-            print("Form is valid")
+            admin_logger.info("Form is valid")
             form.save()
-            print("Color added successfully")
+            admin_logger.info("Color added successfully")
             messages.success(request, 'Color added successfully!')
             return redirect('add_color')
         else:
-            print(form.errors)
-            print("Form is invalid")
+            admin_logger.error(form.errors)
             messages.error(request, 'Form is invalid!')
     else:
         form = ColorForm()
@@ -249,7 +252,7 @@ def product_view(request, slug):
 #--------------------------------------------edit product view
 
 @staff_member_required
-def edit_product(request, slug=None):
+def edit_product(request,slug=None):
     # Get product if editing
     product = get_object_or_404(Product, slug=slug) if slug else None
 
@@ -360,7 +363,7 @@ def delete_product(request, slug):
         # delete product + variants
         product.is_deleted = True
         product.save()
-        print(f"Product {product.name} marked as deleted.")
+        admin_logger.info(f"Product {product.name} marked as deleted.")
         
         return JsonResponse({"success": True, "message": "Product and all variants deleted successfully!"})
     return JsonResponse({"success": False, "message": "Invalid request!"}, status=400)
@@ -503,6 +506,7 @@ def stock_management(request):
             })
 
         except Exception as e:
+            admin_logger.error(f"Error updating stock: {str(e)}")
             return JsonResponse({
                 'success': False,
                 'error': str(e)
@@ -639,7 +643,7 @@ def product_sizes(request, product_id):
 
 #new arrivals
 def new_arrivals(request):
-    products = Product.objects.all().order_by('-created_at')  # Fetch latest 8 products
+    products = Product.objects.exclude(is_deleted=True).filter(is_active=True).distinct().order_by('-created_at')  # 
     # apply filters
     products, filter_form = apply_product_filters(request, products)
 
@@ -651,7 +655,7 @@ def new_arrivals(request):
 # products by gender with pagination
 def products_by_gender(request, gender_label):
     gender = get_object_or_404(Gender, label=gender_label)
-    products = Product.objects.filter(gender=gender).order_by('-created_at')
+    products = Product.objects.filter(gender=gender).exclude(is_deleted=True).order_by('-created_at')
     # apply filters 
     products, filter_form = apply_product_filters(request, products)
     paginator = Paginator(products, 6)

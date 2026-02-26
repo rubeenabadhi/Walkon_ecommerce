@@ -18,11 +18,12 @@ from .models import Payment
 from decimal import Decimal
 from offers.models import Coupon, UserCoupon
 from wallet.models import Wallet, WalletTransaction
-import json
 from .utils import calculate_final_amount
 from django.core.exceptions import ValidationError
+import logging
 
-
+admin_logger = logging.getLogger('admin_logger')
+user_logger = logging.getLogger('user_logger')
 
 razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
@@ -40,11 +41,11 @@ def select_address(request):
             selected_address = get_object_or_404(Address, id=selected_address_id, user=request.user)
 
             request.session['selected_address_id'] = selected_address.id
-            print("Selected Address ", selected_address.full_name,selected_address.city)  # Debugging line
+            user_logger.info("Selected Address ", selected_address.full_name,selected_address.city)  # Debugging line
             messages.success(request, "Address selected successfully.")
             return redirect("select_payment")  # Redirect to payment page after selecting address
         else:
-            print("No address selected.")
+            user_logger.info(f"No address selected for user {request.user.username}.")
             messages.error(request, "Please select an address.")
             return redirect("select_address")
     return render(request, "user/select_address.html", {"addresses": addresses})
@@ -68,11 +69,11 @@ def add_address_checkout(request):
     try:
         address.full_clean()  # Validate the model fields
         address.save()
-        print("Address added successfully for user:", request.user)
+        user_logger.info("Address added successfully for user:", request.user)
         return JsonResponse({"status": "success", "message": "Address saved successfully!"})
     
     except ValidationError as e:
-        print("Validation error:", e) #e means the error message from validation
+        user_logger("Validation error:", e) #e means the error message from validation
         return JsonResponse({"status": "error", "errors": e.message_dict}, status=400)
     
 #=======================================edit address view checkout page ==========================
@@ -80,10 +81,10 @@ def add_address_checkout(request):
 
 @login_required(login_url="login")
 def edit_address_checkout(request, address_id):
-    print("Editing Address ID:", address_id, request.user) # 
+    user_logger.info("Editing Address ID:", address_id, request.user) # 
     if request.method == "POST":
         address = get_object_or_404(Address, id=address_id, user=request.user)
-        print("Editing Address ID:", address.user)  
+        user_logger.info("Editing Address ID:", address.user)  
         if not address:
             messages.error(request, "Address not found.")
             return redirect("select_address")
@@ -114,9 +115,10 @@ def edit_address_checkout(request, address_id):
         try:
             address.full_clean()  # Validate the model fields
             address.save()
+            user_logger.info("Address updated successfully for user:", request.user)
             return JsonResponse({"status": "success", "message": "Address updated successfully!"})
         except ValidationError as e:
-            print("Validation error:", e)
+            user_logger.error("Validation error:", e)
             return JsonResponse({"status": "error", "errors": e.message_dict}, status=400)
     return JsonResponse({"status": "error", "message": "Invalid request method"}, status=400)
 
@@ -129,7 +131,7 @@ def get_delivery_charge(state):
 #======================================selecr payment method view =========================
 @login_required(login_url="login")
 def select_payment(request):
-    print(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)  # Debugging line
+    user_logger.info(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)  # Debugging line
     cart_items = CartItems.objects.filter(user=request.user).select_related('variant')
     if not cart_items.exists():
         messages.error(request, "Your cart is empty!")
@@ -150,15 +152,15 @@ def select_payment(request):
     coupon_id = request.session.get("coupon_id")
     if coupon_id:
         coupon = Coupon.objects.filter(id=coupon_id, active=True).first()
-        print("Applying coupon in select payment:", coupon)
+        user_logger.info(f"Applying coupon in select payment:{coupon} for user {request.user.username}.")
 
     # calculate final amount along with discount from utils.py
     _, discount, final_total = calculate_final_amount(cart_items, coupon)
-    print("Select Payment - Subtotal:", subtotal, "Discount:", discount, "Final Total:", final_total)
+    user_logger.info("Select Payment - Subtotal:", subtotal, "Discount:", discount, "Final Total:", final_total)
     # delivery charge calculation
     delivery_charge = get_delivery_charge(address.state)
     final_total += delivery_charge
-    print("Delivery Charge:", delivery_charge, "New Final Total:", final_total)
+    user_logger.info("Delivery Charge:", delivery_charge, "New Final Total:", final_total)
     #sessio storage for final amount and discount to be used in payment processing views
     request.session["final_total"] = float(final_total)  # Convert Decimal to float for JSON serialization
 
@@ -213,18 +215,18 @@ def select_payment(request):
 @csrf_exempt
 @login_required(login_url="login")
 def wallet_payment(request, order_id):
-    print("Incoming ORDER ID:", order_id)
+    user_logger.info("Incoming ORDER ID:", order_id)
     if request.method != "POST":
-        print("DEBUG: Invalid method:", request.method)
+        user.logger.error("Invalid method:", request.method)
         return JsonResponse({"error": "Invalid request method"}, status=400)
 
     user = request.user
     wallet = get_object_or_404(Wallet, user=user)
-    print("DEBUG: Wallet balance BEFORE payment:", wallet.balance)
+    user_logger.info("Wallet balance BEFORE payment:", wallet.balance)
 
     order = Order.objects.create(user=user, status="pending", payment_method="wallet")  # Temporary order object for validation,
     if order.status != "pending":
-        print("DEBUG: Order already processed")
+        user_logger.error("Order already processed")
         return JsonResponse({
             "status": "failed",
             "message": "Order already processed."
@@ -232,7 +234,7 @@ def wallet_payment(request, order_id):
 
     # FETCH CART ITEMS
     cart_items = CartItems.objects.filter(user=user).select_related("variant", "product")
-    print("DEBUG: Cart item count =", cart_items.count())
+    user_logger.info("Cart item count =", cart_items.count())
 
     if not cart_items.exists():
         return JsonResponse({"status": "failed", "message": "Cart is empty"}, status=400)
@@ -242,7 +244,7 @@ def wallet_payment(request, order_id):
 
     session_final = request.session.get("final_total")
     session_discount = request.session.get("discount")
-    print("DEBUG: session_final:", session_final, "session_discount:", session_discount, "subtotal:", subtotal)
+    user_logger.info(" session_final:", session_final, "session_discount:", session_discount, "subtotal:", subtotal)
 
     if session_final:
         final_total = Decimal(str(session_final)).quantize(Decimal('0.01'))
@@ -251,21 +253,21 @@ def wallet_payment(request, order_id):
         final_total = final_total.quantize(Decimal('0.01'))
         session_discount = session_discount or discount_calc
 
-    print("DEBUG: final_total:", final_total)
+    user_logger.info(" final_total:", final_total)
     discount_amount = Decimal(str(session_discount)) if session_discount else (Decimal(subtotal) - final_total)
-    print("DEBUG: discount_amount:", discount_amount)
+    user_logger.info("discount_amount:", discount_amount)
     # coupon
     coupon = None
     coupon_id = request.session.get("coupon_id")
 
     if coupon_id:
         coupon = Coupon.objects.filter(id=coupon_id).first()
-        print("DEBUG: coupon object:", coupon)
+        user_logger.info(" coupon object:", coupon)
 
     # WALLET BALANCE CHECK
-    print("DEBUG: Wallet balance CHECK:", wallet.balance, "<", final_total)
+    user_logger.info(" Wallet balance CHECK:", wallet.balance, "<", final_total)
     if wallet.balance < final_total:
-        print("DEBUG: Insufficient wallet balance")
+        user_logger.error(" Insufficient wallet balance")
         return JsonResponse({
             "status": "failed",
             "message": "Insufficient wallet balance"
@@ -277,7 +279,7 @@ def wallet_payment(request, order_id):
         with transaction.atomic():
 
             for ci in cart_items:
-                print(f"DEBUG: Checking item → VariantID:{ci.variant.id}, Qty:{ci.quantity}")
+                user_logger.info(f" Checking item → VariantID:{ci.variant.id}, Qty:{ci.quantity}")
 
                 if not OrderItem.objects.filter(order=order, product_variant=ci.variant).exists():
                     OrderItem.objects.create(
@@ -288,14 +290,14 @@ def wallet_payment(request, order_id):
                     )
                     # STOCK REDUCE
                     variant = ci.variant
-                    print("DEBUG: Before Stock:", variant.stock)
+                    user_logger.info(" Before Stock:", variant.stock)
                     variant.stock = F("stock") - ci.quantity
                     variant.save(update_fields=["stock"])
                     variant.refresh_from_db()
-                    print("DEBUG: After Stock:", variant.stock)
+                    user_logger.info(" After Stock:", variant.stock)
                 else:
                     # if item already exists
-                    print("DEBUG: OrderItem already exists → Skipped")
+                    user_logger.info(" OrderItem already exists → Skipped")
 
             # clear cart
             cart_items.delete()
@@ -306,7 +308,7 @@ def wallet_payment(request, order_id):
                 amount=final_total,
                 description__icontains=f"Wallet Payment for Order #{order.order_id}"
             ).exists():
-                print("DEBUG: Duplicate wallet transaction detected")
+                user_logger.error("DEBUG: Duplicate wallet transaction detected")
                 raise Exception("Duplicate wallet transaction detected")
             # -------------------------------
 
@@ -314,7 +316,7 @@ def wallet_payment(request, order_id):
             wallet.balance = F("balance") - final_total
             wallet.save(update_fields=["balance"])
             wallet.refresh_from_db()
-            print("DEBUG: Wallet balance AFTER deduction:", wallet.balance)
+            user_logger.info("DEBUG: Wallet balance AFTER deduction:", wallet.balance)
 
             WalletTransaction.objects.create(
                 wallet=wallet,
@@ -322,6 +324,7 @@ def wallet_payment(request, order_id):
                 amount=final_total,
                 order=order,
                 purpose="order_payment",
+
                 description=f"Wallet Payment for Order #{order.order_id}",
             )
 
@@ -348,13 +351,13 @@ def wallet_payment(request, order_id):
             delivery_charge = get_delivery_charge(order.state)
             order.delivery_charge = delivery_charge
             order.save()
-            print("DEBUG: Delivery Address:", )
+            user_logger.info("Order updated","delevery_charge", delivery_charge)
 
             # -------------------------------
             # COUPON USAGE
             # -------------------------------
             if coupon:
-                print("DEBUG: Updating coupon usage")
+                user_logger.info("DEBUG: Updating coupon usage")
                 user_coupon, _ = UserCoupon.objects.get_or_create(user=user, coupon=coupon)
                 user_coupon.used_count = F("used_count") + 1
                 user_coupon.save()
@@ -362,7 +365,7 @@ def wallet_payment(request, order_id):
             # -------------------------------
             # PAYMENT RECORD
             # -------------------------------
-            print("DEBUG: Creating Payment record")
+            user_logger.info("DEBUG: Creating Payment record")
             payment, _ = Payment.objects.get_or_create(order=order)
             payment.payment_method = "wallet"
             payment.payment_status = "success"
@@ -376,7 +379,7 @@ def wallet_payment(request, order_id):
             request.session.pop("discount", None)
             request.session.pop("final_total", None)
 
-        print("=== WALLET PAYMENT SUCCESS ===")
+            user_logger.info("=== WALLET PAYMENT SUCCESS ===")
         return JsonResponse({
             "status": "success",
             "order_id": order.order_id,
@@ -384,7 +387,7 @@ def wallet_payment(request, order_id):
         })
 
     except Exception as e:
-        print(" WALLET ERROR:", str(e))
+        user_logger.error(" WALLET ERROR:", str(e))
         return JsonResponse({"status": "failed", "message": str(e)}, status=500)
 
 #===================== RAZORPAY INTEGRATION ===============================
@@ -430,15 +433,16 @@ def create_razorpay_order(request, order_id):
             "payment_status": "pending",
             "paid_amount": final_total,
             "payment_gateway": "Razorpay",
+            "paid_at": timezone.now(),
             "gateway_order_id": razorpay_order["id"]
         }
     )
-    print("final_total:", final_total)
+    user_logger.info("final_total:", final_total)
 
     if not created:
         payment.paid_amount = final_total
         payment.gateway_order_id = razorpay_order["id"]
-        payment.payment_status = "pending"
+        payment.payment_status = "pending",
         payment.save()
 
     return JsonResponse({
@@ -499,10 +503,10 @@ def verify_razorpay_payment(request):
 
             if session_final:
                 order.final_amount = Decimal(str(session_final)).quantize(Decimal('0.01'))
-                print("Order final amount from session:", order.final_amount)
+                user_logger.info("Order final amount from session:", order.final_amount)
             if session_discount:
                 order.discount_amount = Decimal(str(session_discount)).quantize(Decimal('0.01'))
-                print("Order discount amount from session:", order.discount_amount)
+                user_logger.info("Order discount amount from session:", order.discount_amount)
             # copy address snapshot from session
             address_id = request.session.get("selected_address_id")
             if address_id:
@@ -535,7 +539,7 @@ def verify_razorpay_payment(request):
 
                 # Reduce stock
                 variant = ci.variant
-                print("DEBUG: Before Stock:", variant.stock)
+                user_logger.info("DEBUG: Before Stock:", variant.stock)
                 variant.stock = F("stock") - ci.quantity
                 variant.save(update_fields=["stock"])
 
@@ -568,14 +572,14 @@ def verify_razorpay_payment(request):
         return JsonResponse({"status": "failed", "message": "Payment verification failed"}, status=400)
 
     except Exception as e:
-        print("Verification error:", str(e))
+        user_logger.error("Verification error:", str(e))
         return JsonResponse({"status": "failed", "message": str(e)}, status=400)
 
 #====================SAVE PAYMENT FAILURE  ============================
 
 @login_required(login_url="login")
 def save_payment_failure(request, order_id):
-    print("Saving payment failure...", order_id)
+    user_logger.info("Saving payment failure...", order_id)
     order = get_object_or_404(Order, id=order_id, user=request.user)
     request.session['failed_order_number'] = str(order.order_id)
     request.session['payment_failure_reason'] = "Payment failed or cancelled."
@@ -584,7 +588,7 @@ def save_payment_failure(request, order_id):
 #====================PAYMENT FAILURE VIEW ============================
 @login_required(login_url="login")
 def payment_failure(request):
-    print("Payment failed...")
+    user_logger.info("Payment failed...")
     order_number = request.session.get('failed_order_number')
     failure_reason = request.session.get('payment_failure_reason', 'Payment failed. Please try again.')
 
@@ -642,7 +646,7 @@ def place_order(request):
     
     if payment_method == "cod" and final_amount >= 1000:
         messages.error(request, "Cash on Delivery is not available for orders above ₹1000.")
-        print('final amount',final_amount)
+        user_logger.info('final amount',final_amount)
         return redirect("select_payment")
 
     try:
@@ -679,7 +683,7 @@ def place_order(request):
                 )
 
                 variant = ci.variant
-                print("DEBUG: Before Stock:", variant.stock)    
+                user_logger.info("DEBUG: Before Stock:", variant.stock)    
                 variant.stock = F('stock') - ci.quantity
                 variant.save(update_fields=['stock'])
 
@@ -713,7 +717,8 @@ def place_order(request):
                     payment_method="cod",
                     payment_status="pending",
                     paid_amount=Decimal('0.00'),
-                    payment_gateway="COD"
+                    payment_gateway="COD",
+                    created_at=timezone.now()
                 )
     
 
@@ -722,7 +727,7 @@ def place_order(request):
     
 
     except Exception as e:
-        print("Order creation error:", str(e))
+        user_logger.error("Order creation error:", str(e))
         messages.error(request, "Failed to place order. Please try again later.")
         return redirect("cart:cart")
 
@@ -745,7 +750,7 @@ def order_success(request, order_id):
     order.unchanged_discount = discount_amount
     order.save(update_fields=['unchanged_amount','unchanged_discount'])
 
-    print(order.unchanged_amount, order.unchanged_discount)
+    user_logger.info(order.unchanged_amount, order.unchanged_discount)
     # clear any session keys used in checkout (optional)
     request.session.pop("coupon_id", None)
     request.session.pop("final_total", None)

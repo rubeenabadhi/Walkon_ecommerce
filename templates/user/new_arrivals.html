@@ -140,11 +140,11 @@
                     {% endif %}
                     {% endwith %}
 
-                    <p class="card-text small text-white">{{ product.category|default:"No Category" }}</p>
-                    <p class="card-text small text-white">
+                    <p class="card-text small text-white">{{ product.category|default:"No Category" }}
+                    
                         <i class="bi bi-tags-fill me-1"></i>{{ product.brand|default:"No Brand" }}
-                    </p>
-                    <p class="card-text small text-white">
+                   
+                    
                         <i class="bi bi-people-fill me-1"></i>{{ product.gender|default:"No Gender" }}
                     </p>
 
@@ -159,12 +159,19 @@
                     </div>
 
                     <!-- Add to Cart -->
-                    <button class="btn btn-warning btn-sm px-3 py-1 add-to-cart-btn rounded-pill"
-                            type="button"
-                            data-product-id="{{ product.id }}"
-                            data-variant-id="{{ product.variants.first.id }}">
-                        <i class="bi bi-cart-plus"></i> Add to Cart
-                    </button>
+                <button class="btn btn-dark w-50 mx-auto  btn-sm px-3 py-1 add-to-cart-btn rounded-pill"  
+                                type="button"
+                                data-product-id="{{ product.id }}"
+                        data-variant-id="{{ product.variants.first.id }}"
+                        {% if not product.is_available %}disabled{% endif %}>
+                    <i class="bi bi-cart-plus"></i> 
+                    {% if product.is_available %}
+                    Add to Cart
+                     {% else %}
+                        Out of Stock
+                                    {% endif %}
+                            </button>
+
                 </div>
             </div>
         </div>

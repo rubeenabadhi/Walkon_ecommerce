@@ -5,6 +5,9 @@ from django.views.decorators.http import require_POST
 from .models import Wishlist, WishlistItem
 from product.models import Product, ProductVariant
 from cart.models import CartItems
+import logging
+
+user_logging = logging.getLogger('user_logger') 
 
 # -------------------
 # counter for wishlist,cart in navbar
@@ -46,7 +49,7 @@ def toggle_wishlist(request, product_id):
         wishlist_count = wishlist.items.count()
         return JsonResponse({"status": "removed", "in_wishlist": False, "wishlist_count": wishlist_count})
 
-    print(" Added to wishlist:", variant)  # Debug log
+    user_logging.info(" Added to wishlist:", variant)  # Debug log
     wishlist_count= wishlist.items.count()
     return JsonResponse({"status": "added", "in_wishlist": True, "wishlist_count": wishlist_count})
 # -------------------
@@ -93,7 +96,7 @@ def add_to_wishlist(request, variant_id):
 def remove_from_wishlist(request, item_id):
     wishlist_item = get_object_or_404(WishlistItem, id=item_id, wishlist__user=request.user)
     wishlist_item.delete()
-    print(" Removed from wishlist:", wishlist_item)
+    user_logging.info(" Removed from wishlist:", wishlist_item)
     return JsonResponse({"status": "success"})
 # -------------------
 # Move from wishlist → cart
@@ -124,7 +127,7 @@ def move_to_cart(request, variant_id):
         cart_item.save()
 
     cart_count = CartItems.objects.filter(user=request.user).count()
-    print(f" Moved {product.name} (Size {variant.size.label}) to cart.")
+    user_logging.info(f" Moved {product.name} (Size {variant.size.label}) to cart.")
     return JsonResponse({
         "status": "success",
         "message": f" {product.name} (Size {variant.size.label}) added to cart successfully!",

@@ -33,7 +33,7 @@ class Address(models.Model):
             raise ValidationError("Phone number must contain only numbers.")
         if self.phone_number and not self.phone_number.isdigit():
             raise ValidationError("Phone number must contain only numbers.")
-        if self.phone_number and len(self.phone_number) < 10 and len(self.phone_number) > 15:
+        if self.phone_number and len(self.phone_number) < 10 or len(self.phone_number) > 15:
             raise ValidationError("Phone number must be at least 10 digits long and at most 15 digits long.")
         if self.pincode and not self.pincode.isdigit():
             raise ValidationError("Pincode must contain only numbers.")

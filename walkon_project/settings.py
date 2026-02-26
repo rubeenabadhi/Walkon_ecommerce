@@ -265,7 +265,7 @@ LOGGING = {
 
     'formatters': {
         'detailed': {
-            'format': '{levelname} {asctime} {module} {message}',
+            'format': '{levelname} {asctime}.{msecs:03.0f} [{name}] {filename}:{lineno} {funcName}() - {message}',
             'style': '{',
         },
     },

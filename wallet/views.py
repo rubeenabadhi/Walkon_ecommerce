@@ -8,6 +8,9 @@ from django.http import JsonResponse
 from decimal import Decimal
 from django.contrib import messages
 from django.core.paginator import Paginator
+import logging
+
+user_logger = logging.getLogger('user_logger')
 
 
 # Create your views here.
@@ -48,8 +51,8 @@ def add_money(request):
             "payment_capture": "1"
         })
 
-        # Store in session
-        request.session['wallet_amount'] = amount / 100
+        # Store in session for payment success
+        request.session['wallet_amount'] = amount / 100 # amount in rupees 
         request.session['razorpay_order_id'] = razorpay_order['id']
 
         # Return JSON (AJAX response)
@@ -86,6 +89,7 @@ def wallet_payment_success(request):
             wallet, _ = Wallet.objects.get_or_create(user=request.user)
             wallet.balance += Decimal(amount)
             wallet.save()
+            user_logger.info(f"[DEBUG] Wallet balance after payment: ₹{wallet.balance}")
 
             # Add wallet transaction
             WalletTransaction.objects.create(
@@ -103,8 +107,10 @@ def wallet_payment_success(request):
             return JsonResponse({"status": "success", "message": f"₹{amount} added to wallet"})
 
         except razorpay.errors.SignatureVerificationError:
+            user_logger.error("Payment verification failed")
             return JsonResponse({"status": "failure", "message": "Payment verification failed"})
         except Exception as e:
+            user_logger.error(str(e))
             return JsonResponse({"status": "failure", "message": str(e)})
 
     return JsonResponse({"status": "failure", "message": "Invalid request"})

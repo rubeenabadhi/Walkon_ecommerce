@@ -9,7 +9,10 @@ from product.models import Product
 from django.contrib import messages
 from django.db.models import Q
 from django.core.paginator import Paginator
+import logging
 
+admin_logging=logging.getLogger('admin_logger')
+user_logging=logging.getLogger('user_logger')
 # Create your views here.
 #=========================================================================USER REVIEW VIEW===============================================
 
@@ -33,7 +36,7 @@ def add_review(request, product_id):
     # Check duplicate review
     if Review.objects.filter(user=request.user, product=product).exists():
         messages.warning(request, "You already reviewed this product.")
-        print("You already reviewed this product.")
+        user_logging.warning(f"{request.user} already reviewed this product.")
         return redirect("order_details", delivered_item.order.order_id)
 
     # FORM SUBMIT
@@ -46,7 +49,7 @@ def add_review(request, product_id):
             review.rating = int(request.POST["rating"])
             review.save()
             messages.success(request, "Review added successfully!")
-            print("Review added successfully!", review)
+            user_logging.info("Review added successfully!", review)
             return redirect("order_details", delivered_item.order.order_id)
     return redirect("order_details", delivered_item.order.order_id)
 
@@ -98,9 +101,11 @@ def admin_review(request):
 @staff_member_required(login_url="admin_login")
 def delete_review(request, review_id):
     if request.method != "POST":
+        admin_logging.warning("Invalid request method.")
         return JsonResponse({"status": "error", "message": "Invalid request method."})
     review = get_object_or_404(Review, id=review_id)
     review.delete()
+    admin_logging.info("Review deleted successfully!", review)
     messages.success(request, "Review deleted successfully.")
     return redirect('admin_review')
 

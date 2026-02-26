@@ -14,45 +14,113 @@
     <h1 class="cart-title text-center text-primary ">YOUR CART</h1>
     <div class="row">
         <div class="col-lg-8">
-            {% if cart_items %}
-                {% for item in cart_items %}
-                <div class="cart-item d-flex align-items-start mb-3" id="cart-item-{{ item.id }}">
-                    <a href="{% url 'product_details' item.product.slug %}" class="d-flex align-items-start text-decoration-none text-dark">
-                    <img src="{{ item.product.primary_image.url }}" alt="Product Image" class="me-3">
-                    </a>
-                    <div class="flex-grow-1">
-                        <p class="in-stock">{% if item.product.is_active and item.product.stock > 0 %}In Stock{% else %}Out of Stock{% endif %}</p>
-                        <p class="free-delivery">{{ item.product.name }}</p>
-                        <div class="item-details">
-                            <p class="item-color">Size: {{ item.variant.size }}   {{ item.variant.color.name }}  </p>
-                        </div>
-                        <p class="qty">Qty: <span id="quantity-{{ item.id }}">{{ item.quantity }}</span></p>
-                       <p class="item-price fw-bold text-success">
-                         ₹{{ item.variant.get_offer_price }}
-                           {% if item.variant.get_offer_price < item.variant.price %}
-                            <span class="text-decoration-line-through text-muted ms-2">
-                                ₹{{ item.variant.price }}
-                            </span>
-                           {% endif %}
-                          </p>
-                          <p class="item-subtotal text-primary fw-bold">
-                            <span id="item_subtotal-{{ item.id }}">{{ item.quantity|mul:item.variant.get_offer_price|floatformat:2 }}</span>   
-                            </p>                 
-                        </div>
-                    <div class="col-md-4">
-                        <div class="quantity-controls">
-                            <button class="btn btn-outline-secondary quantity-btn decrement" data-item-id="{{ item.id }}">-</button>
-                            <span id="control-quantity-{{ item.id }}">{{ item.quantity }}</span>
-                            <button class="btn btn-outline-secondary quantity-btn increment" data-item-id="{{ item.id }}">+</button>
-                        </div>
-                        <button class="btn btn-danger btn-sm mt-2 remove-item" data-item-id="{{ item.id }}">Remove</button>
-                    </div>
-                </div>
-                <hr>
-                {% endfor %}
+{% if cart_items %}
+    {% for item in cart_items %}
+    <div class="cart-item d-flex align-items-start mb-3" id="cart-item-{{ item.id }}">
+
+        <a href="{% url 'product_details' item.product.slug %}" 
+           class="d-flex align-items-start text-decoration-none text-dark">
+            <img src="{{ item.product.primary_image.url }}" 
+                 alt="Product Image" class="me-3">
+        </a>
+
+        <div class="flex-grow-1">
+
+            <!-- STOCK STATUS -->
+            {% if not item.product.is_active or item.variant.stock <= 0 %}
+                <p class="text-danger fw-bold" id="in-stock-{{ item.id }}">
+                    Out of Stock
+                </p>
+            {% elif item.variant.stock < item.quantity %}
+                <p class="text-warning fw-bold" id="in-stock-{{ item.id }}">
+                    Only {{ item.variant.stock }} left in stock
+                </p>
             {% else %}
-                <p class="text-center">Your cart is empty.</p>
+                <p class="text-success fw-bold" id="in-stock-{{ item.id }}">
+                    In Stock
+                </p>
             {% endif %}
+
+            <p class="free-delivery">{{ item.product.name }}</p>
+
+            <div class="item-details">
+                <p class="item-color">
+                    Size: {{ item.variant.size }}  
+                    {{ item.variant.color.name }}
+                </p>
+            </div>
+
+            <p class="qty">
+                Qty: <span id="quantity-{{ item.id }}">{{ item.quantity }}</span>
+            </p>
+
+            <!-- PRICE -->
+            <p class="item-price fw-bold text-success">
+                ₹{{ item.variant.get_offer_price }}
+                {% if item.variant.get_offer_price < item.variant.price %}
+                    <span class="text-decoration-line-through text-muted ms-2">
+                        ₹{{ item.variant.price }}
+                    </span>
+                {% endif %}
+            </p>
+
+            <p class="item-subtotal text-primary fw-bold">
+                <span id="item_subtotal-{{ item.id }}">
+                    {{ item.quantity|mul:item.variant.get_offer_price|floatformat:2 }}
+                </span>
+            </p>
+
+        </div>
+
+        <!-- QUANTITY CONTROLS -->
+        <div class="col-md-4">
+            <div class="quantity-controls">
+
+                {% if item.variant.stock <= 0 %}
+                    <!-- Completely Disable -->
+                    <button class="btn btn-outline-secondary quantity-btn" disabled>-</button>
+                    <span>{{ item.quantity }}</span>
+                    <button class="btn btn-outline-secondary quantity-btn" disabled>+</button>
+
+                {% elif item.variant.stock <= item.quantity %}
+                    <!-- Disable Increment Only -->
+                    <button class="btn btn-outline-secondary quantity-btn decrement"
+                            data-item-id="{{ item.id }}">-</button>
+
+                    <span id="control-quantity-{{ item.id }}">
+                        {{ item.quantity }}
+                    </span>
+
+                    <button class="btn btn-outline-secondary quantity-btn increment"
+                            disabled>+</button>
+
+                {% else %}
+                    <!-- Normal Controls -->
+                    <button class="btn btn-outline-secondary quantity-btn decrement"
+                            data-item-id="{{ item.id }}">-</button>
+
+                    <span id="control-quantity-{{ item.id }}">
+                        {{ item.quantity }}
+                    </span>
+
+                    <button class="btn btn-outline-secondary quantity-btn increment"
+                            data-item-id="{{ item.id }}">+</button>
+                {% endif %}
+
+            </div>
+
+            <button class="btn btn-danger btn-sm mt-2 remove-item"
+                    data-item-id="{{ item.id }}">
+                Remove
+            </button>
+        </div>
+
+    </div>
+    <hr>
+    {% endfor %}
+{% else %}
+    <p class="text-center">Your cart is empty.</p>
+{% endif %}
         </div>
         
         <!-- Order Summary -->

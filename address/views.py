@@ -37,8 +37,9 @@ def add_address(request):
             messages.success(request, "Address added successfully.")
             return redirect("address")
         else:
-            messages.error(request, "Form is invalid.")
-            return redirect("add_address")
+            user_logger.error("Form is invalid.")
+            messages.error(request, "Fill the form correctly.")
+            return render(request, "user/address_form.html", {"form": form})
     else:
         form = AddressForm()
     return render(request, "user/address_form.html", {"form": form})

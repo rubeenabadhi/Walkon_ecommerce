@@ -38,8 +38,7 @@ from checkout.models import Payment
 from django.template.loader import render_to_string
 import logging
 
-logger = logging.getLogger(__name__)
-
+admin_logger = logging.getLogger('admin_logger')
 @never_cache
 @staff_member_required(login_url="admin_login")
 def admin_dashboard(request):

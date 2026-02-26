@@ -14,6 +14,10 @@ from decimal import Decimal
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.utils.dateparse import parse_date
+import logging
+
+admin_logger = logging.getLogger('admin_logger')
+user_logger = logging.getLogger('user_logger')
 
 
 # Create your views here.
@@ -106,9 +110,9 @@ def save_coupon(request, pk=None):
     if pk:
         coupon = get_object_or_404(Coupon, pk=pk)
         form = CouponForm(request.POST, instance=coupon)
-        print("Editing Coupon")
+        admin_logger.info("Editing Coupon")
     else:
-        print("Adding Coupon")
+        admin_logger.info("Adding Coupon")
         form = CouponForm(request.POST)
 
     if form.is_valid():
@@ -124,10 +128,10 @@ def save_coupon(request, pk=None):
                 'valid_to': coupon.valid_to.strftime('%d-%m-%y %H:%M'),
             }
         }
-        print(data)
+        admin_logger.info(data)
         return JsonResponse(data)
     else:
-        print(form.errors)
+        admin_logger.error(form.errors)
         html = render_to_string('admin/coupon_form_partial.html', {'form': form}, request=request)
         return JsonResponse({'success': False, 'html': html})
     
@@ -215,9 +219,9 @@ def save_product_offer(request, pk=None):
     if pk:
         offer = get_object_or_404(ProductOffer, pk=pk)
         form = ProductOfferForm(request.POST, instance=offer)
-        print("Editing Product Offer")
+        admin_logger.info("Editing Product Offer")
     else:
-        print("Adding Product Offer")
+        admin_logger.info("Adding Product Offer")
         form = ProductOfferForm(request.POST)
 
     if form.is_valid():
@@ -232,10 +236,10 @@ def save_product_offer(request, pk=None):
                 'valid_to': offer.valid_to.strftime('%d-%m-%y %H:%M'),
             }
         }
-        print(data)
+        admin_logger.info(data)
         return JsonResponse(data)
     else:
-        print(form.errors)
+        admin_logger.error(form.errors)
         html = render_to_string('admin/product_offer_form_partial.html', {'form': form}, request=request)
         return JsonResponse({'success': False, 'html': html})
 
@@ -296,10 +300,10 @@ def save_category_offer(request, pk=None):
     if pk:
         offer = get_object_or_404(CategoryOffer, pk=pk)
         form = CategoryOfferForm(request.POST, instance=offer)
-        print("Editing Category Offer")
+        admin_logger.info("Editing Category Offer")
 
     else:
-        print("Adding Category Offer")
+        admin_logger.info("Adding Category Offer")
         form = CategoryOfferForm(request.POST)
 
     if form.is_valid():
@@ -314,10 +318,10 @@ def save_category_offer(request, pk=None):
                 'valid_to': offer.valid_to.strftime('%d-%m-%y %H:%M'),
             }
         }
-        print(data)
+        admin_logger.info(data)
         return JsonResponse(data)
     else:
-        print(form.errors)
+        admin_logger.error(form.errors)
         html = render_to_string('admin/category_offer_form_partial.html', {'form': form}, request=request)
         return JsonResponse({'success': False, 'html': html})
     
@@ -361,9 +365,8 @@ def available_coupons(request):
     coupons = Coupon.objects.filter(active=True, valid_from__lte=now, valid_to__gte=now)
 
     # Debugging logs
-    print("Current time:", now)
     filtered = coupons.filter(active=True, valid_from__lte=now, valid_to__gte=now)
-    print("Filtered coupons:", list(filtered.values('code', 'valid_from', 'valid_to')))
+    user_logger.info("Filtered coupons:", list(filtered.values('code', 'valid_from', 'valid_to')))
 
     # Filter out coupons already fully used by the user
     available = []
@@ -378,7 +381,7 @@ def available_coupons(request):
 @login_required(login_url='login')
 @require_POST
 def apply_coupon(request):
-    print("Applying coupon...")
+    user_logger.info("Applying coupon...")
     code = request.POST.get("coupon_code", "").strip()
     if not code:
         return JsonResponse({"status": "error", "message": "Please enter a coupon code."})
@@ -395,12 +398,13 @@ def apply_coupon(request):
     # Check user usage limit via UserCoupon (do NOT increase used_count here)
     user_coupon, _ = UserCoupon.objects.get_or_create(user=request.user, coupon=coupon)
     if user_coupon.used_count >= coupon.usage_limit:
+        user_logger.info("Coupon usage limit reached")
         return JsonResponse({"status": "error", "message": "You have already used this coupon maximum times"})
 
     # Calculate cart total
     cart_items = CartItems.objects.filter(user=request.user).select_related("variant")
     total_price = sum(Decimal(item.variant.get_offer_price()) * item.quantity for item in cart_items)
-    print("Cart total price:", total_price)
+    user_logger.info("Cart total price:", total_price)
 
     if total_price < coupon.min_order_amount:
         return JsonResponse({

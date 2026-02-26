@@ -5,10 +5,11 @@ from .models import *
 from product.models import *
 from wishlist.models import Wishlist
 from django.db.models import Sum
-
+import logging
 
 # Create your views here.
 
+user_logger = logging.getLogger('user_logger')
 def cart(request):
     if request.user.is_authenticated:
         cart_items = CartItems.objects.filter(user=request.user).select_related('product', 'variant')
@@ -29,7 +30,7 @@ def cart(request):
 
 @login_required(login_url="login")
 def add_to_cart(request, slug):
-    print("Hit add_to_cart view with:", slug, request.POST.dict())
+    user_logger.info("Hit add_to_cart view with:", slug, request.POST.dict())
 
     if request.method != "POST":
         return JsonResponse({"status": "error", "message": "Invalid request method."})
@@ -82,13 +83,15 @@ def add_to_cart(request, slug):
             return JsonResponse({"status": "error", "message": f"Cannot exceed {min(available_for_user,5)} items in cart."})
         cart_item.quantity = new_qty
         cart_item.save()
+        user_logger.info(" Updated existing item in cart.")
     else:
-        print(" Added new item to cart.")
+        user_logger.info(" Added new item to cart.")
 
     # Remove from wishlist if exists
     try:
         wishlist = Wishlist.objects.get(user=request.user)
         wishlist.items.filter(product_variant=variant).delete()
+        user_logger.info(" Removed item from wishlist.")
     except Exception:
         pass
 
@@ -110,7 +113,7 @@ def update_cart(request, cart_item_id):
     except CartItems.DoesNotExist:
         return JsonResponse({"status": "error", "message": "Item not found."})
 
-    deleted = False
+    deleted = False # default value for response data 
 
     if action == "increment":
         max_quantity = min(cart_item.variant.stock, 5)

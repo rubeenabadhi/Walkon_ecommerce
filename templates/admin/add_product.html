@@ -37,7 +37,7 @@
                     <label class="form-label fw-bold">Primary Image</label>
                     <input type="file" name="primary_image" class="form-control" id="id_primary_image">
                     <div class="image-preview mt-1" style="min-height: 80px;">
-                        <img id="primaryImagePreview" src="{% if product.primary_image %}{{ product.primary_image.url }}{% endif %}" style="max-width: 100%; max-height: 150px; border:1px solid #ddd;">
+                        <img id="primaryImagePreview" src="{% if product.primary_image %}{{ product.primary_image.url }}{% endif %}" style="max-width: 200px; max-height: 150px; border:1px solid #ddd;">
                     </div>
                     <button type="button" class="btn btn-sm btn-success mt-1" id="cropPrimaryBtn">Crop</button>
                 </div>
@@ -161,41 +161,55 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    // Primary Image crop
-    let primaryCropper;
-    const primaryImg = document.getElementById('primaryImagePreview');
-    const primaryInput = document.getElementById('id_primary_image');
-    const originalWidth = primaryImg.naturalWidth;
-    const originalHeight = primaryImg.naturalHeight;
+let primaryCropper;
+const primaryImg = document.getElementById('primaryImagePreview');
+const primaryInput = document.getElementById('id_primary_image');
+let croppedBlob = null;
 
+primaryInput.addEventListener('change', function (e) {
+    const file = e.target.files[0];
+    if (!file) return;
 
-    primaryInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if(file){
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                primaryImg.src = event.target.result;
-                if(primaryCropper) primaryCropper.destroy();
-                primaryCropper = new Cropper(primaryImg, { aspectRatio: 1, viewMode: 1 });
-            }
-            reader.readAsDataURL(file);
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        primaryImg.src = event.target.result;
+
+        if (primaryCropper) {
+            primaryCropper.destroy();
         }
+
+        primaryCropper = new Cropper(primaryImg, {
+            aspectRatio: 1,
+            viewMode: 1
+        });
+    };
+    reader.readAsDataURL(file);
+});
+
+document.getElementById('cropPrimaryBtn').addEventListener('click', function () {
+    if (!primaryCropper) return;
+
+    const canvas = primaryCropper.getCroppedCanvas({
+        width: 300,
+        height: 300
     });
 
-    document.getElementById('cropPrimaryBtn').addEventListener('click', ()=>{
-        if(primaryCropper){
-            const canvas = primaryCropper.getCroppedCanvas({ width: originalWidth, height: originalHeight });
-            primaryImg.src = canvas.toDataURL();
-            canvas.toBlob(blob => {
-                const file = new File([blob], 'primary_image.png', { type:'image/png' });
-                const dt = new DataTransfer();
-                dt.items.add(file);
-                primaryInput.files = dt.files;
-            });
-        }
-    });
+    canvas.toBlob(function (blob) {
+        croppedBlob = blob;
 
-    // Additional Images crop
+        const file = new File([blob], 'primary_image.png', {
+            type: 'image/png'
+        });
+
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        primaryInput.files = dataTransfer.files;
+
+        primaryImg.src = canvas.toDataURL();
+    }, 'image/png');
+});
+
+// Additional Images crop
     document.querySelectorAll('.cropAdditionalBtn').forEach(btn => {
         btn.addEventListener('click', ()=>{
             const inputId = btn.dataset.input;
@@ -231,6 +245,12 @@
             }
         });
     });
+    document.querySelector("form").addEventListener("submit", function(e) {
+    if (primaryInput.files.length && !croppedBlob) {
+        alert("Please crop the primary image before submitting.");
+        e.preventDefault();
+    }
+});
 </script>
 
 <style>

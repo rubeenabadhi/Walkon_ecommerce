@@ -17,6 +17,10 @@ from django.db.models import F, Sum, DecimalField
 from wallet.models import Wallet, WalletTransaction
 from xhtml2pdf import pisa
 from review.models import Review
+import logging
+
+admin_logger = logging.getLogger('admin_logger')
+user_logger = logging.getLogger('user_logger')
 
 
 #========================================================================USER ORDER VIEW===============================================
@@ -163,7 +167,7 @@ def cancel_order(request, order_id):
         with transaction.atomic():
             # for refund calculation
             refund_amount = Decimal(str(order.final_amount))  # Save original final amount
-            print(f"[DEBUG] Original final amount before cancel: ₹{refund_amount}")
+            user_logger.info(f"[DEBUG] Original final amount before cancel: ₹{refund_amount}")
 
             success = order.cancel_order(reason=reason)
             if not success:
@@ -173,17 +177,17 @@ def cancel_order(request, order_id):
             payment_method = (order.payment_method or "").lower()
             if payment_method == "cod":
                 refund_amount = Decimal("0.00")
-                print("[DEBUG] COD order - no refund applicable")
+                user_logger.info("[DEBUG] COD order - no refund applicable")
 
             # Refund logic (use original final amount)
             if refund_amount > 0:
                 wallet, _ = Wallet.objects.get_or_create(user=request.user)
-                print(f" Wallet balance before refund: ₹{wallet.balance}")
+                user_logger.info(f" Wallet balance before refund: ₹{wallet.balance}")
 
                 wallet.balance += refund_amount
                 wallet.save(update_fields=['balance'])
                 wallet.refresh_from_db()
-                print(f"Wallet balance after refund: ₹{wallet.balance}")
+                user_logger.info(f"Wallet balance after refund: ₹{wallet.balance}")
 
                 WalletTransaction.objects.create(
                     wallet=wallet,
@@ -192,9 +196,9 @@ def cancel_order(request, order_id):
                     purpose="refund",
                     description=f"Full order cancelled refund - Order #{order.order_id}"
                 )
-                print("[DEBUG] Refund transaction created")
+                user_logger.info("[DEBUG] Refund transaction created")
             else:
-                print("[DEBUG] No refund needed (amount <= 0)")
+                user_logger.info("[DEBUG] No refund needed (amount <= 0)")
                 messages.info(request, 'No refund amount to process.')
 
             messages.success(
@@ -206,14 +210,8 @@ def cancel_order(request, order_id):
             return redirect(redirect_to)
 
     except Exception as e:
-        import traceback
-        print("=== CANCEL ORDER ERROR ===")
-        print(f"Order ID: {order.order_id}")
-        print(f"Error type: {type(e).__name__}")
-        print(f"Error message: {str(e)}")
-        traceback.print_exc()
-        print("========================")
-
+        user_logger.error(f"Error in cancel_order: {str(e)}")
+        user_logger.exception(e)
         messages.error(request, 'Cancellation failed. Please check server logs or contact support.')
         return redirect(redirect_to)
 #------------------------------------------------------------------------------cancel item view------------------------------
@@ -252,15 +250,16 @@ def cancel_item(request, item_id):
             refund_amount = Decimal('0.00')
             payment_method = (order.payment_method or "").lower()
             is_cod = (payment_method == "cod")
-            print(f"[DEBUG] Payment method: {payment_method} | is_cod: {is_cod}")
+
+            user_logger.info(f"[DEBUG] Payment method: {payment_method}")
+            user_logger.info(f"[DEBUG] Is COD: {is_cod}")
 
             if is_cod:
-                print("[DEBUG] COD order - no refund on item cancel")
+                user_logger.info("[DEBUG] COD order - no refund on item cancel")
                 messages.info(request, "COD order - no refund applicable on item cancel.")
                 reason = reason or "Cancelled - COD order"
-            else:
-                
-                print("[DEBUG] Non-COD order - calculating proportional refund")
+            else: 
+                user_logger.info("[DEBUG] Non-COD order - calculating proportional refund")
 
             # Item cancel + restock 
             item.is_cancelled = True
@@ -294,7 +293,7 @@ def cancel_item(request, item_id):
                     description=f"Refund for cancelled item ({item.product_variant.product.name}) in order {order.order_id}"
                 )
             else:
-                print("[DEBUG] No refund processed (COD or zero amount)")
+                user_logger.info("[DEBUG] No refund needed (amount <= 0)")
 
             # All items cancelled ?
             if all(i.is_cancelled for i in order.items.all()):
@@ -306,12 +305,14 @@ def cancel_item(request, item_id):
                 request,
                 f"Item cancelled successfully. "
                 f"{'₹' + str(refund_amount.quantize(Decimal('0.01'))) + ' refunded to wallet.' if refund_amount > 0 else 'No refund applicable (COD order).'}"
+                
             )
+            user_logger.info(f"[DEBUG] Refund amount: {refund_amount}")
 
             return redirect(redirect_to)
 
     except Exception as e:
-        print(f"[ERROR] Cancel item failed: {type(e).__name__}: {str(e)}")
+        user_logger.error(f"Error in cancel_item: {str(e)}")
         messages.error(request, 'Item cancellation failed. Please try again or contact support.')
         return redirect(redirect_to)
     #--------------------------------------------------------------------request return item---------
@@ -403,10 +404,12 @@ def order_invoice_pdf(request, order_id):
         response["Content-Disposition"] = f'attachment; filename="invoice-{order.order_id}.pdf"'
         pisa_status = pisa.CreatePDF(html, dest=response)
         if pisa_status.err:
+            user_logger.error("Error generating PDF using xhtml2pdf.")
             messages.error(request, "Error generating PDF.")
             return redirect("orders:detail", pk=order.id)
         return response
     except Exception:
+        user_logger.error("Error generating PDF using xhtml2pdf.")
         messages.error(request, "PDF library not installed. Install xhtml2pdf or use WeasyPrint.")
         return redirect("orders:detail", pk=order.id)
     
@@ -472,14 +475,16 @@ def admin_order_action(request, order_number):
         messages.error(request, "Delivered orders cannot have their status changed.")
         return redirect("admin_order_details", order.order_id)
     if order.status=="cancelled" or order.status=="returned" and action == "update_status":
+        admin_logger.info(f"Cancelled or returned order {order.order_id} cannot have their status changed by admin.")
         messages.error(request, "Cancelled or returned orders cannot have their status changed.")
         return redirect("admin_order_details", order.order_id)
 
     if action == "update_status":
-        new_status = request.POST.get("status")
+        new_status = request.POST.get("status") 
         order.status = new_status
         order.save(update_fields=['status'])
         messages.success(request, "Order status updated successfully.")
+        admin_logger.info(f"Order {order.order_id} status updated to {new_status} by admin.")
         return redirect("admin_order_details", order.order_id)
 
     # APPROVE RETURN (single item return)
@@ -501,13 +506,13 @@ def admin_order_action(request, order_number):
 
         try:
             with transaction.atomic():
-                # 1. Original final amount save 
+                #  Original final amount save 
                 original_final = order.final_amount.quantize(Decimal('0.01'))
 
-                # 2. Item- returned + refunded  + restock
+                # Item- returned + refunded  + restock
                 item.is_returned = True
                 item.admin_refunded = True
-                item.returned_at = timezone.now()  # optional, if you have this field
+                item.returned_at = timezone.now()  # mark as returned
                 item.save(update_fields=['is_returned', 'admin_refunded', 'returned_at'])
 
                 # Restock product
@@ -535,7 +540,7 @@ def admin_order_action(request, order_number):
                         description=f"Admin approved return refund for item {item.product_variant.product.name} (Order: {order.order_id})"
                     )
 
-                # 5. Order status update
+                # Order status update
                 remaining_items = order.items.filter(is_returned=False, is_cancelled=False)
                 if remaining_items.exists():
                     order.status = "partially_returned"
@@ -547,10 +552,10 @@ def admin_order_action(request, order_number):
                     request,
                     f"Return approved! ₹{refund_amount:.2f} refunded to user's wallet."
                 )
-                print(f"Refund approved: {refund_amount} | New status: {order.status}")
+                admin_logger.info(f"Refund approved: {refund_amount} | New status: {order.status}")
 
         except Exception as e:
-            print(f"Approve return error: {str(e)}")
+            admin_logger.error(f"Approve return error: {str(e)}")
             messages.error(request, "Error processing return approval. Please try again.")
         
         return redirect("admin_order_details", order.order_id)
@@ -572,7 +577,7 @@ def admin_return_requests_list(request):
     page_number = request.GET.get('page')
     return_requests = paginator.get_page(page_number)
 
-    print(return_requests)    
+    admin_logger.info(return_requests)    
     # render to a template with approve/reject buttons
     return render(request, "admin/return_requests_list.html", {"requests": return_requests})
 
@@ -586,6 +591,7 @@ def admin_process_return(request, request_id):
 
     if rr.status != "requested":
         messages.info(request, "This return request is already processed.")
+        admin_logger.info(f"Return request {rr.id} already processed.")
         return redirect("admin_return_requests")
 
     if request.method != "POST":
@@ -613,6 +619,7 @@ def admin_process_return(request, request_id):
                 item.admin_refunded = True
                 item.returned_at = timezone.now()
                 item.save()
+
 
                 # Restock
                 product = item.product_variant
@@ -674,7 +681,7 @@ def admin_process_return(request, request_id):
             return redirect("admin_return_requests")
 
         except Exception as e:
-            print(f"[ADMIN RETURN ERROR] {type(e).__name__}: {str(e)}")
+            admin_logger.error(f"[ADMIN RETURN ERROR] {type(e).__name__}: {str(e)}")
             messages.error(request, "Error approving return. Please try again.")
             return redirect("admin_return_requests")
 

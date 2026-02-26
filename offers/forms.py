@@ -86,6 +86,9 @@ class ProductOfferForm(ModelForm):
         discount = self.cleaned_data.get('discount_percentage')
         if discount <= 0 or discount > 100:
             raise forms.ValidationError("Discount percentage must be between 1 and 100.")
+        if discount is None:
+            raise forms.ValidationError("This field is required.")
+
         return discount 
 
     def clean(self):
@@ -121,6 +124,8 @@ class CategoryOfferForm(ModelForm):
         discount = self.cleaned_data.get('discount_percentage')
         if discount <= 0 or discount > 100:
             raise forms.ValidationError("Discount percentage must be between 1 and 100.")
+        if discount is None:
+            raise forms.ValidationError("This field is required.")
         return discount 
 
     def clean(self):

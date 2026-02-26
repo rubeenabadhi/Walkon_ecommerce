@@ -159,7 +159,7 @@
                 <!-- Coupon Section (separate form, not inside payment-form) -->
                 <div id="coupon-section">
                     
-                    {% if available_coupons and coupon.usage_limit > 0 %}
+                    {% if available_coupons   %}
                     <h6 class="fw-semibold mt-4 mb-2">Available Coupons</h6>
                     <ul class="list-group list-group-flush mb-3 shadow-sm rounded ">
                         {% for coupon in available_coupons %}
