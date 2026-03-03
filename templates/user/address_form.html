@@ -22,12 +22,12 @@
             {% endif %}
 
             <!-- Main Form Card - Same style as Refer & Earn -->
-            <div class="refer-card p-4 shadow-sm rounded" style="min-height: 500px; background: linear-gradient(135deg, #ffffff, #e3f2fd);">
+            <div class="refer-card p-4 shadow-sm rounded" style="min-height: 500px; background: #f8f7f5;">
                 
-                <h2 class="mb-3 text-center" style="text-transform: uppercase; color: #1a73e8; font-weight: 700; font-family: 'Inter', sans-serif; font-size: clamp(1.3rem, 3.5vw, 1.8rem);">
+                <h2 class="mb-3 text-center" style="text-transform: uppercase; color:; font-weight: 700; font-family: 'Inter', sans-serif; font-size: clamp(1.3rem, 3.5vw, 1.8rem);">
                     Add New Address
                 </h2>
-                <p class="text-center mb-4" style="color: #1a73e8; font-weight: 500; font-family: 'Inter', sans-serif; font-size: clamp(0.8rem, 2vw, 1rem);">
+                <p class="text-center mb-4" style="color: #b8972e; font-weight: 500; font-family: 'Inter', sans-serif; font-size: clamp(0.8rem, 2vw, 1rem);">
                     Fill in your delivery details for faster checkout
                 </p>
 
@@ -48,7 +48,7 @@
                     <div class="row g-3">
                         {% for field in form %}
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold" style="color: #444; font-size: 0.95rem;">
+                                <label class="form-label fw-semibold" style="color: #0a0a0a; font-size: 0.95rem;">
                                     {{ field.label }}
                                 </label>
                                 {{ field }}
@@ -65,11 +65,11 @@
                     <!-- Action Buttons -->
                     <div class="d-flex justify-content-end gap-3 mt-5">
                         <a href="{% url 'address' %}" class="btn btn-outline-secondary rounded-pill px-4 py-2"
-                           style="font-weight: 600; font-size: 0.95rem; border-color: #1a73e8; color: #1a73e8;">
+                           style="font-weight: 600; font-size: 0.95rem; border-color: #b8972e;">
                             Cancel
                         </a>
                         <button type="submit" class="btn btn-primary rounded-pill px-5 py-2"
-                                style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; font-weight: 700; font-size: 0.95rem; border: none;">
+                                style="background: #bb9720; color: white; font-weight: 700; font-size: 0.95rem; border: none;">
                             Save Address
                         </button>
                     </div>
@@ -84,7 +84,7 @@
 <style>
     /* Refer & Earn style reused for Add Address page */
     .refer-card {
-        background: linear-gradient(135deg, #ffffff, #e3f2fd);
+        background: #f6efda;
         border: none;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -97,6 +97,14 @@
     .form-label {
         color: #444;
         font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 5px;
+        transition: all 0.3s;
+    }
+    .form-label:hover {
+        color: #b8972e;
+        cursor: pointer;
+        transform: scale(1.05);
     }
 
     .form-control, .form-select {
@@ -108,7 +116,7 @@
     }
 
     .form-control:focus, .form-select:focus {
-        border-color: #1a73e8;
+        border-color: #b8972e;
         box-shadow: 0 0 0 0.25rem rgba(26, 115, 232, 0.25);
         background: white;
     }
@@ -117,9 +125,9 @@
         transition: all 0.3s;
     }
     .btn-outline-secondary:hover {
-        background: #1a73e8;
+        background: #b8972e;
         color: white;
-        border-color: #1a73e8;
+        border-color: #b8972e;
     }
 
     .text-danger {

@@ -2,18 +2,19 @@
 {% load static math_filters humanize %}
 {% block title %}My Orders - WalkOn{% endblock %}
 
+
+
+{% block content %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/order.css' %}">
 {% endblock %}
-
-{% block content %}
 
 <div class="container my-5">
   <div class="row">
     {% include 'user/user_sidebar.html' %}
 
     <div class="col-md-9 col-lg-8 mx-auto">
-      <h2 class="mb-4 text-center fw-bold" style="color: #1a73e8;">MY ORDERS</h2>
+      <h2 class="mb-4 text-center fw-bold" >MY ORDERS</h2>
 
       <!-- message-->
         {% if messages %}

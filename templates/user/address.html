@@ -22,19 +22,19 @@
             {% endif %}
 
             <!-- Refer & Earn style main card -->
-            <div class="refer-card p-2 shadow-sm rounded" style="min-height: 450px; background: linear-gradient(135deg, #ffffff, #9ee3f0);">
+            <div class="refer-card p-2 shadow-sm rounded" style="min-height: 450px; background: #f8f7f5;">
                 
-                <h2 class="mb-2 text-center" style="text-transform: uppercase; color: #1a73e8; font-weight: 700; font-family: 'Inter', sans-serif; font-size: clamp(1.3rem, 3.5vw, 1.8rem);">
+                <h2 class="mb-2 text-center" style="text-transform: uppercase; color: #d4af37; font-weight: 700; font-family: 'Inter', sans-serif; font-size: clamp(1.3rem, 3.5vw, 1.8rem);">
                     Manage Addresses
                 </h2>
-                <p class="text-center mb-4" style="color: #1a73e8; font-weight: 500; font-family: 'Inter', sans-serif; font-size: clamp(0.8rem, 2vw, 1rem);">
+                <p class="text-center mb-4" style="color: #d4af37; font-weight: 500; font-family: 'Inter', sans-serif; font-size: clamp(0.8rem, 2vw, 1rem);">
                     Add or edit your delivery addresses
                 </p>
 
                 <!-- Add New Address Button -->
                 <div class="text-center mb-4">
                     <a href="{% url 'add_address' %}" class="btn btn-primary rounded-pill px-4 py-2" 
-                       style="background: linear-gradient(135deg, #5098ef, #5695ed); color: white; font-weight: 700; font-family: 'Poppins', sans-serif; text-transform: uppercase; font-size: clamp(0.9rem, 2vw, 1rem);">
+                       style="background: linear-gradient(135deg, #d4af37); color: white; font-weight: 700; font-family: 'Poppins', sans-serif; text-transform: uppercase; font-size: clamp(0.9rem, 2vw, 1rem);">
                         + Add New Address
                     </a>
                 </div>
@@ -60,7 +60,7 @@
                             {% endif %}
 
                             <div class="d-flex gap-2 mt-4">
-                                <a href="{% url 'edit_address' addr.id %}" class="btn btn-sm btn-outline-primary rounded-pill flex-fill">
+                                <a href="{% url 'edit_address' addr.id %}" class="btn btn-sm btn-outline-dark rounded-pill flex-fill">
                                     Edit
                                 </a>
                                 <a href="{% url 'delete_address' addr.id %}" class="btn btn-sm btn-outline-danger rounded-pill flex-fill"

@@ -1,17 +1,16 @@
 {% extends 'user/base.html' %}
 {% load static %}
 {% block title %}Cart - Walkon{% endblock %}
+
+{% load math_filters %}
+{% load humanize%}
+
+{% block content %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/cart.css' %}">
 {% endblock %}
-{% load math_filters %}
-{% load humanize%}
-{% block breadcrumbs %}
-<li class="breadcrumb-item active" aria-current="page">Cart</li>
-{% endblock %}
-{% block content %}
 <div class="container cart-container my-5">
-    <h1 class="cart-title text-center text-primary ">YOUR CART</h1>
+    <h1 class="cart-title text-center text-uppercase fw-bold text-dark ">YOUR CART</h1>
     <div class="row">
         <div class="col-lg-8">
 {% if cart_items %}
@@ -125,13 +124,13 @@
         
         <!-- Order Summary -->
         <div class="col-lg-4 mt-4 mt-lg-0">
-            <div class="order-summary p-3 shadow-sm border rounded" style="background: #d6e2ee; ">
-                <h4 class="fw-bold mb-3 text-center" style="color: #1a73e8;">Order Summary</h4>
+            <div class="order-summary p-3 shadow-sm border rounded" style="background: #fffffd; ">
+                <h4 class="fw-bold mb-3 text-center" style="color: #b8972e;">Order Summary</h4>
                 <p>In Rupees</p>
                 {% if cart_items %}
                     {% for product in cart_items %}
-                    <p class="qty"><span id="summary-quantity-{{ product.id }}">{{ product.quantity }}</span> x : ₹{{ product.variant.get_offer_price }}
-                         <span class="float-end" id="summary-subtotal-{{ product.id }}">= ₹{{ product.quantity|mul:product.variant.get_offer_price|floatformat:2 }}</span></p>
+                    <p class="qty"><span id="summary-quantity-{{ product.id }}">{{ product.quantity }}</span>  : ₹{{ product.variant.get_offer_price }}
+                         <span class="float-end" id="summary-subtotal-{{ product.id }}"> ₹{{ product.quantity|mul:product.variant.get_offer_price|floatformat:2 }}</span></p>
                     {% endfor %}
                 {% else %}
                     <p class="text-muted">No items in cart</p>
@@ -139,8 +138,8 @@
                 <hr>
                 <p class="fw-bold">Total: ₹<span id="grand-total">{{ total_price|default:"0" }}</span></p>
                 <div class="d-flex justify-content-center pt-3">
-                     <a href="{% url 'select_address' %}" class="btn continue-btn w-70 mt-3 {% if not cart_items %}disabled{% endif %}" 
-                    style="background-color: #1a73e8; color: white; border: none;" >Continue to Shipping</a>
+                     <a href="{% url 'select_address' %}" class="btn continue-btn w-70 auto-w mt-3 {% if not cart_items %}disabled{% endif %}" 
+                    style="background-color: #b8972e; color: white; border: none;" >Continue to Shipping</a>
                  </div>
             </div>
         </div>

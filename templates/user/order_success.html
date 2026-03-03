@@ -5,7 +5,7 @@
 {% block content %}
 <style>
     .thank-you-container {
-        background: linear-gradient(135deg, #ffffff, #afe9f5);
+        background: linear-gradient(135deg, #fdf8e7);
         border-radius: 20px;
         padding: 3rem;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -16,7 +16,7 @@
         animation: popIn 0.5s ease-out;
     }
     .thank-you-title {
-        color: #1a73e8;
+        color: #d4af37;
         text-shadow: 0 2px 10px rgba(26, 115, 232, 0.2);
     }
     .thank-you-text {
@@ -94,8 +94,8 @@
 
     <!-- Buttons -->
     <div class="d-flex justify-content-center gap-3">
-        <a href="{% url 'orders' %}" class="btn btn-dark px-4 thank-you-btn" style="background: #1a73e8;">View Orders</a>
-        <a href="{% url 'all_products' %}" class="btn btn-outline-dark px-4 thank-you-btn" style="background: #f8f9fa; border: 1px solid #1a73e8;">Continue Shopping</a>
+        <a href="{% url 'orders' %}" class="btn btn-dark px-4 thank-you-btn" style="background: #dbac10;">View Orders</a>
+        <a href="{% url 'all_products' %}" class="btn btn-outline-dark px-4 thank-you-btn" style="background: #f8f9fa; border: 1px solid #d4af37;">Continue Shopping</a>
     </div>
 </div>
 {% endblock %}

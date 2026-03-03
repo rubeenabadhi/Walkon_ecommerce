@@ -3,6 +3,8 @@
 {% block title %}Order Details - WalkOn{% endblock %}
 
 {% block content %}
+
+
 <div class="container my-4">
     <div class="row">
         {% include 'user/user_sidebar.html' %}
@@ -10,7 +12,7 @@
         <div class="col-md-8">
 
             <!-- Page Title -->
-            <h2 class="mb-3 fw-bold text-center" style="color: #1a73e8;">
+            <h2 class="mb-3 fw-bold text-center">
                 Order Details: {{ order.order_id }}
             </h2>
 
@@ -27,18 +29,18 @@
             </div>
 
             <!-- Order Summary -->
-            <div class="card summary-card shadow-sm mb-3 p-3" style="border-left: 6px solid #1a73e8; border-radius: 8px; background: linear-gradient(135deg, #ffffff, #e3f2fd); ">
+            <div class="card summary-card shadow-sm mb-3 p-3" style="border-left: 6px solid #d3a307; border-radius: 8px; background: linear-gradient(135deg, #ffffff">
                 <p class="mb-1 fs-5">
                     <span class="fw-sm-bold">Status:</span>
                     <span class="
                         {% if order.status == 'pending' %}text-secondary
-                        {% elif order.status == 'confirmed' %}text-primary
+                        {% elif order.status == 'confirmed' %}text-warning
                         {% elif order.status == 'shipped' %}text-warning
                         {% elif order.status == 'delivered' %}text-success
                         {% elif order.status == 'cancelled' %}text-danger
                         {% elif order.status == 'returned' %}text-dark
                         {% elif order.status == 'failed' %}text-danger
-                        {% else %}text-primary
+                        {% else %}text-secondary
                         {% endif %}" >                       
                         {{ order.get_status_display }}
                     </span><br>
@@ -61,8 +63,8 @@
             </div>
 
             <!-- ORDER ITEMS -->
-            <div class="card order-card shadow-sm mb-3 p-3" style="background: linear-gradient(135deg, #ffffff, #afe9f5);">
-                <h5 class="fw-bold mb-2 text-primary">Order Items</h5>
+            <div class="card order-card shadow-sm mb-3 p-3" style="background: linear-gradient(135deg, #ffffff);">
+                <h5 class="fw-bold mb-2 ">Order Items</h5>
 
                 {% for item in order.items.all %}
                 <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
@@ -246,7 +248,7 @@
                 <div class="row">
 
                     <div class="col-md-6">
-                        <h5 class="fw-bold mb-2 text-info">Transaction Details</h5>
+                        <h5 class="fw-bold mb-2 ">Transaction Details</h5>
 
                         {% if order.payment %}
                             <p class="small text-muted mb-0">
@@ -263,7 +265,7 @@
                     </div>
 
                     <div class="col-md-6">
-                        <h5 class="fw-bold mb-2 text-info">Shipping Details</h5>
+                        <h5 class="fw-bold mb-2 ">Shipping Details</h5>
                         <p class="small text-muted mb-0">
                             <span class="fw-bold">Name:</span> {{ order.full_name }}<br>
                             <span class="fw-bold">Phone:</span> {{ order.phone_number }}<br>

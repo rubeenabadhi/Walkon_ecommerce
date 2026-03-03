@@ -3,12 +3,12 @@
 {% load widget_tweaks %} <!-- For adding CSS classes to form fields -->
 
 {% block title %}KIDS SHOES - Walkon{% endblock %}
+
+{% block content %}
+
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/productlist.css' %}">
 {% endblock %}
-{% block content %}
-
-
 <div class="container py-4">
     <!-- Header Section -->
     <div class="text-center mb-4 header-section">
@@ -37,9 +37,9 @@
 
         <!-- Filters Section -->
         <div class="col-lg-3 col-md-4 collapse d-md-block mb-4 filter-sidebar" id="filterSidebar">
-            <div class="card p-3 shadow-lg rounded-4">
+            <div class="card p-3 shadow-lg rounded-4 text-dark">
                 <form method="get" class="p-2 rounded">
-                    <h5 class="fw-bold mb-3 text-primary">Filters</h5>
+                    <h5 class="fw-bold mb-3 text-center text-dark">Filters</h5>
 
                     <!-- Category -->
                     <div class="mb-3">
@@ -150,9 +150,7 @@
                     <div class="mb-2">
                         <p style="font-size:0.85rem; color:#ff9800; font-weight:600; margin:4px 0;">
                             ⭐ {{ product.average_rating }}
-                            <span style="font-size:0.75rem; color:#777;">
-                                ({{ product.review_count }} Reviews)
-                            </span>
+                           
                         </p>
                     </div>
 

@@ -5,7 +5,7 @@
 {% block content %}
 <style>
     .refer-card {
-        background: linear-gradient(135deg, #ffffff, #e3f2fd);
+        background: linear-gradient(135deg, #ffffff);
         border: 0px solid;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -23,8 +23,8 @@
         {% include 'user/user_sidebar.html' %}
         <div class="col-md-8">
             <div class="refer-card p-2 shadow-sm rounded " style="min-height: 350px; ">
-                <h2 class="mb-2 text-center" style="text-transform: uppercase; color: #1a73e8; font-weight: 700; font-family: 'Inter', sans-serif; font-size: clamp(1.3rem, 3.5vw, 1.8rem);">Refer & Earn</h2>
-                <p class="text-center mb-2" style="color: #1a73e8; font-weight: 500; font-family: 'Inter', sans-serif; font-size: clamp(0.8rem, 2vw, 1rem);">Refer your friends and get exciting rewards!</p>
+                <h2 class="mb-2 text-center" style="text-transform: uppercase; color: #b8972e; font-weight: 700; font-family: 'Inter', sans-serif; font-size: clamp(1.3rem, 3.5vw, 1.8rem);">Refer & Earn</h2>
+                <p class="text-center mb-2" style="color: #b8972e; font-weight: 500; font-family: 'Inter', sans-serif; font-size: clamp(0.8rem, 2vw, 1rem);">Refer your friends and get exciting rewards!</p>
                 
                 <!-- Referral Image -->
                 <div class="text-center mb-2">
@@ -35,16 +35,16 @@
                 <div class="text-center mb-2">
                     {% if referral_code %} 
                         <p class="mb-1" style="font-family: 'Inter', sans-serif; font-size: clamp(0.8rem, 2vw, 0.9rem); color: #555;">Your Referral Code:</p>
-                        <input type="text" class="form-control w-50 mx-auto" value="{{ referral_code }}" readonly style="font-family: 'Outfit', sans-serif; font-size: clamp(0.9rem, 2.5vw, 1rem); background-color: #f8f9fa; border-color: #2193b0; text-align: center; padding: 0.25rem;">
-                        <button class="btn btn-primary mt-1" onclick="copyCode()" style="font-family: 'Poppins', sans-serif; font-weight: 700; text-transform: uppercase; padding: 0.3rem 0.6rem; font-size: clamp(0.7rem, 2vw, 0.8rem);">Copy Code</button>
+                        <input type="text" class="form-control w-50 mx-auto" value="{{ referral_code }}" readonly style="font-family: 'Outfit', sans-serif; font-size: clamp(0.9rem, 2.5vw, 1rem); background-color: #f8f9fa; border-color: #b8972e; text-align: center; padding: 0.25rem;">
+                        <button class="btn btn-success mt-1" onclick="copyCode()" style="font-family: 'Poppins', sans-serif; font-weight: 700; text-transform: uppercase; padding: 0.3rem 0.6rem; font-size: clamp(0.7rem, 2vw, 0.8rem);">Copy Code</button>
 
                         <!-- Referral Link Section -->
                         <hr class="my-1" style="border-color: #dee2e6;">
                         <p class="mb-1" style="font-family: 'Inter', sans-serif; font-size: clamp(0.8rem, 2vw, 0.9rem); color: #555;">Your Referral Link:</p>
                         <input type="text" id="referralLink" class="form-control w-75 mx-auto" 
                                value="{{ request.build_absolute_uri }}?ref={{ referral_code }}" readonly 
-                               style="font-family: 'Outfit', sans-serif; font-size: clamp(0.85rem, 2vw, 0.95rem); background-color: #f8f9fa; border-color: #2193b0; text-align: center; padding: 0.25rem;">
-                        <button class="btn btn-outline-primary mt-1" onclick="copyLink()" style="font-family: 'Poppins', sans-serif; font-weight: 700; text-transform: uppercase; padding: 0.3rem 0.6rem; font-size: clamp(0.7rem, 2vw, 0.8rem);">Copy Link</button>
+                               style="font-family: 'Outfit', sans-serif; font-size: clamp(0.85rem, 2vw, 0.95rem); background-color: #f8f9fa; border-color: #b99e47; text-align: center; padding: 0.25rem;">
+                        <button class="btn btn-outline-success mt-1" onclick="copyLink()" style="font-family: 'Poppins', sans-serif; font-weight: 700; text-transform: uppercase; padding: 0.3rem 0.6rem; font-size: clamp(0.7rem, 2vw, 0.8rem);">Copy Link</button>
                         <p class="mt-1" style="font-family: 'Inter', sans-serif; font-size: clamp(0.7rem, 2vw, 0.8rem); color: #555;">Share this link with friends to invite them easily!</p>
 
                         <!-- Button to view referred users -->
@@ -60,7 +60,7 @@
 
                 <!-- How It Works Section -->
                 <div class="text-center">
-                    <h4 style="font-family: 'Inter', sans-serif; color: #0170bc; font-weight: 600; font-size: clamp(1rem, 2.5vw, 1.2rem);">How It Works</h4>
+                    <h4 style="font-family: 'Inter', sans-serif; color: #b8972e; font-weight: 600; font-size: clamp(1rem, 2.5vw, 1.2rem);">How It Works</h4>
                     <ul class="list-unstyled text-start mx-auto" style="max-width: 350px; font-family: 'Inter', sans-serif; font-size: clamp(0.7rem, 2vw, 0.8rem); color: #666;">
                         <li class="mb-1">1. Share your referral code or link with friends.</li>
                         <li class="mb-1">2. They sign up using your code or link.</li>

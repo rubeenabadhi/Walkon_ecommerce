@@ -1,12 +1,37 @@
 {% extends 'user/base.html' %}
 {% load static %}
 {% block title %}Product Details - Walkon{% endblock %}
+
+{% block content %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/product.css' %}">
 
 {% endblock %}
-{% block content %}
 <style>
+  
+  .nav-tabs{
+    color: black !important; 
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+  }
+  .nav-tabs .nav-link.active, .nav-tabs .nav-link:hover{
+    color: #121004 !important;
+
+  }  
+  .nav-link-item{
+    color: var(--text-dark) !important; 
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+    text-decoration: none !important;
+    color: #443f3f !important;
+  }
+  .nav-link-item.active, .nav-link-item:hover{
+    color: #1a1604 !important;
+    padding: 15px !important;
+    
+
+  }
+  
 .star-rating-display .star {
     font-size: 1.4rem;
     color: #f5f508ff;
@@ -39,7 +64,7 @@
     .color-circle { cursor: pointer; }
     .color-circle.selected { border: 2px solid #000; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
     .size-option { cursor: pointer; padding: 5px 10px; border: 1px solid #ddd; border-radius: 5px; }
-    .size-option.selected { background-color: #007bff; color: white; }
+    .size-option.selected { background-color: #d5a508; color: white; }
     .modal-backdrop { display: none !important; }
     #cartErrorMsg { font-size: 0.9rem; }
 </style>
@@ -47,7 +72,7 @@
 <!-- Alert Box for Messages -->
 <div id="cartMessage" class="alert-custom alert alert-success d-none" role="alert"></div>
 <div id="cartErrorMsg" class="alert-custom alert alert-danger text-center " style="display:none;"></div>
-<h1 class="text-center fw-bold text-uppercase text-primary mb-4">Product Details</h1>
+<h1 class="text-center fw-bold text-uppercase  mb-4">Product Details</h1>
 <div class="product-details container">
   <div class="row">
   
@@ -104,7 +129,7 @@
 
     <!-- RIGHT: Details -->
     <div class="col-md-6">
-      <h1 class="product-title">{{ product.name }}</h1>
+      <h3 class="product-title">{{ product.name }}</h3>
       <p class="product-category fw-semibold">Category: {{ product.category.name }}</p>
       <p class="product-gender">{{ product.gender.label|default:product.gender }}</p>
       <p class="product-brand fw-semibold">Brand: {{ product.brand.name }}</p>
@@ -175,7 +200,7 @@
               In Wishlist
             </button>
           {% else %}
-            <button class="btn btn-outline-danger btn-wishlist btn-sm px-3 py-2"
+            <button class="btn btn-outline-danger btn-wishlist btn-sm px-3 py-2 "
                     data-url="{% url 'toggle_wishlist' product.id %}"
                     data-variant-id="{{ product.variants.first.id }}"
                     title="Add to Wishlist">
@@ -194,12 +219,12 @@
       </div>
 
       <!-- Tabs -->
-      <ul class="nav nav-tabs">
+      <ul class="nav nav-tabs mt-4 border-0 border-bottom border-top  ">
         <li class="nav-item">
-          <a class="nav-link active" data-bs-toggle="tab" href="#description">Description</a>
+          <a class="nav-link-item active fw-semibold text-dark " data-bs-toggle="tab" href="#description">Description</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" data-bs-toggle="tab" href="#review">Review</a>
+        <li class="nav-item ">
+          <a class="nav-link-item fw-semibold " data-bs-toggle="tab" href="#review">Review</a>
         </li>
       </ul>
 

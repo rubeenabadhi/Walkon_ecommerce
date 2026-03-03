@@ -2,10 +2,7 @@
 
 
     :root {
-        --font-family-inter: 'Inter', sans-serif;
-        --font-family-volkhov: 'Volkhov', sans-serif;
-        --font-family-poppins: 'Poppins', sans-serif;
-        --font-family-outfit: 'Outfit', sans-serif;
+      
         --text-black: rgba(0, 0, 0, 1);
         --text-rgb-52-199-89: rgba(52, 199, 89, 1);
         --text-rgb-5-5-5: rgba(5, 5, 5, 0.84);
@@ -16,7 +13,7 @@
     }
 
     .cart-container {
-        background: linear-gradient(135deg, #ffffff, #e3f2fd);
+        background: linear-gradient(135deg, #ffffff);
         padding: 2rem;
         border-radius: 15px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
@@ -41,7 +38,8 @@
     }
 
     .cart-item:hover {
-        border: 2px solid #3b65ff;
+        border: 2px solid #b8900b;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
 
     .cart-item img {

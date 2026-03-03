@@ -13,95 +13,178 @@
   <!-- Bootstrap Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css?family=Poppins|Inter&display=swap" rel="stylesheet">
-  <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+  <!-- Google Fonts - Poppins modern weights -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
+  <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
 
   <!-- Custom CSS -->
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
-  
 
   <style>
-    /* Navbar Animation */
+    :root {
+      --gold-primary: #d4af37;      /* Soft metallic gold - luxury feel */
+      --gold-dark: #b8972e;         /* Deeper gold for hover/active */
+      --gold-light: #f0d084;        /* Subtle highlight */
+      --bg-dark: #0f172a;           /* Dark slate for contrast/premium */
+      --text-light: #f8fafc;
+      --text-dark: #1e293b;
+      --accent-red: #ef4444;        /* Modern danger/red for badges */
+      --gray-light: #e2e8f0;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f8fafc;
+      color: var(--text-dark);
+    }
+
+    /* Modern Navbar - Golden with subtle gradient & shadow */
     .navbar {
-      transition: all 0.3s ease;
+      transition: all 0.4s ease;
       position: sticky;
       top: 0;
       z-index: 1000;
-    }
-    .navbar.scrolled {
-      background-color: #fff !important;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      padding: 0.5rem 1rem !important;
-    }
-    .navbar .nav-link:hover {
-      color: #ff4d4f !important;
-      transition: 0.3s;
+      background: linear-gradient(135deg, var(--gold-primary) 0%, #c9a028 100%) !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     }
 
-    /* Footer Compact */
-    footer {
-      background: #f8f9fa;
-      font-size: 0.9rem;
+    .navbar.scrolled {
+      background: linear-gradient(135deg, #b8972e 0%, #8b6f1e 100%) !important;
+      box-shadow: 0 6px 25px rgba(0,0,0,0.2);
+      padding: 0.6rem 1rem !important;
     }
+
+    .navbar-brand img {
+      transition: transform 0.3s ease;
+    }
+    .navbar-brand:hover img {
+      transform: scale(1.08);
+    }
+
+    .nav-link {
+      color: var(--text-light) ;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      border-radius: 50px;
+      padding: 0.5rem 1.2rem !important;
+    }
+
+    .nav-link:hover {
+      color: var(--gold-light) !important;
+      background: rgba(255,255,255,0.15);
+      transform: translateY(-2px);
+    }
+
+    .nav-link.active {
+      background: rgba(255,255,255,0.25) !important;
+      color: white !important;
+    }
+
+    /* Dropdown modern */
+    .dropdown-menu {
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      background: white;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+
+    .dropdown-item {
+      padding: 0.8rem 1.5rem;
+      transition: all 0.25s ease;
+    }
+
+    .dropdown-item:hover {
+      background: #fdfaf6 !important;
+      color: var(--gold-dark) !important;
+      padding-left: 1.8rem;
+    }
+
+    /* Buttons modern gold */
+    .btn-dark {
+      background: var(--gold-primary);
+      border: none;
+      color: var(--bg-dark) !important;
+      font-weight: 600;
+      border-radius: 50px;
+      padding: 0.6rem 1.5rem;
+      transition: all 0.3s;
+    }
+
+    .btn-dark:hover {
+      background: var(--gold-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(212,175,55,0.3);
+    }
+
+    /* Icons & badges */
+    .bi-heart, .bi-cart3, .bi-person-circle {
+      transition: transform 0.3s !important;
+    }
+    a:hover .bi-heart, a:hover .bi-cart3, a:hover .bi-person-circle {
+      transform: scale(1.2) !important;
+    }
+
+    .badge {
+    background: var(--accent-red) !important;
+    }
+
+    /* Footer modern compact luxury */
+    footer {
+      background: var(--bg-dark);
+      color: var(--gray-light);
+      padding: 3rem 0 1.5rem;
+      font-size: 0.95rem;
+    }
+
     footer a {
+      color: var(--gray-light);
       text-decoration: none;
-      color: #333;
       transition: color 0.2s;
     }
+
     footer a:hover {
-      color: #ff4d4f;
+      color: var(--gold-primary);
     }
-    footer .footer-col h6 {
+
+    footer h6 {
+      color: white;
       font-weight: 600;
-      margin-bottom: 0.8rem;
+      margin-bottom: 1.2rem;
     }
-    footer .newsletter input {
-      height: 38px;
+
+    .newsletter input {
+      border-radius: 50px 0 0 50px;
+      border: 1px solid #4b5563;
+      background: #1e293b;
+      color: white;
     }
-    footer .newsletter button {
-      height: 38px;
+
+    .newsletter button {
+      border-radius: 0 50px 50px 0;
+      background: var(--gold-primary);
+      color: var(--bg-dark);
+      border: none;
     }
-    /* Category Dropdown - Attractive Enhancements */
-.dropdown-toggle:hover {
-  background: rgba(26, 115, 232, 0.08) !important;
-  transition: all 0.2s ease;
-}
 
-.dropdown-menu {
-  border-radius: 12px !important;
-  animation: dropdownFade 0.3s ease-out;
-}
+    /* Animations */
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-15px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .dropdown-menu {
+      animation: fadeInDown 0.3s ease-out;
+    }
 
-@keyframes dropdownFade {
-  from { opacity: 0; transform: translateY(-10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.dropdown-item {
-  transition: all 0.2s ease;
-}
-
-.dropdown-item:hover {
-  background: #e3f2fd !important;
-  color: #1a73e8 !important;
-  transform: translateX(5px);
-}
-
-.hover-bg-light:hover {
-  background: #f1f5f9 !important;
-}
-
-.text-pink { color: #e91e63; }
+    {% block extra_css %}{% endblock %}
   </style>
-
-  {% block extra_css %}{% endblock %}
 </head>
 <body>
-  
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-light bg-transparent py-3">
+
+<!-- Navbar (structure same, styles modernized) -->
+<nav class="navbar navbar-expand-lg py-3">
   <div class="container">
     <a class="navbar-brand" href="{% url 'home' %}">
       <img src="{% static 'images/logo.png' %}" alt="Logo" style="width:150px;">
@@ -112,88 +195,80 @@
     
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item position-relative"><a class="nav-link fw-semibold d-flex align-items-center gap-1 px-3 py-2 rounded-pill hover-bg-primary text-dark text-decoration-none" href="{% url 'home' %}">Home</a></li>
-        <li class="nav-item position-relative"><a class="nav-link fw-semibold d-flex align-items-center gap-1 px-3 py-2 rounded-pill hover-bg-primary text-dark text-decoration-none" href="{% url 'about_us' %}">About</a></li>
-        <li class="nav-item position-relative"><a class="nav-link fw-semibold d-flex align-items-center gap-1 px-3 py-2 rounded-pill hover-bg-primary text-dark text-decoration-none" href="{% url 'all_products' %}">Shop</a></li>
-        <li class="nav-item dropdown position-relative">
-  <a class="nav-link dropdown-toggle fw-semibold d-flex align-items-center gap-1 px-3 py-2 rounded-pill hover-bg-primary text-dark text-decoration-none"
-     href="#" id="categoryDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-  Category
-  </a>
-
-  <ul class="dropdown-menu shadow-lg border-0 rounded-3 overflow-hidden mt-2 fade-in"
-      aria-labelledby="categoryDropdown"
-      style="min-width: 220px; border-top: 3px solid #1a73e8;">
-    {% for gender in genders %}
-    
-    <li>
-      <a class="dropdown-item d-flex align-items-center gap-3 py-3 px-4 hover-bg-light" href="{% url 'products_by_gender' gender.label %}">
-        <i class="bi bi-gender-female fs-4 text-pink"></i>
-        <div>
-          <div class="fw-bold">{{ gender.label }}</div>
-        </div>
-      </a>
-    </li>
-    {% endfor %}
-
-    <!-- Optional: Divider + All Categories link -->
-    <li><hr class="dropdown-divider my-1"></li>
-    <li>
-      <a class="dropdown-item text-center fw-semibold py-3 text-primary" href="{% url 'all_products' %}">
-        View All Categories →
-      </a>
-    </li>
-  </ul>
-</li>
-        <li class="nav-item position-relative"><a class="nav-link fw-semibold d-flex align-items-center gap-1 px-3 py-2 rounded-pill hover-bg-primary text-dark text-decoration-none" href="{% url 'contact_us' %}">Contact</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'about_us' %}">About</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'all_products' %}">Shop</a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="categoryDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Category
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="categoryDropdown">
+            {% for gender in genders %}
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-3" href="{% url 'products_by_gender' gender.label %}">
+                <i class="bi bi-gender-female fs-4" style="color: var(--gold-primary);"></i>
+                <div class="fw-bold">{{ gender.label }}</div>
+              </a>
+            </li>
+            {% endfor %}
+            <li><hr class="dropdown-divider my-1"></li>
+            <li>
+              <a class="dropdown-item text-center fw-semibold text-primary" href="{% url 'all_products' %}">
+                View All Categories →
+              </a>
+            </li>
+          </ul>
+        </li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'contact_us' %}">Contact</a></li>
       </ul>
 
       <form method="get" class="d-flex mb-2">
-        <input type="text" name="q" value="{{ query }}" placeholder="Search.." class="form-control me-2"/>
-        <button type="submit" class="btn btn-dark px-4 py-2 rounded-pill width-100 me-3">Search</button>
+        <input type="text" name="q" value="{{ query }}" placeholder="Search products..." class="form-control me-2 rounded-pill"/>
+        <button type="submit" class="btn btn-dark px-4 rounded-pill">Search</button>
       </form>
 
       {% if user.is_authenticated %}
-        <a href="{% url 'logout' %}" class="btn btn-dark px-4 py-2 rounded-pill width-90 me-3 mb-2">Sign out</a>
+        <a href="{% url 'logout' %}" class="btn btn-dark px-4 rounded-pill me-3 mb-2">SignOut</a>
       {% else %}
-        <a href="{% url 'login' %}" class="btn btn-dark px-4 py-2 rounded-pill width-90 me-3 mb-2">Sign in</a>
+        <a href="{% url 'login' %}" class="btn btn-dark px-4 rounded-pill me-3 mb-2">Sign in</a>
       {% endif %}
 
-      <div class="d-flex align-items-center gap-3">
-        <a href="{% url 'wishlist' %}" class="text-dark fs-5 position-relative">
+      <div class="d-flex align-items-center gap-4">
+        <a href="{% url 'wishlist' %}" class="text-light fs-5 position-relative">
           <i class="bi bi-heart"></i>
-          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger " id="wishlist-count">{{ count_wishlist }}</span>
+          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill" id="wishlist-count">{{ count_wishlist }}</span>
         </a>
         {% if user.is_authenticated %}
-        <a href="{% url 'user_profile' user.id %}" class="text-dark fs-5">
+        <a href="{% url 'user_profile' user.id %}" class="text-light fs-5">
           <i class="bi bi-person-circle"></i>
         </a>
         {% endif %}
-        <a href="{% url 'cart:cart' %}" class="text-dark fs-5 position-relative">
+        <a href="{% url 'cart:cart' %}" class="text-light fs-5 position-relative">
           <i class="bi bi-cart3"></i>
-          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-count" id="cart-count">{{ cart_count }}</span>
+          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill cart-count" id="cart-count">{{ cart_count }}</span>
         </a>
       </div>
     </div>
   </div>
 </nav>
-<!-- brud crumbs-->
+
+<!-- Breadcrumbs -->
 {% include 'user/breadcrumbs.html' %}
 
 {% block content %}{% endblock %}
 
-<!-- Footer -->
-<footer class="pt-4 pb-3 border-top">
+<!-- Footer (modernized) -->
+<footer class="pt-5 pb-4">
   <div class="container">
     <div class="row">
-      <div class="col-md-3 footer-col mb-3">
+      <div class="col-md-3 mb-4">
         <h6>Info</h6>
         <ul class="list-unstyled">
           <li><a href="{% url 'contact_us' %}">Contact us</a></li>
           <li><a href="{% url 'about_us' %}">About us</a></li>
         </ul>
       </div>
-      <div class="col-md-3 footer-col mb-3">
+      <div class="col-md-3 mb-4">
         <h6>Policies</h6>
         <ul class="list-unstyled">
           <li><a href="#">Privacy Notice</a></li>
@@ -202,19 +277,20 @@
           <li><a href="#">Cookie Policy</a></li>
         </ul>
       </div>
-      <div class="col-md-6 mb-3">
+      <div class="col-md-6 mb-4">
         <h6>Subscribe to Our Newsletter</h6>
         <form class="d-flex newsletter">
-          <input type="email" class="form-control me-2" placeholder="Email Address">
+          <input type="email" class="form-control me-2" placeholder="Your email address">
           <button class="btn btn-dark" type="submit">Subscribe</button>
         </form>
       </div>
     </div>
-    <div class="text-center mt-3">
-      <p class="mb-0 small">© 2025 WalkOn | All Rights Reserved</p>
+    <div class="text-center mt-4 pt-3 border-top border-secondary">
+      <p class="mb-0 small">© 2026 WalkOn | Crafted with Passion</p>
     </div>
   </div>
 </footer>
+
 
 <!-- Bootstrap + jQuery -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

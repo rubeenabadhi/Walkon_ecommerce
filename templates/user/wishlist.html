@@ -1,15 +1,12 @@
 {% extends 'user/base.html' %}
 {% load static %}
 {% block title %}Wishlist - WalkOn{% endblock %}
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/productlist.css' %}">
-{% endblock %}
 
 {% block content %}
 <div class="container my-5 wishlist-container">
   <!-- Page Header -->
   <div class="text-center mb-5 wishlist-header">
-    <h2 class="fw-bold display-5 text-primary">My Wishlist ❤️</h2>
+    <h4 class="fw-bold mb-3 text-uppercase text-center text-dark fs-3">My Wishlist ❤️</h4>
     <p class="text-muted lead text-center text-muted">Save the styles you love • Buy them whenever you're ready</p>
   </div>
 
@@ -19,11 +16,11 @@
     <div class="col-6 col-md-4 col-lg-3">
       <div class="card wishlist-card shadow hover-lift border-0 rounded-4 overflow-hidden h-100 bg-white">
         <!-- Product Image -->
-        <div class="position-relative overflow-hidden">
+        <div class="position-relative overflow-hidden card-img-top p-3 text-center bg-light rounded-3">
           <img src="{{ item.product_variant.product.primary_image.url }}"
-               class="card-img-top object-fit-cover"
-               alt="{{ item.product_variant.product.name }}"
-               style="height: 280px;">
+               class="card-img-top  "
+               style="height: 170px; object-fit: contain; background: rgba(255, 255, 255, 0.1);"
+               alt="{{ item.product_variant.product.name }}">
                {% if item.product_variant.get_offer_percentage > 0 %}
           <span class="badge bg-danger text-white position-absolute top-0 end-0 m-3 px-3 py-2 fs-6 fw-semibold rounded-pill shadow-sm">
            {{ item.product_variant.get_offer_percentage }}% OFF
@@ -43,7 +40,7 @@
             <i class="bi bi-people-fill me-1"></i>{{ item.product_variant.product.gender.label }}&nbsp;
               {{ item.product_variant.color.name }}
              </p>
-          </div>
+          
           {% with offer=item.product_variant.get_offer_price %}
   <p class="fw-bold mb-2 text-center">
     {% if offer < item.product_variant.price %}
@@ -54,7 +51,7 @@
     {% endif %}
   </p>
 {% endwith %}
-
+</div>
 
           <!-- Size Selection -->
           <select class="form-select form-select-sm mb-4 size-select shadow-sm border-secondary-subtle"
@@ -69,7 +66,7 @@
 
           <!-- Button Group -->
           <div class="button-group mt-auto d-flex gap-2">
-            <button class="btn btn-primary add-to-cart flex-grow-1 rounded-pill fw-semibold py-2"
+            <button class="btn btn-dark add-to-cart flex-grow-1 rounded-pill fw-semibold py-2"
                     data-variant-id="{{ item.product_variant.id }}">
               Add to Cart
             </button>
@@ -124,6 +121,7 @@ $(document).on("click", ".remove-wishlist", function (e) {
       alert("Removed from wishlist");
       btn.closest(".col-6").fadeOut(300, function () {
         $(this).remove();
+        location.reload();
 
         if ($(".wishlist-card").length === 0) {
           location.reload();

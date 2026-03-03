@@ -1,15 +1,6 @@
-@font-face {
-      font-family: 'Volkhov';
-      src: url('fonts/volkhov.woff2') format('woff2'),
-           url('fonts/volkhov.woff') format('woff');
-      font-weight: normal;
-      font-style: normal;
-    }
 
     :root {
-      --font-family-inter: 'Inter', sans-serif;
-      --font-family-volkhov: 'Volkhov', sans-serif;
-      --font-family-poppins: 'Poppins', sans-serif;
+    
       --text-black: #000000;
       --text-white: #FFFFFF;
       --text-rgb-72-72-72: #484848;
@@ -24,12 +15,11 @@
     
     max-width: 80%;
     margin: 40px auto;
-    background: linear-gradient(135deg, #ffffff, #afe9f5);
+    background: linear-gradient(135deg, #ffffff, #ffffff);
     border-radius: 15px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     padding: 30px;
     color: rgb(8, 2, 2);
-    font-family: 'Inter', sans-serif;
     transition: transform 0.3s ease;
  
   }
@@ -110,7 +100,6 @@
     }
 
     .btn-wishlist {
-      font-family: var(--font-family-inter);
       font-weight: 700;
       font-size: 16px;
       text-transform: uppercase;
@@ -121,7 +110,6 @@
     }
 
     .btn-cart {
-      font-family: var(--font-family-inter);
       font-weight: 700;
       font-size: 16px;
       text-transform: uppercase;

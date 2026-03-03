@@ -1,18 +1,19 @@
 {% extends 'user/base.html' %}
 {% load static %}
 {% block title %}Select Address - Walkon{% endblock %}
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/select_address.css' %}">
-{% endblock %}
+
 {% load math_filters %}
 {% load humanize %}
 {% block content %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/select_address.css' %}">
+{% endblock %}
 <div class="container my-5">
     <div class="row">
         <!-- Address Selection -->
         <div class="col-lg-8">
             <div class="address-container">
-                <h1 class="mb-4 fw-bold address-title">Select Address</h1>
+                <h3 class="mb-4 fw-bold address-title text-uppercase text-center">Select Address</h3>
                 <!-- Flash Messages -->
                 {% if messages %}
                     <div class="mb-3">
@@ -81,7 +82,7 @@
 
                     <!-- Continue Button -->
                     <div class="mt-4 d-flex justify-content-center">
-                        <button id="continueToShipping" class="btn continue-btn w-60" style="background-color: #1a73e8; color: white;">Continue to Shipping</button>
+                        <button id="continueToShipping" class="btn continue-btn w-60 text-light" >Continue to Shipping</button>
                     </div>
                 </form>
             </div>
@@ -89,8 +90,8 @@
 
         <!-- Order Summary -->
         <div class="col-lg-4">
-            <div class="order-summary p-3 shadow-sm border rounded" style="background: #white; ">
-                <h4 class="fw-bold mb-3 text-center text-uppercase" style="color: #1a73e8;">Order Summary</h4>
+            <div class="order-summary p-3 shadow-sm border rounded bg-white" style="background: #white; ">
+                <h4 class="fw-bold mb-3 text-center text-uppercase" style="color: #b8972e;">Order Summary</h4>
                 <p>In Rupees</p>
                 {% for product in cart_items %}
                 <p class="qty"><span id="control-quantity-{{ product.id }}">{{ product.quantity }}</span>  : ₹{{ product.variant.get_offer_price }}
