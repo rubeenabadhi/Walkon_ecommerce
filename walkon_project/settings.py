@@ -17,22 +17,25 @@ import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 # Load environment variables from .env file for sensitive information
-load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'. used for constructing paths relative to the project directory
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret! means used for cryptographic signing means it should be kept secret in production
-SECRET_KEY = 'django-insecure-w@4r%f)iu(7+i$(=a7$zu+32st7ite^&%t@da04=2q^o01c2q@'
+#SECRET_KEY = 'django-insecure-w@4r%f)iu(7+i$(=a7$zu+32st7ite^&%t@da04=2q^o01c2q@'
 
+#new secret key
+SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY environment variable is not set.")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.ngrok-free.dev']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'walkonstore.bar','www.walkonstore.bar','15.206.92.8']
 CSRF_TRUSTED_ORIGINS = [
     "https://*.ngrok-free.app",
     "https://*.ngrok-free.dev",
@@ -84,6 +87,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware', 
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'walkon_project.urls'
@@ -166,7 +170,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
@@ -203,8 +207,11 @@ SOCIALACCOUNT_PROVIDERS = {
             'access_type': 'online',  # For background authentication refresh
         },
         'APP': {
-            'client_id': os.environ['GOOGLE_CLIENT_ID'],  # Use environment variable
-            'secret': os.environ['GOOGLE_CLIENT_SECRET'],
+         
+            'client_id': os.getenv('GOOGLE_CLIENT_ID',''),
+              # Use environment variable
+            'secret': os.getenv('GOOGLE_CLIENT_SECRET',''),
+            
         },
         'OAUTH_PKCE_ENABLED': True, # Enables Proof Key for Code Exchange
     }

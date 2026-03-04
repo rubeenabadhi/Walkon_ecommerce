@@ -14,7 +14,7 @@
 <div id="heroCarousel" class="carousel slide m-1 p-1" data-bs-ride="carousel">
   <div class="carousel-inner">
     <div class="carousel-item active">
-      <section class="hero-section" style="background-image: url('{% static "images/1877.jpg" %}');">
+      <section class="hero-section" style="background-image: url('{% static "images/CRICKET-BANNER-DESKTOP-VIEW-03-02-2026.jpg" %}');">
         <div class="hero-content">
           <h1>Step Into Style</h1>
           <p>Explore our vibrant collection of premium shoes</p>
@@ -46,13 +46,13 @@
 <!-- Category Section -->
 <section class="category-section">
   <div class="container">
-    <h2 class="text-center mb-5">Shop by Category</h2>
-    <div class="row g-4">
+    <h2 class="fw-semibold mb-4 text-center "style ="font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif">Shop by Category</h2>
+    <div class="row g-4 text-uppercase text-center">
       <div class="col-md-4 col-sm-6">
-        <div class="category-card">
+        <div class="category-card ">
           <img src="{% static 'images/men_home.jpeg' %}" alt="Men's Shoes">
-          <div class="category-overlay">
-            <h3>Men's Collection</h3>
+          <div class="category-overlay ">
+            <h3 style ="background-color: #393833">Men's Collection</h3>
             <a href="{% url 'products_by_gender' 'Men' %}" class="btn btn-primary">Explore Now</a>
           </div>
         </div>
@@ -61,7 +61,7 @@
         <div class="category-card">
           <img src="{% static 'images/women_home.jpeg' %}" alt="Women's Shoes">
           <div class="category-overlay">
-            <h3>Women's Collection</h3>
+            <h3 style ="background-color: #393833">Women's Collection</h3>
             <a href="{% url 'products_by_gender' 'Women' %}" class="btn btn-primary">Explore Now</a>
           </div>
         </div>
@@ -70,7 +70,7 @@
         <div class="category-card">
           <img src="{% static 'images/kid_home.jpeg' %}" alt="Kids' Shoes">
           <div class="category-overlay">
-            <h3>Kids' Collection</h3>
+            <h3 style ="background-color: #393833">Kids' Collection</h3>
             <a href="{% url 'products_by_gender' 'Kids' %}" class="btn btn-primary">Explore Now</a>
           </div>
         </div>
@@ -78,53 +78,7 @@
     </div>
   </div>
 </section>
-<!-- Skechers-Style Featured Hero Banner (One big + one small image in one line) -->
-<section class="hero-featured position-relative overflow-hidden mb-5" style="height: 80vh; min-height: 600px;">
-  <!-- Background -->
-  <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark">
-    <div class="row g-0 h-100">
-      <!-- Left: Big Main Image (70% width) -->
-      <div class="col-lg-7 h-100 position-relative">
-        <img 
-          src="{% static 'images/CRICKET-BANNER-DESKTOP-VIEW-03-02-2026.jpg' %}"  
-          alt="Featured Player Collection" 
-          class="w-100 h-100 object-fit-cover"
-          style="filter: brightness(0.85);"
-        >
-        <!-- Text Overlay on left image -->
-        <div class="position-absolute bottom-0 start-0 p-5 text-white" style="max-width: 90%;">
-          <h1 class="display-3 fw-bold mb-3" style="text-shadow: 4px 4px 12px rgba(0,0,0,0.8);">
-            COMFORT THAT PERFORMS
-          </h1>
-          <p class="fs-3 fw-light mb-4" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.7);">
-            Premium Shoes for Champions
-          </p>
-          <a href="{% url 'all_products' %}" class="btn btn-lg px-5 py-3 rounded-pill fw-bold"
-             style="background: var(--gold-primary, #d4af37); color: #0f172a; border: none; box-shadow: 0 6px 20px rgba(212,175,55,0.4);">
-            Shop Now
-          </a>
-        </div>
-      </div>
 
-      <!-- Right: Small Secondary Image (30% width) -->
-      <div class="col-lg-5 h-100 position-relative d-none d-lg-block">
-        <img 
-          src="{% static 'images/CRICKET-BANNER-DESKTOP-VIEW-03-02-2026.jpg' %}" 
-          alt="Shoe Detail" 
-          class="w-100 h-100 object-fit-cover"
-          style="filter: brightness(0.9);"
-        >
-        <!-- Optional small text or logo on right -->
-        <div class="position-absolute bottom-0 end-0 p-4 text-white text-end">
-          <h3 class="fw-bold" style="text-shadow: 2px 2px 6px rgba(0,0,0,0.7);">
-            WalkOn Cricket Series
-          </h3>
-          <p class="small">Engineered for Speed & Grip</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
 <!-- Featured Hero Banner Section (Skechers-inspired) -->
 <section class="featured-hero position-relative overflow-hidden" style="height: 80vh; min-height: 600px;">
   <!-- Background Image -->
@@ -170,9 +124,9 @@
 </section>
 
 <!-- Top Trends Section -->
-<section class="trends-section my-5">
+<section class="trends-section my-1">
   <div class="container">
-    <h2 class="fw-bold mb-4 text-center">🔥 Top Trends</h2>
+    <h2 class="fw-bold mb-4 text-center" style ="font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif">🔥 Top Trends</h2>
     <div class="row g-4">
       {% for product in products|slice:":4" %}
       {% with variant=product.variants.first %}
@@ -236,7 +190,7 @@
 <!-- New Arrivals Section -->
 <section class="arrivals-section">
   <div class="container">
-    <h2>✨ New Arrivals</h2>
+    <h2 class="fw-bold text-center" style ="font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif">✨ New Arrivals</h2>
     <div class="row g-4 mt-2">
       {% for product in new_products|slice:":4" %}
       {% with variant=product.variants.first %}

@@ -146,7 +146,21 @@
 
   @media (max-width: 768px) {
     .hero-content h1 { font-size: 2.8rem; }
+    .hero-content h2 { font-size: 2rem; }
+  
     .hero-content p { font-size: 1.2rem; }
     .carousel-item { height: 60vh; min-height: 400px; }
     .category-card img { height: 280px; }
   }
+  @media (max-width: 576px) {
+    .hero-content h1 { font-size: 2.4rem; }
+    .hero-content p { font-size: 1rem; }
+    .carousel-item { height: 50vh; min-height: 300px; }
+    .category-card img { height: 240px; }
+  }
+  @media (max-width: 400px) {
+    .hero-content h1 { font-size: 1.8rem; }
+    .hero-content p { font-size: 0.9rem; }
+    .carousel-item { height: 40vh; min-height: 200px; }
+    .category-card img { height: 180px; }
+  } 

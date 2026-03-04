@@ -45,6 +45,15 @@ urlpatterns = [
 ]
 def custom_404_view(request, exception):
     return render(request, "404.html", status=404)
+def custom_500_view(request):
+    return render(request, "500.html", status=500)
+def custom_403_view(request, exception):
+    return render(request, "403.html", status=403)
+
 handler404 = custom_404_view
+handler500 = custom_500_view
+handler403 = custom_403_view
+
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
