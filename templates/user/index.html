@@ -226,7 +226,9 @@
             {% endwith %}
 
             <p style="font-size:0.85rem; color:#ff9800; font-weight:600; margin:4px 0;">
-  ⭐ {{ product.average_rating }} / 5
+  ⭐ {{ product.average_rating }}<span style="font-size:0.75rem; color:#777;">
+  ({{ product.review_count }} Reviews)
+</span>
 </p>
 
             <a href="{% url 'product_details' product.slug %}" 
