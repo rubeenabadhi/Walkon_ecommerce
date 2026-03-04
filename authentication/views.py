@@ -478,6 +478,16 @@ def change_password(request):
 
     return render(request, 'user/change_password.html')
 
+#soft delete user
+@login_required(login_url='login')
+def delete_account(request):
+    user = request.user
+    user.is_active = False
+    user.save()
+    user_logger.info(f"User {user.username} deleted their account.")
+    messages.success(request, "Your account has been deleted successfully.")
+    return redirect('home')
+
 #================================================================================Admin views=================================================================================
 #admin login view
 def admin_login(request):

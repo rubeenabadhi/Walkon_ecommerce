@@ -21,6 +21,7 @@ urlpatterns = [
     path("change-email/", views.request_email_change, name="change_email"),
     path("verify-email-otp/", views.verify_email_otp, name="verify_email_change_otp"),
     path("resend-email-otp/", views.resend_email_change_otp, name="resend_email_change_otp"),
+    path('delete-account/', views.delete_account, name='delete_account'),
 
     
 ]
