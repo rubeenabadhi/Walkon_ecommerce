@@ -37,10 +37,9 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'walkonstore.bar','www.walkonstore.bar','15.206.92.8']
 CSRF_TRUSTED_ORIGINS = [
-    "https://*.ngrok-free.app",
-    "https://*.ngrok-free.dev",
+    "https://walkonstore.bar",
+    "https://www.walkonstore.bar",
 ]
-
 
 # Application definition
 
