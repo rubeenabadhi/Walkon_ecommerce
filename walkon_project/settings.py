@@ -33,7 +33,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 if not SECRET_KEY:
     raise ValueError("SECRET_KEY environment variable is not set.")
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'walkonstore.bar','www.walkonstore.bar','15.206.92.8']
 CSRF_TRUSTED_ORIGINS = [
