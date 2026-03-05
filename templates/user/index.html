@@ -130,6 +130,7 @@
     <div class="row g-4">
       {% for product in products|slice:":4" %}
       {% with variant=product.variants.first %}
+      
       <div class="col-md-3 col-sm-6">
         <div class="card shadow-sm border-0" 
              style="border-radius:12px; transition:transform 0.3s, box-shadow 0.3s;"

@@ -29,8 +29,8 @@ admin_logger=logging.getLogger('admin_logger')
 #user-defined views for signup and OTP verification,home view
 #=====================HOME VIEW===============================================
 def home(request):
-    products = Product.objects.all().prefetch_related('variants')
-    new_products = Product.objects.all().order_by('-created_at').prefetch_related('variants')
+    products = Product.objects.all().prefetch_related('variants').exclude(is_deleted=True)[:4]
+    new_products = Product.objects.all().order_by('-created_at').prefetch_related('variants').exclude(is_deleted=True)[:4]
 
     for product in products:
         for variant in product.variants.all():
@@ -207,6 +207,8 @@ def user_login(request):
 
         user = auth.authenticate(request, username=email, password=password)
         # If  use custom user with EMAIL as USERNAME_FIELD, then 'username=email' is correct
+        
+        
 
         if user is not None:
             if user.is_active and not user.is_staff and not user.is_superuser:
