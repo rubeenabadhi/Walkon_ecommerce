@@ -644,8 +644,8 @@ def place_order(request):
     discount_amount = Decimal(str(session_discount)) if session_discount else (Decimal(subtotal) - final_amount)
     delivery_charge=get_delivery_charge(address.state)
     
-    if payment_method == "cod" and final_amount >= 1000:
-        messages.error(request, "Cash on Delivery is not available for orders above ₹1000.")
+    if payment_method == "cod" and final_amount >= 1500:
+        messages.error(request, "Cash on Delivery is not available for orders above ₹1500.")
         user_logger.info('final amount',final_amount)
         return redirect("select_payment")
 
