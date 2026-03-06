@@ -43,6 +43,8 @@ urlpatterns = [
     path('review/', include('review.urls')),
     path('pages/', include('pages.urls')),
 ]
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 def custom_404_view(request, exception):
     return render(request, "404.html", status=404)
 def custom_500_view(request):
@@ -56,4 +58,3 @@ handler403 = custom_403_view
 
 
 
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
