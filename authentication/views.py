@@ -22,6 +22,8 @@ from product.models import Product
 from offers.models import Referral
 from wallet.models import Wallet, WalletTransaction
 from django.views.decorators.csrf import csrf_protect
+from order.models import OrderItem
+from django.db.models import Count, Avg
 import logging
 
 user_logger = logging.getLogger('user_logger')
@@ -29,7 +31,20 @@ admin_logger=logging.getLogger('admin_logger')
 #user-defined views for signup and OTP verification,home view
 #=====================HOME VIEW===============================================
 def home(request):
-    products = Product.objects.all().prefetch_related('variants').exclude(is_deleted=True)[:4]
+    # top 4 products most purchased by users
+    products = (
+        Product.objects
+        .exclude(is_deleted=True)
+        .annotate(
+            review_total=Count("reviews"),
+            avg_rating=Avg("reviews__rating")
+        )
+        .order_by("-review_total", "-avg_rating")
+        .prefetch_related("variants")[:10]
+    )
+
+    
+    #products = Product.objects.all().prefetch_related('variants').exclude(is_deleted=True)[:4]
     new_products = Product.objects.all().order_by('-created_at').prefetch_related('variants').exclude(is_deleted=True)[:4]
 
     for product in products:

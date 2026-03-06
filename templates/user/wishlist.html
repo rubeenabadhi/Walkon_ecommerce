@@ -3,6 +3,29 @@
 {% block title %}Wishlist - WalkOn{% endblock %}
 
 {% block content %}
+<style>
+@media (min-width: 992px) {
+  .wishlist-card {
+    height: 100%;
+  }
+}
+@media (min-width: 768px) {
+  .wishlist-card {
+    height: 100%;
+  }
+}
+@media (min-width: 576px) {
+  .wishlist-card {
+    height: 100%;
+  }
+}
+@media (max-width: 575px) {
+  .wishlist-card {
+    height: 100%;
+  }
+}
+
+</style>
 <div class="container my-5 wishlist-container">
   <!-- Page Header -->
   <div class="text-center mb-5 wishlist-header">
@@ -65,7 +88,7 @@
           </select>
 
           <!-- Button Group -->
-          <div class="button-group mt-auto d-flex gap-2">
+          <div class="button-group mt-auto d-flex gap-2 align-items-center justify-content-center w-100 flex-wrap flex-md-nowrap flex-lg-nowrap flex-xl-nowrap">
             <button class="btn btn-dark add-to-cart flex-grow-1 rounded-pill fw-semibold py-2"
                     data-variant-id="{{ item.product_variant.id }}">
               Add to Cart
