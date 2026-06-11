@@ -16,8 +16,8 @@ WalkOn is a full-featured E-Commerce Shoe Shopping Platform built with Django. T
 - Wishlist
 - Coupon Application
 - Wallet System
+- Razorpay payment system
 - Order Placement
-- Order Tracking
 - Product Reviews & Ratings
 - Return & Refund Requests
 
@@ -42,7 +42,6 @@ WalkOn is a full-featured E-Commerce Shoe Shopping Platform built with Django. T
 
 - Python
 - Django
-- Django REST Framework
 
 ### Frontend
 
@@ -53,7 +52,7 @@ WalkOn is a full-featured E-Commerce Shoe Shopping Platform built with Django. T
 
 ### Database
 
-- PostgreSQL / MongoDB
+- PostgreSQL 
 
 ### Version Control
 
@@ -150,7 +149,6 @@ WalkOn is a full-featured E-Commerce Shoe Shopping Platform built with Django. T
 - Build a scalable E-Commerce platform
 - Implement secure authentication
 - Learn Django ORM deeply
-- Design RESTful APIs
 - Practice database design and optimization
 - Develop production-ready project architecture
 
@@ -200,6 +198,6 @@ python manage.py runserver
 
 ## 👨‍💻 Author
 
-Ata
+Rubeena
 
-Built using Django, Python, HTML, CSS, JavaScript, and Bootstrap.
+Built using Django, Python, postgresql,HTML, CSS, JavaScript, and Bootstrap.
